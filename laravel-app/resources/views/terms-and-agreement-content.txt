@@ -1,0 +1,133 @@
+TERMS & CONDITIONS
+
+TERMS & CONDITIONS
+
+NaijaBuilders
+
+Operated by 7 Pillars Holdings Ltd (England & Wales)
+
+1. Introduction
+These Terms & Conditions ("Terms") govern your use of the NaijaBuilder website and services. The Platform is operated by 7 Pillars Holdings Ltd, a company registered in England & Wales. By accessing or using the Platform, you agree to be bound by these Terms. If you do not agree, you must not use the Platform.
+
+2. Platform Role
+The Platform operates as a digital marketplace connecting buyers and suppliers of construction materials.
+
+The Platform:
+- Does not manufacture goods
+- Does not own inventory
+- Does not operate logistics services (Phase 1)
+- Acts as an escrow facilitator and transaction intermediary
+Suppliers are responsible for product accuracy, delivery execution, and compliance with applicable laws.
+
+3. Eligibility
+
+Users must:
+- Be at least 18 years old
+- Provide accurate registration information
+- Not use the Platform for unlawful purposes
+The Platform may suspend or terminate accounts for false or misleading information.
+
+4. Supplier Verification (KYC/KYB)
+Suppliers must:
+- Be a registered legal entity
+- Provide valid CAC or equivalent registration
+- Provide beneficial ownership information
+- Provide a verified business bank account
+- Provide proof of operational address
+The Platform reserves the right to request additional documentation and to reject or suspend suppliers at its discretion.
+
+Individual sellers are not permitted.
+
+5. Orders & Deposits
+All transactions require a deposit of 30-50% of total order value before supplier dispatch. Deposit includes:
+- Product portion
+- Delivery portion
+- Buyer Service & Protection Fee portion
+Funds are held in escrow until completion or dispute resolution.
+
+6. Negotiation System
+Suppliers may list products as:
+
+- Fixed Price
+- Negotiable
+- Quote Required
+For negotiable listings:
+- Buyers may submit structured offers
+- Suppliers may accept, reject, or counter
+- Offer cycles are limited
+- Once accepted, the agreed price is binding
+
+7. Communication Policy
+Before deposit:
+- Communication is restricted to in-platform messaging
+- Contact details are masked
+After deposit:
+- Contact details may be revealed
+- Direct phone and WhatsApp communication is permitted
+- All final confirmations must occur within the Platform
+Circumventing the Platform may result in suspension.
+
+8. Fees
+Buyer Service & Protection Fee: A mandatory 1-2% fee applied at checkout. Covers escrow, payment processing, and dispute infrastructure.
+
+Supplier Service Fee: A 3-5% fee deducted upon successful completion before payout.
+
+Subscription Fees:
+
+Premium suppliers may pay a monthly subscription fee for enhanced benefits.
+
+9. Delivery & Liability
+Suppliers are solely responsible for:
+- Delivery execution
+- Product quality
+- Compliance with declared delivery window
+The Platform is not liable for:
+- Delivery delays
+- Product defects
+- Third-party logistics failures
+Maximum liability is limited to fees paid to the Platform.
+
+10. Dispute Resolution
+10.1 Internal Review (Mandatory)
+Any dispute, including delivery, quality, or payment issues, must first be submitted for internal review.
+
+Escrow funds remain frozen during review. The Platform will issue a written determination.
+
+10.2 Escalation Threshold
+Only disputes exceeding £1,000 (or local equivalent) may proceed to arbitration. Below this threshold, the Platform's decision is final.
+
+10.3 Binding Arbitration
+
+Eligible disputes shall be resolved by binding arbitration:
+- Governed by laws of England & Wales
+- Seated in London
+- Conducted under Arbitration Act 1996
+- Documents-only basis unless otherwise agreed
+The initiating party bears initial arbitration costs. Costs may be reallocated only if a claim is found to be frivolous or in bad faith.
+
+11. Refunds
+If supplier is at fault:
+- Buyer receives refund of product and delivery amount.
+If buyer is at fault:
+- Supplier may retain deposit (subject to review).
+Buyer Service & Protection Fee may be partially retained to cover processing costs.
+
+12. Anti-Circumvention
+Users agree not to bypass the Platform to complete transactions introduced via the Platform. Violation may result in:
+- Suspension
+- Deposit forfeiture
+- Legal action
+
+13. Data Protection
+Use of personal data is governed by our Privacy Policy, which forms part of these Terms.
+
+14. Limitation of Liability
+The Platform's total liability shall not exceed fees paid to the Platform for the relevant transaction.
+
+The Platform is not responsible for indirect or consequential losses.
+
+15. Force Majeure
+The Platform is not liable for delays or failures caused by events beyond reasonable control, including natural disasters, strikes, fuel shortages, civil unrest, or technical failures.
+
+16. Governing Law
+These Terms are governed by the laws of England and Wales.
