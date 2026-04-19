@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "NaijaBuilders",
+    "slug": "naijabuilders-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "splash": {
+      "backgroundColor": "#F8F4EF"
+    },
+    "assetBundlePatterns": ["**/*"]
+  }
+}

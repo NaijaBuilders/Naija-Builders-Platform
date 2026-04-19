@@ -1,11 +1,11 @@
 # NaijaBuilders
 
-NaijaBuilders is a Laravel 12 application with a modern Vite build and a legacy data import path.
+NaijaBuilders is a Laravel 11 application with a modern Vite build and a legacy data import path.
 
 ## Tech Stack
 
 - PHP 8.2+
-- Laravel 12
+- Laravel 11
 - MySQL (primary database + legacy source)
 - Vite + Tailwind CSS
 
@@ -130,7 +130,7 @@ php artisan migrate --force
 7) Assets
 
 - Preferred: run `npm run build` locally and upload the `public/build` folder.
-- If Node is available on the server, you can run `npm install` and `npm run build` there.
+- If Node is not available on the server, keep the prebuilt `public/build` folder in the deployment.
 
 8) Permissions
 

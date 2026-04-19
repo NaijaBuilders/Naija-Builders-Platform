@@ -1,2 +1,12 @@
 legacy-backup/
 .venv/
+mobile/app/node_modules/
+mobile/app/.expo/
+mobile/app/.expo-shared/
+mobile/app/android/
+mobile/app/ios/
+mobile/app/web-build/
+mobile/app/.parcel-cache/
+mobile/app/npm-debug.log
+mobile/app/yarn-error.log
+mobile/app/.turbo/
