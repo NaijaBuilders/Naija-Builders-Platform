@@ -1,6 +1,6 @@
 # NaijaBuilders
 
-NaijaBuilders is a Laravel 11 application with a modern Vite build and a legacy data import path.
+NaijaBuilders is a Laravel 12 application with a modern Vite build and a legacy data import path.
 
 ## Tech Stack
 

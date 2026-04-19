@@ -2,10 +2,6 @@
 
 This repository hosts the NaijaBuilders Laravel application.
 
-## Structure
-
-- laravel-app/ : the Laravel 12 application
-- .gitignore   : root ignores for legacy backup and local tooling
 
 ## Quick Start
 
