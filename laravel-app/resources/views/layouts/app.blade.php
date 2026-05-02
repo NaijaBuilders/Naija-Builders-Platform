@@ -25,6 +25,14 @@
         $cartCount += max(1, (int) ($entry['quantity'] ?? 1));
     }
     $shouldRunOnboardingTour = (bool) session()->pull('show_onboarding_tour', false);
+    $displayCurrencyCode = (string) ($displayCurrency ?? 'NGN');
+    $currencyDetails = (array) (($supportedCurrencies ?? [])[$displayCurrencyCode] ?? []);
+    $currencyRate = app(\App\Support\CurrencyManager::class)->rateNgnPerUnit($displayCurrencyCode);
+    $currencyPayload = [
+        'code' => $displayCurrencyCode,
+        'symbol' => (string) ($currencyDetails['symbol'] ?? 'NGN'),
+        'rateNgnPerUnit' => $currencyRate > 0 ? $currencyRate : 1,
+    ];
 @endphp
 <!DOCTYPE html>
 <html lang="en" @if ($themeFromCookie !== '') data-theme="{{ $themeFromCookie }}" @endif>
@@ -39,6 +47,8 @@
     <meta property="og:description" content="Connect with trusted construction material suppliers across Nigeria">
     <meta property="og:type" content="website">
     <script>
+        window.NaijaBuildersCurrency = @json($currencyPayload);
+
         (function () {
             var theme = null;
 

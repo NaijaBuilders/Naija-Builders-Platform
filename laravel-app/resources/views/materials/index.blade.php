@@ -500,9 +500,9 @@
 
                             <div class="material-price-wrap">
                                 @if ($originalPrice !== null)
-                                    <span class="material-price-original">₦{{ number_format($originalPrice, 2) }}</span>
+                                <span class="material-price-original">{{ $formatMoney($originalPrice) }}</span>
                                 @endif
-                                <span class="material-price-current">₦{{ number_format((float) $material->price, 2) }}</span>
+                                <span class="material-price-current">{{ $formatMoney((float) $material->price) }}</span>
                                 <span style="font-size: 0.8rem; color: var(--neutral-600);">/ {{ $unit }}</span>
                             </div>
 

@@ -53,7 +53,7 @@
                 <div class="card-body">
                     <p style="margin: 0 0 0.35rem; font-size: 0.78rem; color: var(--neutral-500); text-transform: uppercase; letter-spacing: 0.04em;">{{ $savedItem->saved_category_name ?: 'General Saves' }}</p>
                     <h3 style="margin: 0 0 0.45rem; font-size: 1.15rem;">{{ $savedItem->name }}</h3>
-                    <p style="margin: 0 0 0.35rem; color: var(--primary-color); font-weight: 700;">₦{{ number_format((float) $savedItem->price, 2) }} / {{ ucfirst(str_replace('_', ' ', (string) ($savedItem->price_unit ?: 'item'))) }}</p>
+            <p style="margin: 0 0 0.35rem; color: var(--primary-color); font-weight: 700;">{{ $formatMoney((float) $savedItem->price) }} / {{ ucfirst(str_replace('_', ' ', (string) ($savedItem->price_unit ?: 'item'))) }}</p>
                     <p style="margin: 0 0 0.45rem; color: var(--neutral-600); font-size: 0.9rem;">
                         {{ $supplierName }}
                         @if ((int) ($savedItem->is_verified_badge ?? 0) === 1)

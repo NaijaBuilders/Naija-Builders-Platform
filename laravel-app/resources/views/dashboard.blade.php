@@ -65,7 +65,7 @@
                 <div class="grid-3 gap-lg" style="margin-bottom: 1rem;">
                     <div>
                         <p style="margin: 0 0 0.35rem; color: var(--neutral-600);">Inventory Value (Active Only)</p>
-                        <h4 style="margin: 0; color: var(--primary-color);">N{{ number_format((float) $inventoryValue, 2) }}</h4>
+                        <h4 style="margin: 0; color: var(--primary-color);">{{ $formatMoney((float) $inventoryValue) }}</h4>
                     </div>
                     <div>
                         <p style="margin: 0 0 0.35rem; color: var(--neutral-600);">Active Listing Rate</p>
@@ -99,7 +99,7 @@
                             <tr style="border-bottom: 1px solid var(--neutral-200);">
                                 <td style="padding: 1rem;">{{ $listing->name }}</td>
                                 <td style="padding: 1rem;">{{ $listing->category ?: 'General' }}</td>
-                                <td style="padding: 1rem;">N{{ number_format((float) $listing->price, 2) }} / {{ ucfirst(str_replace('_', ' ', (string) ($listing->price_unit ?: 'item'))) }}</td>
+                                <td style="padding: 1rem;">{{ $formatMoney((float) $listing->price) }} / {{ ucfirst(str_replace('_', ' ', (string) ($listing->price_unit ?: 'item'))) }}</td>
                                 <td style="padding: 1rem;">{{ number_format((int) $listing->stock_qty) }}</td>
                                 <td style="padding: 1rem;">{{ ucwords(str_replace('_', ' ', (string) $listing->status)) }}</td>
                                 <td style="padding: 1rem;">{{ \Carbon\Carbon::parse($listing->created_at)->format('M d, Y') }}</td>

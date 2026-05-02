@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Mobile;
 
 use App\Http\Controllers\Controller;
+use App\Support\CurrencyManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,8 @@ class ProfileController extends Controller
         'notifications_push' => true,
         'language' => 'en',
         'timezone' => 'Africa/Lagos',
+        'detected_timezone' => '',
+        'currency_mode' => 'auto',
         'currency' => 'NGN',
         'auto_save_drafts' => true,
         'compact_dashboard' => false,
@@ -177,6 +180,8 @@ class ProfileController extends Controller
             'notifications_push' => (string) $request->input('notifications_push', '0') === '1',
             'language' => (string) $request->input('language', 'en'),
             'timezone' => (string) $request->input('timezone', 'Africa/Lagos'),
+            'detected_timezone' => (string) $request->input('detected_timezone', ''),
+            'currency_mode' => (string) $request->input('currency_mode', 'auto'),
             'currency' => (string) $request->input('currency', 'NGN'),
             'auto_save_drafts' => (string) $request->input('auto_save_drafts', '0') === '1',
             'compact_dashboard' => (string) $request->input('compact_dashboard', '0') === '1',
@@ -198,7 +203,12 @@ class ProfileController extends Controller
             $settings['timezone'] = 'Africa/Lagos';
         }
 
-        if (!in_array($settings['currency'], ['NGN', 'USD', 'EUR', 'GBP'], true)) {
+        if (!in_array($settings['currency_mode'], ['auto', 'manual'], true)) {
+            $settings['currency_mode'] = 'auto';
+        }
+
+        $currencyManager = app(CurrencyManager::class);
+        if (!$currencyManager->isSupported($settings['currency'])) {
             $settings['currency'] = 'NGN';
         }
 

@@ -126,17 +126,29 @@
                                 <option value="America/New_York" {{ ($settings['timezone'] ?? '') === 'America/New_York' ? 'selected' : '' }}>America/New_York</option>
                             </select>
                     </li>
+                    <li class="settings-item settings-item--has-divider settings-item--field">
+                        <div class="settings-item__content">
+                            <p class="settings-item__title">Currency Detection</p>
+                            <p class="settings-item__desc">Automatically show prices in your local currency when your location can be detected</p>
+                        </div>
+                        <select class="settings-select" name="currency_mode" id="currency_mode">
+                            <option value="auto" {{ ($settings['currency_mode'] ?? 'auto') === 'auto' ? 'selected' : '' }}>Auto-detect from location</option>
+                            <option value="manual" {{ ($settings['currency_mode'] ?? 'auto') === 'manual' ? 'selected' : '' }}>Manual selection</option>
+                        </select>
+                    </li>
                     <li class="settings-item settings-item--field">
                         <div class="settings-item__content">
-                            <p class="settings-item__title">Currency</p>
-                            <p class="settings-item__desc">Default currency for pricing</p>
-                            </div>
-                            <select class="settings-select" name="currency">
-                                <option value="NGN" {{ ($settings['currency'] ?? 'NGN') === 'NGN' ? 'selected' : '' }}>Nigerian Naira (NGN)</option>
-                                <option value="USD" {{ ($settings['currency'] ?? '') === 'USD' ? 'selected' : '' }}>US Dollar (USD)</option>
-                                <option value="EUR" {{ ($settings['currency'] ?? '') === 'EUR' ? 'selected' : '' }}>Euro (EUR)</option>
-                                <option value="GBP" {{ ($settings['currency'] ?? '') === 'GBP' ? 'selected' : '' }}>British Pound (GBP)</option>
-                            </select>
+                            <p class="settings-item__title">Manual Currency</p>
+                            <p class="settings-item__desc">Used when manual selection is enabled, or when auto-detection is unavailable</p>
+                        </div>
+                        <input type="hidden" name="detected_timezone" id="detected_timezone" value="{{ $settings['detected_timezone'] ?? '' }}">
+                        <select class="settings-select" name="currency">
+                            @foreach (($supportedCurrencies ?? []) as $currencyCode => $currencyDetails)
+                                <option value="{{ $currencyCode }}" {{ ($settings['currency'] ?? 'NGN') === $currencyCode ? 'selected' : '' }}>
+                                    {{ $currencyDetails['name'] }} ({{ $currencyCode }})
+                                </option>
+                            @endforeach
+                        </select>
                     </li>
                 </ul>
             </div>
@@ -274,6 +286,19 @@
 </div>
 
 <script>
+    (function () {
+        var detectedTimezoneInput = document.getElementById('detected_timezone');
+        if (!detectedTimezoneInput || detectedTimezoneInput.value) {
+            return;
+        }
+
+        try {
+            detectedTimezoneInput.value = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+        } catch (error) {
+            detectedTimezoneInput.value = '';
+        }
+    })();
+
     function showSavingMessage() {
         showNotification('Saving your settings...', 'info', 3000);
     }

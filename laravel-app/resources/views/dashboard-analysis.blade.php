@@ -32,7 +32,7 @@
         </div>
 
         <div class="grid-3 gap-lg" style="margin-bottom: 1.5rem;">
-            <div class="card"><div class="card-body"><p style="margin: 0 0 0.35rem; color: var(--neutral-600);">Inventory Value (Active Only)</p><h3 style="margin: 0; color: var(--primary-color);">N{{ number_format((float) $inventoryValue, 2) }}</h3></div></div>
+            <div class="card"><div class="card-body"><p style="margin: 0 0 0.35rem; color: var(--neutral-600);">Inventory Value (Active Only)</p><h3 style="margin: 0; color: var(--primary-color);">{{ $formatMoney((float) $inventoryValue) }}</h3></div></div>
             <div class="card"><div class="card-body"><p style="margin: 0 0 0.35rem; color: var(--neutral-600);">Active Listing Rate</p><h3 style="margin: 0; color: var(--secondary-color);">{{ number_format((float) $activeListingRate, 1) }}%</h3></div></div>
             <div class="card"><div class="card-body"><p style="margin: 0 0 0.35rem; color: var(--neutral-600);">Low Stock Rate (Active Only)</p><h3 style="margin: 0; color: var(--accent-warning);">{{ number_format((float) $lowStockRate, 1) }}%</h3></div></div>
         </div>
@@ -66,12 +66,12 @@
                             <div style="display: flex; flex-direction: column; align-items: center; gap: 0.35rem;">
                                 <div style="width: 100%; max-width: 52px; height: 130px; display: flex; align-items: flex-end;">
                                     <div
-                                        title="{{ $point->month_label }}: N{{ number_format($monthlySales, 2) }}"
+                                        title="{{ $point->month_label }}: {{ $formatMoney($monthlySales) }}"
                                         style="width: 100%; height: {{ $barHeight }}px; border-radius: 8px 8px 4px 4px; background: linear-gradient(180deg, var(--secondary-color), var(--primary-color));"
                                     ></div>
                                 </div>
                                 <span style="font-size: 0.8rem; color: var(--neutral-700);">{{ $point->month_label }}</span>
-                                <span style="font-size: 0.78rem; color: var(--neutral-600);">N{{ number_format($monthlySales, 0) }}</span>
+                                <span style="font-size: 0.78rem; color: var(--neutral-600);">{{ $formatMoney($monthlySales) }}</span>
                             </div>
                         @endforeach
                     </div>

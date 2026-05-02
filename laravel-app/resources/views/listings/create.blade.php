@@ -21,7 +21,7 @@
             </div>
             <div class="form-group"><label>Description</label><textarea name="description" rows="5">{{ old('description') }}</textarea></div>
             <div class="grid-4 gap-lg">
-                <div class="form-group"><label>Price (₦)</label><input type="number" min="0" step="0.01" name="price" required value="{{ old('price') }}"></div>
+                <div class="form-group"><label>Price (NGN)</label><input type="number" min="0" step="0.01" name="price" required value="{{ old('price') }}"></div>
                 <div class="form-group"><label>Price Unit</label><select name="price_unit" required>@foreach ($priceUnits as $unit)<option value="{{ $unit }}" {{ old('price_unit', 'item') === $unit ? 'selected' : '' }}>{{ ucfirst(str_replace('_', ' ', $unit)) }}</option>@endforeach</select></div>
                 <div class="form-group"><label>Stock Quantity</label><input type="number" min="0" step="1" name="stock_qty" required value="{{ old('stock_qty', 0) }}"></div>
                 <div class="form-group"><label>Status</label><select name="status"><option value="active">Active</option><option value="inactive">Inactive</option><option value="out_of_stock">Out of Stock</option></select></div>

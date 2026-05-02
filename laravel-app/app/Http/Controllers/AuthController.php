@@ -58,6 +58,7 @@ class AuthController extends Controller
                     'full_name',
                     'email',
                     'role',
+                    'location',
                     'password_hash',
                     'profile_image_path',
                     Schema::hasColumn('users', 'subscription_plan') ? 'subscription_plan' : DB::raw("'standard' as subscription_plan"),
@@ -80,6 +81,7 @@ class AuthController extends Controller
             'email' => $user->email,
             'name' => $user->full_name,
             'role' => $user->role,
+            'location' => (string) ($user->location ?? ''),
             'profile_image_path' => (string) ($user->profile_image_path ?? ''),
             'subscription_plan' => (string) ($user->subscription_plan ?? 'standard'),
             'is_verified_badge' => (int) ($user->is_verified_badge ?? 0) === 1,
@@ -198,6 +200,7 @@ class AuthController extends Controller
             'name' => $name,
             'company' => $company,
             'role' => $accountType,
+            'location' => $location,
             'profile_image_path' => '',
             'subscription_plan' => 'standard',
             'is_verified_badge' => false,
@@ -319,6 +322,7 @@ class AuthController extends Controller
             ->update($updatePayload);
 
         $legacyUser['company'] = $company;
+        $legacyUser['location'] = $location;
         $legacyUser['kyc_status'] = Schema::hasColumn('users', 'kyc_status') ? 'submitted' : 'approved';
         $request->session()->put('legacy_user', $legacyUser);
 

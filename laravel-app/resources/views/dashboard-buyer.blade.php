@@ -28,7 +28,7 @@
                 <h3 style="margin: 0 0 0.35rem;">Total Spend</h3>
                 <p style="margin: 0; color: var(--neutral-600);">Across completed and active orders</p>
             </div>
-            <h2 style="margin: 0; color: var(--accent-success);">₦{{ number_format($totalSpent, 2) }}</h2>
+            <h2 style="margin: 0; color: var(--accent-success);">{{ $formatMoney($totalSpent) }}</h2>
         </div>
     </div>
 
@@ -43,7 +43,7 @@
                 <tbody>
                     @forelse ($recentOrders as $order)
                         @php($supplierName = trim((string) ($order->company ?? '')) !== '' ? (string) $order->company : (string) ($order->full_name ?? 'Supplier'))
-                        <tr style="border-bottom: 1px solid var(--neutral-200);"><td style="padding: 1rem;">#{{ $order->id }}</td><td style="padding: 1rem;">{{ $supplierName }}</td><td style="padding: 1rem;">{{ ucfirst((string) $order->order_status) }}</td><td style="padding: 1rem;">₦{{ number_format((float) $order->total_amount, 2) }}</td><td style="padding: 1rem;">{{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y') }}</td></tr>
+                        <tr style="border-bottom: 1px solid var(--neutral-200);"><td style="padding: 1rem;">#{{ $order->id }}</td><td style="padding: 1rem;">{{ $supplierName }}</td><td style="padding: 1rem;">{{ ucfirst((string) $order->order_status) }}</td><td style="padding: 1rem;">{{ $formatMoney((float) $order->total_amount) }}</td><td style="padding: 1rem;">{{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y') }}</td></tr>
                     @empty
                         <tr><td colspan="5" style="padding: 1rem; color: var(--neutral-600);">No orders yet. Start by browsing available materials.</td></tr>
                     @endforelse
@@ -69,7 +69,7 @@
                                 <span style="display: inline-block; margin-left: 0.35rem; background: var(--secondary-color); color: white; border-radius: 999px; font-size: 0.72rem; padding: 0.15rem 0.45rem;">Verified</span>
                             @endif
                         </p>
-                        <p style="margin: 0 0 1rem; font-weight: 600; color: var(--primary-color);">₦{{ number_format((float) $material->price, 2) }} / {{ ucfirst(str_replace('_', ' ', (string) ($material->price_unit ?: 'item'))) }}</p>
+                        <p style="margin: 0 0 1rem; font-weight: 600; color: var(--primary-color);">{{ $formatMoney((float) $material->price) }} / {{ ucfirst(str_replace('_', ' ', (string) ($material->price_unit ?: 'item'))) }}</p>
                         <a href="/material-detail.php?id={{ $material->id }}" class="btn btn-outline" style="text-decoration: none; margin-bottom: 0.45rem;">View Material</a>
                         <button
                             type="button"
@@ -112,7 +112,7 @@
                             @if ((int) ($savedItem->is_verified_badge ?? 0) === 1)
                                 <span style="display: inline-block; margin-left: 0.35rem; background: var(--secondary-color); color: white; border-radius: 999px; font-size: 0.72rem; padding: 0.15rem 0.45rem;">Verified</span>
                             @endif
-                            · ₦{{ number_format((float) $savedItem->price, 2) }} / {{ ucfirst(str_replace('_', ' ', (string) ($savedItem->price_unit ?: 'item'))) }}
+                            · {{ $formatMoney((float) $savedItem->price) }} / {{ ucfirst(str_replace('_', ' ', (string) ($savedItem->price_unit ?: 'item'))) }}
                         </p>
                         <p style="margin: 0.2rem 0 0; color: var(--neutral-500); font-size: 0.85rem;">
                             Saved to: {{ $savedItem->saved_category_name ?: 'General Saves' }}

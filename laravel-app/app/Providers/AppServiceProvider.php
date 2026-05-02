@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Support\CurrencyManager;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use RuntimeException;
@@ -39,6 +40,17 @@ class AppServiceProvider extends ServiceProvider
             ->pluck('name')
             ->all();
 
+        $currencyManager = app(CurrencyManager::class);
+
         view()->share('navbarMaterialSuggestions', $navbarMaterialSuggestions);
+        view()->share('supportedCurrencies', $currencyManager->currencies());
+        view()->share('formatMoney', fn ($amount, ?string $currency = null): string => $currencyManager->formatFromNgn(
+            $amount,
+            $currency ?: $currencyManager->effectiveCurrency($currencyManager->resolveForRequest(request()))
+        ));
+
+        view()->composer('*', function ($view) use ($currencyManager): void {
+            $view->with('displayCurrency', $currencyManager->effectiveCurrency($currencyManager->resolveForRequest(request())));
+        });
     }
 }

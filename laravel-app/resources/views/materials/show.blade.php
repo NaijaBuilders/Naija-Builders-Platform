@@ -818,8 +818,8 @@
                 <div class="placeholder-content-side">
                     <div class="placeholder-price">
                         <span class="material-brand-tag" style="background: var(--accent-success); color: var(--white); border-color: transparent;">-10%</span>
-                        <p class="material-price-main">₦{{ number_format((float) $material->price, 2) }}</p>
-                        <span class="material-old-price">₦{{ number_format((float) $material->price * 1.1, 2) }}</span>
+                        <p class="material-price-main">{{ $formatMoney((float) $material->price) }}</p>
+                        <span class="material-old-price">{{ $formatMoney((float) $material->price * 1.1) }}</span>
                     </div>
 
                     <form method="POST" action="/cart/add.php" style="margin: 0; width: 100%;">
@@ -1014,7 +1014,7 @@
                     <ul class="details-list">
                         <li><span class="details-label">Product Name</span><span class="details-value">{{ $material->name }}</span></li>
                         <li><span class="details-label">Category</span><span class="details-value">{{ $material->category ?: 'General' }}</span></li>
-                        <li><span class="details-label">Price</span><span class="details-value">₦{{ number_format((float) $material->price, 2) }}</span></li>
+                        <li><span class="details-label">Price</span><span class="details-value">{{ $formatMoney((float) $material->price) }}</span></li>
                         <li><span class="details-label">Price Unit</span><span class="details-value">{{ ucfirst(str_replace('_', ' ', (string) ($material->price_unit ?: 'item'))) }}</span></li>
                         <li><span class="details-label">Pricing Type</span><span class="details-value">{{ (int) ($material->is_negotiable ?? 0) === 1 ? 'Negotiable' : 'Fixed Price' }}</span></li>
                         <li><span class="details-label">Stock Quantity</span><span class="details-value">{{ number_format($stockQuantity) }}</span></li>

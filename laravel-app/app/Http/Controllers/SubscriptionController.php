@@ -18,7 +18,7 @@ class SubscriptionController extends Controller
                 [
                     'code' => 'standard',
                     'name' => 'Standard Marketplace',
-                    'price' => 'Free',
+                    'price_ngn' => 0,
                     'description' => 'For new suppliers that want to start listing materials quickly.',
                     'benefits' => [
                         'List materials on marketplace',
@@ -29,7 +29,7 @@ class SubscriptionController extends Controller
                 [
                     'code' => 'pro',
                     'name' => 'Pro Marketplace',
-                    'price' => 'N9,500 / month',
+                    'price_ngn' => 9500,
                     'description' => 'For suppliers that want stronger visibility and trust.',
                     'benefits' => [
                         'Everything in Standard',
@@ -41,7 +41,7 @@ class SubscriptionController extends Controller
                 [
                     'code' => 'enterprise',
                     'name' => 'Enterprise Marketplace',
-                    'price' => 'N25,000 / month',
+                    'price_ngn' => 25000,
                     'description' => 'For high-volume suppliers and teams.',
                     'benefits' => [
                         'Everything in Pro',
@@ -57,7 +57,7 @@ class SubscriptionController extends Controller
             [
                 'code' => 'standard',
                 'name' => 'Buyer Standard',
-                'price' => 'Free',
+                'price_ngn' => 0,
                 'description' => 'For buyers that want to browse and connect with suppliers.',
                 'benefits' => [
                     'Browse all materials',
@@ -69,7 +69,7 @@ class SubscriptionController extends Controller
             [
                 'code' => 'pro',
                 'name' => 'Buyer Pro',
-                'price' => 'N6,500 / month',
+                'price_ngn' => 6500,
                 'description' => 'For active buyers comparing many products each month.',
                 'benefits' => [
                     'Everything in Buyer Standard',
@@ -82,7 +82,7 @@ class SubscriptionController extends Controller
             [
                 'code' => 'enterprise',
                 'name' => 'Buyer Enterprise',
-                'price' => 'N18,000 / month',
+                'price_ngn' => 18000,
                 'description' => 'For procurement teams and larger buying operations.',
                 'benefits' => [
                     'Everything in Buyer Pro',
@@ -111,6 +111,11 @@ class SubscriptionController extends Controller
         }
 
         $plans = $this->plansForRole($role);
+        $plans = array_map(function (array $plan): array {
+            $amount = (float) ($plan['price_ngn'] ?? 0);
+            $plan['price'] = $amount > 0 ? 'NGN ' . number_format($amount, 2) . ' / month' : 'Free';
+            return $plan;
+        }, $plans);
 
         return view('subscription.index', compact('currentUser', 'plans', 'activePlan', 'role'));
     }

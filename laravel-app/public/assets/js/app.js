@@ -500,7 +500,7 @@ function filterProducts(event) {
 function updatePriceRange(value) {
     const display = document.querySelector('.price-display');
     if (display) {
-        display.textContent = '₦0 - ₦' + parseInt(value).toLocaleString();
+        display.textContent = formatCurrency(0) + ' - ' + formatCurrency(parseInt(value, 10) || 0);
     }
 }
 
@@ -514,7 +514,12 @@ function smoothScroll(target) {
 
 // Utility: Format currency
 function formatCurrency(amount) {
-    return '₦' + parseFloat(amount).toLocaleString('en-NG', {
+    const currency = window.NaijaBuildersCurrency || {};
+    const symbol = currency.symbol || '₦';
+    const rate = Number(currency.rateNgnPerUnit || 1);
+    const convertedAmount = rate > 0 ? (parseFloat(amount || 0) / rate) : parseFloat(amount || 0);
+
+    return symbol + convertedAmount.toLocaleString(undefined, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     });

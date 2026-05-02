@@ -49,7 +49,7 @@
             <h2 style="margin: 0; font-size: clamp(1.15rem, 2.8vw, 1.45rem);">Available Plans</h2>
             <p style="margin: 0.35rem 0 0; color: var(--neutral-600);">Compare features and activate the plan that best matches your workflow.</p>
         </div>
-        <p style="margin: 0; color: var(--neutral-500); font-size: 0.9rem;">Prices shown in NGN.</p>
+        <p style="margin: 0; color: var(--neutral-500); font-size: 0.9rem;">Prices shown in {{ $displayCurrency }}. Platform billing thresholds remain calculated in NGN.</p>
     </section>
 
     <div class="subscription-page__plans-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; align-items: stretch;">
@@ -80,7 +80,9 @@
 
                     <div style="padding: 0.85rem 0.95rem; border-radius: var(--rounded-md); background: var(--neutral-50); border: 1px solid var(--neutral-200);">
                         <p style="margin: 0; color: var(--neutral-500); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.07em;">Price</p>
-                        <p style="margin: 0.3rem 0 0; font-size: 1.3rem; line-height: 1; color: var(--secondary-color); font-weight: 800;">{{ $plan['price'] }}</p>
+                        <p style="margin: 0.3rem 0 0; font-size: 1.3rem; line-height: 1; color: var(--secondary-color); font-weight: 800;">
+                            {{ ((float) ($plan['price_ngn'] ?? 0)) > 0 ? $formatMoney((float) $plan['price_ngn']) . ' / month' : 'Free' }}
+                        </p>
                     </div>
 
                     <ul style="margin: 0; padding: 0; list-style: none; display: grid; gap: 0.52rem; color: var(--neutral-700); flex: 1;">

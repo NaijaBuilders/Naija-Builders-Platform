@@ -34,7 +34,7 @@
                                 <div>
                                     <h4 style="margin: 0 0 0.35rem; font-size: 1rem;">{{ $item['name'] }}</h4>
                                     <p style="margin: 0 0 0.35rem; color: var(--neutral-600); font-size: 0.9rem;">{{ $item['category'] }} · {{ $item['company'] !== '' ? $item['company'] : 'Supplier' }}</p>
-                                    <p style="margin: 0; color: var(--primary-color); font-weight: 700;">₦{{ number_format($item['price'], 2) }}</p>
+                                    <p style="margin: 0; color: var(--primary-color); font-weight: 700;">{{ $formatMoney($item['price']) }}</p>
                                 </div>
                                 <div class="cart-item-actions" style="display: flex; flex-direction: column; gap: 0.6rem; align-items: flex-end;">
                                     <form method="POST" action="/cart/update.php" style="display: flex; gap: 0.5rem; align-items: center;">
@@ -43,7 +43,7 @@
                                         <input type="number" name="quantity" min="1" max="{{ max(1, $item['stock_qty']) }}" value="{{ $item['quantity'] }}" style="width: 72px; padding: 0.4rem;">
                                         <button class="btn btn-outline btn-sm" type="submit">Update</button>
                                     </form>
-                                    <p style="margin: 0; font-weight: 700;">₦{{ number_format($item['line_total'], 2) }}</p>
+                                    <p style="margin: 0; font-weight: 700;">{{ $formatMoney($item['line_total']) }}</p>
                                     <form method="POST" action="/cart/remove.php">
                                         @csrf
                                         <input type="hidden" name="material_id" value="{{ $item['id'] }}">
@@ -61,7 +61,7 @@
             <div class="card">
                 <div class="card-body">
                     <h3 class="cart-summary-title">Order Summary</h3>
-                    <div class="flex-between" style="margin-bottom: 0.7rem;"><span>Total</span><strong>₦{{ number_format($total, 2) }}</strong></div>
+                    <div class="flex-between" style="margin-bottom: 0.7rem;"><span>Total</span><strong>{{ $formatMoney($total) }}</strong></div>
                     <button class="btn btn-primary btn-block" type="button">Checkout</button>
                 </div>
             </div>
