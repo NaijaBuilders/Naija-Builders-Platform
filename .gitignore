@@ -2,7 +2,10 @@ legacy-backup/
 .venv/
 mobile/app/node_modules/
 mobile/app/.expo/
+mobile/app/.expo-home/
 mobile/app/.expo-shared/
+mobile/app/.env.local
+mobile/app/.expo-start*.log
 mobile/app/android/
 mobile/app/ios/
 mobile/app/web-build/
