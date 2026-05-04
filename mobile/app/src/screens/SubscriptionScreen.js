@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import ScreenWrapper from '../components/ScreenWrapper';
+import { AppButton, Badge, Card, ErrorBanner, LoadingState, ScreenHeader } from '../components/ui';
 import { api } from '../services/api';
-import { colors, fonts } from '../styles/theme';
+import { colors, spacing } from '../styles/theme';
 
 // Maps to GET/POST /api/mobile/subscription (Mobile/SubscriptionController).
 export default function SubscriptionScreen() {
   const [plans, setPlans] = useState([]);
   const [activePlan, setActivePlan] = useState('standard');
+  const [role, setRole] = useState('builder');
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -16,8 +19,11 @@ export default function SubscriptionScreen() {
         const response = await api.getSubscription();
         setPlans(response.data.plans || []);
         setActivePlan(response.data.active_plan || 'standard');
+        setRole(response.data.role || 'builder');
       } catch (err) {
-        setError('Unable to load subscription plans.');
+        setError(err?.response?.data?.message || 'Unable to load subscription plans.');
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -29,80 +35,63 @@ export default function SubscriptionScreen() {
       const response = await api.updateSubscription({ subscription_plan: planCode });
       setActivePlan(response.data.active_plan || planCode);
     } catch (err) {
-      setError('Unable to update plan.');
+      setError(err?.response?.data?.message || 'Unable to update plan.');
     }
   };
 
   return (
     <ScreenWrapper>
-      <Text style={styles.title}>Subscription</Text>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      <ScreenHeader title="Subscription" subtitle={role === 'supplier' ? 'Supplier marketplace plans and visibility tools.' : 'Buyer plans for saved products, priority messaging, and procurement workflows.'} />
+      <ErrorBanner message={error} />
+      {isLoading ? <LoadingState label="Loading plans..." /> : null}
       {plans.map((plan) => (
-        <View key={plan.code} style={styles.card}>
-          <Text style={styles.cardTitle}>{plan.name}</Text>
-          <Text style={styles.meta}>{plan.price}</Text>
+        <Card key={plan.code} style={styles.cardGap}>
+          <View style={styles.planHeader}>
+            <Text style={styles.cardTitle}>{plan.name}</Text>
+            {activePlan === plan.code ? <Badge label="Current" tone="success" /> : null}
+          </View>
+          <Text style={styles.price}>{plan.price}</Text>
           <Text style={styles.meta}>{plan.description}</Text>
-          <Pressable
-            style={[styles.primaryButton, activePlan === plan.code && styles.primaryButtonActive]}
+          {(plan.benefits || []).map((benefit) => <Text key={benefit} style={styles.benefit}>- {benefit}</Text>)}
+          <AppButton
+            label={activePlan === plan.code ? 'Current Plan' : 'Select Plan'}
+            variant={activePlan === plan.code ? 'soft' : 'primary'}
             onPress={() => handleSelect(plan.code)}
-          >
-            <Text
-              style={[
-                styles.primaryButtonText,
-                activePlan === plan.code && styles.primaryButtonTextActive,
-              ]}
-            >
-              {activePlan === plan.code ? 'Current Plan' : 'Select Plan'}
-            </Text>
-          </Pressable>
-        </View>
+          />
+        </Card>
       ))}
     </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  title: {
-    fontSize: 24,
-    fontFamily: fonts.heading,
-    color: colors.ink,
-    marginBottom: 12,
+  cardGap: {
+    marginBottom: spacing.md,
   },
-  card: {
-    padding: 16,
-    marginBottom: 12,
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
+  planHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.sm,
+    justifyContent: 'space-between',
   },
   cardTitle: {
-    fontFamily: fonts.heading,
-    fontSize: 16,
+    color: colors.ink,
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  price: {
+    color: colors.accent,
+    fontSize: 18,
+    fontWeight: '800',
+    marginTop: 6,
   },
   meta: {
     color: colors.muted,
     marginTop: 4,
   },
-  primaryButton: {
-    marginTop: 12,
-    backgroundColor: colors.accent,
-    paddingVertical: 10,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  primaryButtonActive: {
-    backgroundColor: colors.accentSoft,
-  },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  primaryButtonTextActive: {
-    color: colors.accent,
-  },
-  error: {
-    color: '#B23A3A',
-    marginBottom: 8,
+  benefit: {
+    color: colors.ink,
+    marginTop: 6,
   },
 });

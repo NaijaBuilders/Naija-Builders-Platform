@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import ScreenWrapper from '../components/ScreenWrapper';
+import { AppButton, Card, ErrorBanner, ScreenHeader, TextField } from '../components/ui';
 import { api } from '../services/api';
-import { colors, fonts } from '../styles/theme';
+import { colors, radius, spacing } from '../styles/theme';
 
 // Maps to POST /api/mobile/listings (Mobile/ListingController@store).
 export default function CreateListingScreen() {
@@ -15,6 +17,8 @@ export default function CreateListingScreen() {
     stock_qty: '',
     status: 'active',
   });
+  const [images, setImages] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -22,127 +26,163 @@ export default function CreateListingScreen() {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  const pickImages = async () => {
+    setError('');
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      setError('Photo library permission is required to upload listing images.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      allowsMultipleSelection: true,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.85,
+      selectionLimit: 10,
+    });
+
+    if (result.canceled) {
+      return;
+    }
+
+    setImages((current) => {
+      const nextImages = [...current, ...(result.assets || [])];
+      return nextImages.slice(0, 10);
+    });
+  };
+
+  const removeImage = (uri) => {
+    setImages((current) => current.filter((image) => image.uri !== uri));
+  };
+
   const handleSubmit = async () => {
     setError('');
     setSuccess('');
+    if (images.length < 3) {
+      setError('Please add at least 3 product images.');
+      return;
+    }
 
+    setIsSubmitting(true);
     try {
       const formData = new FormData();
       Object.entries(form).forEach(([key, value]) => {
         formData.append(key, value);
       });
 
-      // Image picker integration should append at least 3 images to `images[]`.
+      images.forEach((image, index) => {
+        const uriParts = String(image.uri || '').split('.');
+        const extension = (uriParts.pop() || 'jpg').toLowerCase();
+        formData.append('images[]', {
+          uri: image.uri,
+          name: `listing-${index + 1}.${extension}`,
+          type: image.mimeType || `image/${extension === 'jpg' ? 'jpeg' : extension}`,
+        });
+      });
+
       await api.createListing(formData);
       setSuccess('Listing created successfully.');
+      setForm({
+        name: '',
+        category: '',
+        description: '',
+        price: '',
+        price_unit: 'item',
+        stock_qty: '',
+        status: 'active',
+      });
+      setImages([]);
     } catch (err) {
       const message = err?.response?.data?.message || 'Unable to create listing.';
       setError(message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <ScreenWrapper>
-      <Text style={styles.title}>Create Listing</Text>
-      <View style={styles.card}>
-        <Text style={styles.label}>Name</Text>
-        <TextInput style={styles.input} value={form.name} onChangeText={(value) => updateField('name', value)} />
+      <ScreenHeader title="Create Listing" subtitle="Publish materials with clear photos, pricing, stock, and status." />
+      <Card>
+        <TextField label="Name" value={form.name} onChangeText={(value) => updateField('name', value)} />
 
-        <Text style={styles.label}>Category</Text>
-        <TextInput style={styles.input} value={form.category} onChangeText={(value) => updateField('category', value)} />
+        <TextField label="Category" value={form.category} onChangeText={(value) => updateField('category', value)} />
 
-        <Text style={styles.label}>Description</Text>
-        <TextInput
-          style={[styles.input, styles.textArea]}
+        <TextField
+          label="Description"
           multiline
           value={form.description}
           onChangeText={(value) => updateField('description', value)}
         />
 
-        <Text style={styles.label}>Price</Text>
-        <TextInput
-          style={styles.input}
+        <TextField
+          label="Price"
           keyboardType="numeric"
           value={form.price}
           onChangeText={(value) => updateField('price', value)}
         />
 
-        <Text style={styles.label}>Price Unit</Text>
-        <TextInput style={styles.input} value={form.price_unit} onChangeText={(value) => updateField('price_unit', value)} />
+        <TextField label="Price Unit" value={form.price_unit} onChangeText={(value) => updateField('price_unit', value)} />
 
-        <Text style={styles.label}>Stock Quantity</Text>
-        <TextInput
-          style={styles.input}
+        <TextField
+          label="Stock Quantity"
           keyboardType="numeric"
           value={form.stock_qty}
           onChangeText={(value) => updateField('stock_qty', value)}
         />
 
-        <Text style={styles.label}>Status</Text>
-        <TextInput style={styles.input} value={form.status} onChangeText={(value) => updateField('status', value)} />
+        <TextField label="Status" value={form.status} onChangeText={(value) => updateField('status', value)} />
 
-        <Text style={styles.helperText}>Add at least 3 product images via an image picker.</Text>
+        <View style={styles.imageHeader}>
+          <Text style={styles.helperText}>Product Images ({images.length}/10)</Text>
+          <AppButton label="Add Images" variant="soft" size="sm" onPress={pickImages} />
+        </View>
+        <View style={styles.imageGrid}>
+          {images.map((image) => (
+            <Pressable key={image.uri} onPress={() => removeImage(image.uri)}>
+              <Image source={{ uri: image.uri }} style={styles.previewImage} />
+              <Text style={styles.removeImageText}>Remove</Text>
+            </Pressable>
+          ))}
+        </View>
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        <ErrorBanner message={error} />
         {success ? <Text style={styles.success}>{success}</Text> : null}
 
-        <Pressable style={styles.primaryButton} onPress={handleSubmit}>
-          <Text style={styles.primaryButtonText}>Publish Listing</Text>
-        </Pressable>
-      </View>
+        <AppButton label={isSubmitting ? 'Publishing...' : 'Publish Listing'} onPress={handleSubmit} disabled={isSubmitting} />
+      </Card>
     </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  title: {
-    fontSize: 24,
-    fontFamily: fonts.heading,
-    color: colors.ink,
-    marginBottom: 12,
-  },
-  card: {
-    padding: 16,
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  label: {
-    marginTop: 12,
-    marginBottom: 6,
-    fontSize: 12,
-    textTransform: 'uppercase',
-    color: colors.muted,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: 12,
-    backgroundColor: '#FFFDF9',
-  },
-  textArea: {
-    minHeight: 90,
-  },
   helperText: {
-    marginTop: 10,
-    color: colors.muted,
+    color: colors.ink,
+    fontWeight: '800',
   },
-  primaryButton: {
-    marginTop: 16,
-    backgroundColor: colors.accent,
-    paddingVertical: 12,
-    borderRadius: 12,
+  imageHeader: {
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: spacing.md,
   },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
+  imageGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
   },
-  error: {
-    marginTop: 8,
-    color: '#B23A3A',
+  previewImage: {
+    backgroundColor: '#EEE6DC',
+    borderRadius: radius.sm,
+    height: 84,
+    width: 84,
+  },
+  removeImageText: {
+    color: colors.muted,
+    fontSize: 11,
+    marginTop: 3,
+    textAlign: 'center',
   },
   success: {
     marginTop: 8,

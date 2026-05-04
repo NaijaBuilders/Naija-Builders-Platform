@@ -2,6 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { authScreens, publicScreens, protectedScreens } from '../config/features';
+import { isSupplier } from '../utils/format';
 
 const Stack = createStackNavigator();
 
@@ -28,17 +29,20 @@ const AuthStack = () => (
   </Stack.Navigator>
 );
 
-const MainStack = () => (
-  <Stack.Navigator screenOptions={screenOptions}>
+const MainStack = ({ user }) => (
+  <Stack.Navigator
+    screenOptions={screenOptions}
+    initialRouteName={isSupplier(user) ? 'Dashboard' : 'BuyerDashboard'}
+  >
     {renderScreens(publicScreens)}
     {renderScreens(protectedScreens)}
   </Stack.Navigator>
 );
 
-export default function AppNavigator({ isAuthenticated }) {
+export default function AppNavigator({ isAuthenticated, user }) {
   return (
     <NavigationContainer>
-      {isAuthenticated ? <MainStack /> : <AuthStack />}
+      {isAuthenticated ? <MainStack user={user} /> : <AuthStack />}
     </NavigationContainer>
   );
 }

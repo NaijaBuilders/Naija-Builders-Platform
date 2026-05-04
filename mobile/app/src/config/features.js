@@ -16,6 +16,7 @@ import SavedProductsScreen from '../screens/SavedProductsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
 import SupportScreen from '../screens/SupportScreen';
+import SupplierKycScreen from '../screens/SupplierKycScreen';
 import TermsScreen from '../screens/TermsScreen';
 
 export const authScreens = [
@@ -44,4 +45,5 @@ export const protectedScreens = [
   { name: 'Settings', component: SettingsScreen },
   { name: 'SavedProducts', component: SavedProductsScreen },
   { name: 'Subscription', component: SubscriptionScreen },
+  { name: 'SupplierKyc', component: SupplierKycScreen },
 ];

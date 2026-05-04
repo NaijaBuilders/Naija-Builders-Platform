@@ -1,17 +1,29 @@
 import React from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
+import { RefreshControl, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
 import FadeInView from './FadeInView';
+import { colors } from '../styles/theme';
 
-export default function ScreenWrapper({ children }) {
+export default function ScreenWrapper({ children, refreshing = false, onRefresh, scroll = true }) {
+  const content = <FadeInView>{children}</FadeInView>;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.background}>
-        <View style={styles.blobPrimary} />
-        <View style={styles.blobSecondary} />
+        <View style={styles.topBand} />
       </View>
-      <ScrollView contentContainerStyle={styles.container}>
-        <FadeInView>{children}</FadeInView>
-      </ScrollView>
+      {scroll ? (
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          refreshControl={
+            onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} /> : undefined
+          }
+          contentContainerStyle={styles.container}
+        >
+          {content}
+        </ScrollView>
+      ) : (
+        <View style={styles.container}>{content}</View>
+      )}
     </SafeAreaView>
   );
 }
@@ -19,7 +31,7 @@ export default function ScreenWrapper({ children }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8F4EF',
+    backgroundColor: colors.background,
   },
   container: {
     padding: 20,
@@ -27,24 +39,14 @@ const styles = StyleSheet.create({
   },
   background: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#F8F4EF',
+    backgroundColor: colors.background,
   },
-  blobPrimary: {
+  topBand: {
     position: 'absolute',
-    top: -120,
-    right: -60,
-    width: 220,
-    height: 220,
-    borderRadius: 120,
-    backgroundColor: '#E4F0EB',
-  },
-  blobSecondary: {
-    position: 'absolute',
-    bottom: -120,
-    left: -80,
-    width: 260,
-    height: 260,
-    borderRadius: 140,
-    backgroundColor: '#F1E3D3',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 150,
+    backgroundColor: '#EEF4F1',
   },
 });

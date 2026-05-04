@@ -1,11 +1,17 @@
 import axios from 'axios';
 
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || '/api/mobile';
-export const MEDIA_BASE_URL = process.env.EXPO_PUBLIC_MEDIA_BASE_URL || '';
+const configuredApiBase = process.env.EXPO_PUBLIC_API_BASE_URL || '';
+
+export const API_BASE_URL = configuredApiBase || 'http://10.0.2.2:8000/api/mobile';
+export const API_ORIGIN = API_BASE_URL.replace(/\/api\/mobile\/?$/, '');
+export const MEDIA_BASE_URL = process.env.EXPO_PUBLIC_MEDIA_BASE_URL || API_ORIGIN;
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 20000,
+  headers: {
+    Accept: 'application/json',
+  },
 });
 
 export const setAuthToken = (token) => {

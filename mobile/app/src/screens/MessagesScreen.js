@@ -1,26 +1,38 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import ScreenWrapper from '../components/ScreenWrapper';
+import { EmptyState, ErrorBanner, LoadingState, ScreenHeader } from '../components/ui';
+import { AuthContext } from '../contexts/AuthContext';
 import { api } from '../services/api';
-import { colors, fonts } from '../styles/theme';
+import { colors, radius, spacing } from '../styles/theme';
 
 // Maps to /api/mobile/messages endpoints (Mobile/MessageController).
 export default function MessagesScreen({ route }) {
+  const { user } = useContext(AuthContext);
   const initialReceiverId = route?.params?.receiver_id || 0;
   const [contacts, setContacts] = useState([]);
   const [threadMessages, setThreadMessages] = useState([]);
   const [selectedContactId, setSelectedContactId] = useState(initialReceiverId);
+  const [selectedContact, setSelectedContact] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  const loadMessages = async (contactId) => {
+  const loadMessages = async (contactId, refreshing = false) => {
+    refreshing ? setIsRefreshing(true) : setIsLoading(true);
+    setError('');
     try {
       const response = await api.getMessages({ contact_id: contactId });
       setContacts(response.data.contacts || []);
       setThreadMessages(response.data.thread_messages || []);
       setSelectedContactId(response.data.selected_contact_id || contactId);
+      setSelectedContact(response.data.selected_contact || null);
     } catch (err) {
-      setError('Unable to load messages.');
+      setError(err?.response?.data?.message || 'Unable to load messages.');
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -36,16 +48,17 @@ export default function MessagesScreen({ route }) {
     try {
       await api.sendMessage({ receiver_id: selectedContactId, content: message.trim() });
       setMessage('');
-      await loadMessages(selectedContactId);
+      await loadMessages(selectedContactId, true);
     } catch (err) {
-      setError('Unable to send message.');
+      setError(err?.response?.data?.message || 'Unable to send message.');
     }
   };
 
   return (
-    <ScreenWrapper>
-      <Text style={styles.title}>Messages</Text>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+    <ScreenWrapper refreshing={isRefreshing} onRefresh={() => loadMessages(selectedContactId, true)}>
+      <ScreenHeader title="Messages" subtitle="Keep buyer and supplier conversations clear and project-focused." />
+      <ErrorBanner message={error} />
+      {isLoading ? <LoadingState label="Loading messages..." /> : null}
       <FlatList
         horizontal
         data={contacts}
@@ -60,14 +73,17 @@ export default function MessagesScreen({ route }) {
             <Text style={[styles.contactText, item.id === selectedContactId && styles.contactTextActive]}>
               {item.full_name || item.company || 'Contact'}
             </Text>
+            {item.unread_count > 0 ? <Text style={styles.unread}>{item.unread_count}</Text> : null}
           </Pressable>
         )}
       />
 
       <View style={styles.threadCard}>
-        {threadMessages.length === 0 ? <Text style={styles.meta}>No conversation yet.</Text> : null}
+        {selectedContact ? <Text style={styles.threadTitle}>{selectedContact.full_name || selectedContact.company || 'Conversation'}</Text> : null}
+        {!isLoading && contacts.length === 0 ? <EmptyState title="No contacts yet" body="Message a supplier from a material detail page to start a conversation." /> : null}
+        {!isLoading && contacts.length > 0 && threadMessages.length === 0 ? <Text style={styles.meta}>No conversation yet. Send the first message.</Text> : null}
         {threadMessages.map((msg) => (
-          <View key={msg.id} style={styles.messageBubble}>
+          <View key={msg.id} style={[styles.messageBubble, msg.sender_id === user?.id ? styles.ownBubble : styles.otherBubble]}>
             <Text style={styles.messageText}>{msg.content}</Text>
             <Text style={styles.messageMeta}>{msg.created_at}</Text>
           </View>
@@ -90,15 +106,13 @@ export default function MessagesScreen({ route }) {
 }
 
 const styles = StyleSheet.create({
-  title: {
-    fontSize: 24,
-    fontFamily: fonts.heading,
-    color: colors.ink,
-  },
   contactList: {
     marginVertical: 12,
   },
   contactChip: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 6,
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 16,
@@ -118,6 +132,16 @@ const styles = StyleSheet.create({
     color: colors.accent,
     fontWeight: '600',
   },
+  unread: {
+    backgroundColor: colors.danger,
+    borderRadius: 999,
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '800',
+    overflow: 'hidden',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
   threadCard: {
     padding: 14,
     backgroundColor: colors.card,
@@ -126,11 +150,24 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     minHeight: 200,
   },
+  threadTitle: {
+    color: colors.ink,
+    fontWeight: '800',
+    marginBottom: spacing.sm,
+  },
   messageBubble: {
     padding: 10,
-    borderRadius: 12,
-    backgroundColor: '#F4F1EC',
+    borderRadius: radius.sm,
     marginBottom: 8,
+    maxWidth: '88%',
+  },
+  ownBubble: {
+    alignSelf: 'flex-end',
+    backgroundColor: colors.accentSoft,
+  },
+  otherBubble: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#F4F1EC',
   },
   messageText: {
     color: colors.ink,

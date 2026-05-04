@@ -1,83 +1,115 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import ScreenWrapper from '../components/ScreenWrapper';
+import { EmptyState, ErrorBanner, LoadingState, MetricCard, ProductCard, QuickAction, ScreenHeader } from '../components/ui';
+import { AuthContext } from '../contexts/AuthContext';
 import { api } from '../services/api';
-import { colors, fonts } from '../styles/theme';
+import { colors, spacing } from '../styles/theme';
+import { formatMoney } from '../utils/format';
 
 // Maps to GET /api/mobile/dashboard/buyer (Mobile/DashboardController@buyer).
-export default function BuyerDashboardScreen() {
+export default function BuyerDashboardScreen({ navigation }) {
+  const { user } = useContext(AuthContext);
   const [metrics, setMetrics] = useState(null);
   const [recommended, setRecommended] = useState([]);
+  const [savedIds, setSavedIds] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    const loadBuyerDashboard = async () => {
-      try {
-        const response = await api.getBuyerDashboard();
-        setMetrics(response.data.metrics || null);
-        setRecommended(response.data.recommended_materials || []);
-      } catch (err) {
-        setError('Unable to load buyer dashboard.');
-      }
-    };
+  const loadBuyerDashboard = async (refreshing = false) => {
+    refreshing ? setIsRefreshing(true) : setIsLoading(true);
+    setError('');
+    try {
+      const response = await api.getBuyerDashboard();
+      setMetrics(response.data.metrics || null);
+      setRecommended(response.data.recommended_materials || []);
+      setSavedIds(response.data.saved_material_ids || []);
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Unable to load buyer dashboard.');
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
 
+  useEffect(() => {
     loadBuyerDashboard();
   }, []);
 
+  const handleSave = async (item) => {
+    try {
+      await api.saveProduct({ material_id: item.id });
+      setSavedIds((current) => (current.includes(item.id) ? current : [...current, item.id]));
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Unable to save product.');
+    }
+  };
+
+  const handleCart = async (item) => {
+    try {
+      await api.addCartItem({ material_id: item.id, quantity: 1 });
+      navigation.navigate('Cart');
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Unable to add item to cart.');
+    }
+  };
+
   return (
-    <ScreenWrapper>
-      <Text style={styles.title}>Buyer Dashboard</Text>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      {!metrics ? null : (
-        <View style={styles.card}>
-          <Text style={styles.metric}>Cart Items: {metrics.cart_item_count}</Text>
-          <Text style={styles.metric}>Orders: {metrics.order_count}</Text>
-          <Text style={styles.metric}>Pending Orders: {metrics.pending_orders}</Text>
-          <Text style={styles.metric}>Unread Messages: {metrics.unread_messages}</Text>
-          <Text style={styles.metric}>Total Spent: NGN {metrics.total_spent}</Text>
+    <ScreenWrapper refreshing={isRefreshing} onRefresh={() => loadBuyerDashboard(true)}>
+      <ScreenHeader title={`Hi, ${user?.name || 'Buyer'}`} subtitle="Track your cart, saved materials, orders, and supplier conversations." />
+      <ErrorBanner message={error} />
+      {isLoading ? <LoadingState label="Loading buyer dashboard..." /> : null}
+      {metrics ? (
+        <View style={styles.metricGrid}>
+          <MetricCard label="Cart Items" value={metrics.cart_item_count} tone="accent" />
+          <MetricCard label="Orders" value={metrics.order_count} />
+          <MetricCard label="Pending Orders" value={metrics.pending_orders} tone="warning" />
+          <MetricCard label="Unread Messages" value={metrics.unread_messages} />
+          <MetricCard label="Total Spent" value={formatMoney(metrics.total_spent)} tone="success" />
         </View>
-      )}
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Recommended Materials</Text>
-        {recommended.map((item) => (
-          <Text key={item.id} style={styles.meta}>
-            {item.name} - NGN {item.price}
-          </Text>
-        ))}
+      ) : null}
+
+      <View style={styles.quickGrid}>
+        <QuickAction label="Browse Materials" detail="Find current listings." onPress={() => navigation.navigate('Materials')} />
+        <QuickAction label="Cart" detail="Review quantities." onPress={() => navigation.navigate('Cart')} />
+        <QuickAction label="Saved Products" detail="Open your shortlist." onPress={() => navigation.navigate('SavedProducts')} />
+        <QuickAction label="Messages" detail="Talk to suppliers." onPress={() => navigation.navigate('Messages')} />
       </View>
+
+      <Text style={styles.sectionTitle}>Recommended Materials</Text>
+      {!isLoading && recommended.length === 0 ? <EmptyState title="No recommendations yet" body="Browse materials to discover products for your project." /> : null}
+      {recommended.map((item) => (
+        <ProductCard
+          key={item.id}
+          item={item}
+          isSaved={savedIds.includes(item.id)}
+          onPress={() => navigation.navigate('MaterialDetail', { materialId: item.id })}
+          onSave={() => handleSave(item)}
+          onCart={() => handleCart(item)}
+        />
+      ))}
     </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  title: {
-    fontSize: 24,
-    fontFamily: fonts.heading,
-    color: colors.ink,
-    marginBottom: 12,
+  metricGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
   },
-  card: {
-    padding: 16,
-    marginBottom: 12,
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  metric: {
-    color: colors.ink,
-    marginBottom: 8,
+  quickGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
   },
   sectionTitle: {
-    fontFamily: fonts.heading,
-    marginBottom: 8,
-  },
-  meta: {
-    color: colors.muted,
-    marginBottom: 4,
-  },
-  error: {
-    color: '#B23A3A',
-    marginBottom: 8,
+    color: colors.ink,
+    fontSize: 19,
+    fontWeight: '800',
+    marginBottom: spacing.sm,
   },
 });
