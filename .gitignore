@@ -1,6 +1,12 @@
 legacy-backup/
 .venv/
 
+# OS and editor workspace files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
 # Local deployment bundles and temporary cPanel files
 deploy/
 
