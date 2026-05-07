@@ -26,6 +26,10 @@ class AppServiceProvider extends ServiceProvider
             throw new RuntimeException('This application is configured for MySQL only. Set DB_CONNECTION=mysql in your .env file.');
         }
 
+        if ($this->app->runningInConsole() || request()->is('api/*')) {
+            return;
+        }
+
         // Fail fast if MySQL is not reachable so local/prod behavior stays consistent.
         DB::connection('mysql')->getPdo();
 

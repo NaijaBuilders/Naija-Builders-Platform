@@ -17,17 +17,21 @@ class CheckDatabaseHealth
      */
     public function handle(Request $request, Closure $next): Response
     {
+        if ($request->is('api/mobile/health')) {
+            return $next($request);
+        }
+
         // Check if database is accessible
         try {
             DB::connection()->getPdo();
         } catch (QueryException) {
             // Database is unavailable - flush any existing sessions
-            if ($request->session()->has('legacy_user_id')) {
+            if ($request->hasSession() && $request->session()->has('legacy_user_id')) {
                 $request->session()->flush();
             }
 
             // If requesting an API endpoint
-            if ($request->expectsJson()) {
+            if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
                     'error' => 'Database unavailable',
                     'message' => 'The application database is currently unavailable. Please check your database connection.',
@@ -39,11 +43,11 @@ class CheckDatabaseHealth
                 ->with('database_error', 'Database connection failed. Please try again later.');
         } catch (\Exception) {
             // Any other connection error
-            if ($request->session()->has('legacy_user_id')) {
+            if ($request->hasSession() && $request->session()->has('legacy_user_id')) {
                 $request->session()->flush();
             }
 
-            if ($request->expectsJson()) {
+            if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
                     'error' => 'Service unavailable',
                     'message' => 'The application is temporarily unavailable.',

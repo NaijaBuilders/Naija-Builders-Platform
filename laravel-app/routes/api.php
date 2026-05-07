@@ -6,6 +6,7 @@ use App\Http\Controllers\Mobile\DashboardController;
 use App\Http\Controllers\Mobile\ListingController;
 use App\Http\Controllers\Mobile\MaterialsController;
 use App\Http\Controllers\Mobile\MessageController;
+use App\Http\Controllers\Mobile\OrderController;
 use App\Http\Controllers\Mobile\ProfileController;
 use App\Http\Controllers\Mobile\SavedMaterialController;
 use App\Http\Controllers\Mobile\StaticPageController;
@@ -14,6 +15,11 @@ use App\Http\Controllers\Mobile\SupportController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('mobile')->group(function (): void {
+    Route::get('/health', fn () => response()->json([
+        'status' => 'ok',
+        'app' => 'naijabuilders-mobile-api',
+    ]));
+
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
 
@@ -42,6 +48,9 @@ Route::prefix('mobile')->group(function (): void {
         Route::post('/cart/items', [CartController::class, 'add']);
         Route::put('/cart/items/{materialId}', [CartController::class, 'update']);
         Route::delete('/cart/items/{materialId}', [CartController::class, 'remove']);
+
+        Route::get('/orders', [OrderController::class, 'index']);
+        Route::get('/orders/{orderId}', [OrderController::class, 'show']);
 
         Route::get('/messages', [MessageController::class, 'index']);
         Route::post('/messages', [MessageController::class, 'store']);

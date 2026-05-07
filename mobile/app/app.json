@@ -1,12 +1,24 @@
 {
   "expo": {
-    "name": "NaijaBuilders",
+    "name": "NaijaBuilders Mobile",
     "slug": "naijabuilders-mobile",
     "version": "0.1.0",
     "orientation": "portrait",
+    "scheme": "naijabuilders",
+    "userInterfaceStyle": "light",
     "splash": {
-      "backgroundColor": "#F8F4EF"
+      "image": "./assets/images/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F4F7FB"
     },
-    "assetBundlePatterns": ["**/*"]
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "plugins": [
+      "expo-font"
+    ]
   }
 }
