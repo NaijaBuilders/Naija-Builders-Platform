@@ -472,24 +472,19 @@ function handleLogout(event) {
     }
 }
 
-// Add to cart placeholder
 function addToCart(productId) {
-    console.log('Added product to cart:', productId);
-    alert('Product added to cart!');
+    if (productId) {
+        window.location.href = 'material-detail.php?id=' + encodeURIComponent(productId);
+    }
 }
 
-// View product details placeholder
 function viewProduct(productId) {
-    console.log('Viewing product:', productId);
-    // In production, navigate to product detail page
     window.location.href = 'material-detail.php?id=' + productId;
 }
 
 // Filter products
 function filterProducts(event) {
     event.preventDefault();
-    console.log('Applying filters...');
-    // In production, submit filters to server
     const form = event.target.closest('form');
     if (form) {
         form.submit();
@@ -515,7 +510,7 @@ function smoothScroll(target) {
 // Utility: Format currency
 function formatCurrency(amount) {
     const currency = window.NaijaBuildersCurrency || {};
-    const symbol = currency.symbol || '₦';
+    const symbol = currency.symbol || '\u20A6';
     const rate = Number(currency.rateNgnPerUnit || 1);
     const convertedAmount = rate > 0 ? (parseFloat(amount || 0) / rate) : parseFloat(amount || 0);
 

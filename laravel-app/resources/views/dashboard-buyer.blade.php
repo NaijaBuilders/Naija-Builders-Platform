@@ -138,7 +138,7 @@
     <div style="width: 100%; max-width: 460px; background: white; border-radius: var(--rounded-lg); box-shadow: var(--shadow-xl); padding: 1.2rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.8rem;">
             <h3 style="margin: 0; font-size: 1.2rem;">Save Product</h3>
-            <button id="closeSaveProductModal" type="button" style="border: 0; background: transparent; font-size: 1.3rem; cursor: pointer;">×</button>
+            <button id="closeSaveProductModal" type="button" aria-label="Close save product dialog" style="border: 0; background: transparent; font-size: 1.3rem; cursor: pointer;">×</button>
         </div>
         <p id="saveProductLabel" style="margin: 0 0 1rem; color: var(--neutral-600);">Choose where to save this product.</p>
         <form method="POST" action="/saved-products.php">

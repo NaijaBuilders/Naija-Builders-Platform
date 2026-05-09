@@ -1,6 +1,8 @@
 @php($pageTitle = 'Home')
 @extends('layouts.app')
 
+@section('meta_description', 'Source construction materials from trusted Nigerian suppliers, compare listings, and manage buyer or supplier workflows on NaijaBuilders.')
+
 @section('content')
 <section id="home" class="hero">
     <div class="container hero-container">
@@ -13,7 +15,7 @@
             </p>
             <div class="hero-actions">
                 <a href="/materials.php" class="btn btn-primary btn-lg">Browse Materials</a>
-                <a href="/services.php" class="btn btn-outline btn-lg">Hire a Service</a>
+                <a href="/support.php" class="btn btn-outline btn-lg">Request Sourcing Help</a>
                 <a href="/signup.php" class="btn btn-secondary btn-lg">Become a Supplier</a>
             </div>
         </div>

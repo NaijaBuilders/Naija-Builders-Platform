@@ -33,6 +33,11 @@
         'symbol' => (string) ($currencyDetails['symbol'] ?? 'NGN'),
         'rateNgnPerUnit' => $currencyRate > 0 ? $currencyRate : 1,
     ];
+    $defaultMetaDescription = 'NaijaBuilders connects construction buyers with trusted material suppliers across Nigeria.';
+    $metaDescription = trim($__env->yieldContent('meta_description'));
+    if ($metaDescription === '') {
+        $metaDescription = $defaultMetaDescription;
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="en" @if ($themeFromCookie !== '') data-theme="{{ $themeFromCookie }}" @endif>
@@ -40,7 +45,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="description" content="NaijaBuilders - Nigerian Construction Materials Marketplace connecting builders, developers and homeowners with trusted local suppliers.">
+    <meta name="description" content="{{ $metaDescription }}">
     <meta name="keywords" content="construction materials, cement, steel, wood, Nigeria, builders, suppliers">
     <meta name="author" content="NaijaBuilders Team">
     <meta property="og:title" content="NaijaBuilders – Nigerian Construction Materials Marketplace">
@@ -80,6 +85,7 @@
     </script>
     <link rel="stylesheet" href="{{ asset('assets/css/professional.css') }}?v={{ $cssVersion }}">
     <title>{{ isset($pageTitle) ? $pageTitle . ' | NaijaBuilders' : 'NaijaBuilders – Nigerian Construction Materials Marketplace' }}</title>
+    @stack('head')
 </head>
 <body @if ($shouldRunOnboardingTour) data-start-onboarding-tour="1" @endif>
 <header class="navbar">
@@ -137,8 +143,14 @@
             @endif
 
             @if ($legacyUser)
-                <a href="/saved-products" class="top-icon" aria-label="Saved products">
-                    <span class="top-icon-mark">⭐</span>
+                <a href="/saved-products" class="top-icon top-icon--saved" aria-label="Saved products">
+                    <span class="top-icon-mark top-icon-mark--save" aria-hidden="true">
+                        <svg class="save-ribbon-icon" viewBox="0 0 24 24" focusable="false">
+                            <path class="save-ribbon-icon__body" d="M7.25 4.55c0-.9.73-1.63 1.63-1.63h6.24c.9 0 1.63.73 1.63 1.63v15.62L12 17.34l-4.75 2.83V4.55Z" />
+                            <path class="save-ribbon-icon__crease" d="M9.4 6.25h5.2" />
+                            <path class="save-ribbon-icon__notch" d="M12 17.34v-3.48" />
+                        </svg>
+                    </span>
                 </a>
             @endif
 
@@ -289,7 +301,7 @@
             <h3>For Suppliers</h3>
             <a href="/signup.php">Become a Supplier</a>
             <a href="/dashboard.php">Dashboard</a>
-            <a href="#">Pricing</a>
+            <a href="/subscription.php">Pricing</a>
         </div>
         <div class="footer-section">
             <h3>Contact</h3>

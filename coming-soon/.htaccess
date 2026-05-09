@@ -1,0 +1,17 @@
+DirectoryIndex index.html
+
+<IfModule mod_mime.c>
+  AddType text/css .css
+  AddType application/javascript .js
+</IfModule>
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.(css|js|png|jpg|jpeg|webp)$">
+    Header set Cache-Control "public, max-age=3600"
+  </FilesMatch>
+</IfModule>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^$ index.html [L]
+</IfModule>

@@ -1,6 +1,8 @@
 @php($pageTitle = 'Product Details')
 @extends('layouts.app')
 
+@section('meta_description', 'Review product details, supplier information, stock, ratings, and contact options for construction materials on NaijaBuilders.')
+
 @section('content')
 <div class="container" style="margin: 2rem auto;">
     <style>
@@ -815,11 +817,11 @@
                     </ul>
                 </div>
 
+                @php($detailIsNegotiable = (int) ($material->is_negotiable ?? 0) === 1)
                 <div class="placeholder-content-side">
                     <div class="placeholder-price">
-                        <span class="material-brand-tag" style="background: var(--accent-success); color: var(--white); border-color: transparent;">-10%</span>
+                        <span class="material-brand-tag" style="background: {{ $detailIsNegotiable ? 'var(--secondary-color)' : 'var(--neutral-100)' }}; color: {{ $detailIsNegotiable ? 'var(--white)' : 'var(--neutral-700)' }}; border-color: {{ $detailIsNegotiable ? 'transparent' : 'var(--neutral-200)' }};">{{ $detailIsNegotiable ? 'Negotiable' : 'Fixed Price' }}</span>
                         <p class="material-price-main">{{ $formatMoney((float) $material->price) }}</p>
-                        <span class="material-old-price">{{ $formatMoney((float) $material->price * 1.1) }}</span>
                     </div>
 
                     <form method="POST" action="/cart/add.php" style="margin: 0; width: 100%;">
@@ -827,27 +829,14 @@
                         <input type="hidden" name="material_id" value="{{ (int) $material->id }}">
                         <div class="placeholder-qty">
                             <button type="button" class="placeholder-btn-sm" aria-label="Decrease quantity" data-qty-action="decrease">-</button>
-                            <input type="number" min="1" value="1" name="quantity" class="material-qty-input" data-qty-input>
+                            <input type="number" min="1" max="{{ max(1, $stockQuantity) }}" value="1" name="quantity" class="material-qty-input" data-qty-input>
                             <button type="button" class="placeholder-btn-sm" aria-label="Increase quantity" data-qty-action="increase">+</button>
                         </div>
 
-                        <div class="placeholder-delivery" style="margin-top: 0.6rem;">
-                            <label class="placeholder-delivery-item" for="delivery-standard">
-                                <input id="delivery-standard" type="radio" name="delivery_option" value="standard" checked>
-                                <span class="delivery-option-label">Standard Delivery</span>
-                            </label>
-                            <label class="placeholder-delivery-item" for="delivery-express">
-                                <input id="delivery-express" type="radio" name="delivery_option" value="express">
-                                <span class="delivery-option-label">Express Delivery</span>
-                            </label>
-                            <label class="placeholder-delivery-item" for="delivery-pickup">
-                                <input id="delivery-pickup" type="radio" name="delivery_option" value="pickup">
-                                <span class="delivery-option-label">Store Pickup</span>
-                            </label>
-                        </div>
+                        <p class="text-note" style="margin: 0.65rem 0 0; color: var(--neutral-600);">Delivery timing and fees are confirmed directly with the supplier.</p>
 
                         <div class="placeholder-actions">
-                            <button type="submit" class="placeholder-btn-lg is-primary" aria-label="Add to Cart">Add to Cart</button>
+                            <button type="submit" class="placeholder-btn-lg is-primary" aria-label="Add to Cart" @if ($stockQuantity <= 0) disabled @endif>{{ $stockQuantity > 0 ? 'Add to Cart' : 'Out of Stock' }}</button>
                             @if (session()->has('legacy_user_id'))
                                 <button type="button" class="placeholder-btn-lg" id="openSaveProductModal" aria-label="Save Product">{{ $isSaved ? 'Update Saved Category' : 'Save Product' }}</button>
                             @else
@@ -1036,7 +1025,7 @@
         <div style="width: 100%; max-width: 460px; background: white; border-radius: var(--rounded-lg); box-shadow: var(--shadow-xl); padding: 1.2rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.8rem;">
                 <h3 style="margin: 0; font-size: 1.2rem;">Save Product</h3>
-                <button id="closeSaveProductModal" type="button" style="border: 0; background: transparent; font-size: 1.3rem; cursor: pointer;">×</button>
+                <button id="closeSaveProductModal" type="button" aria-label="Close save product dialog" style="border: 0; background: transparent; font-size: 1.3rem; cursor: pointer;">×</button>
             </div>
             <p style="margin: 0 0 1rem; color: var(--neutral-600);">Choose where to save "{{ $material->name }}".</p>
             <form method="POST" action="/saved-products.php">
@@ -1097,7 +1086,11 @@
             button.addEventListener('click', function () {
                 const action = button.getAttribute('data-qty-action');
                 const currentValue = parseInt(qtyInput.value, 10) || 1;
-                const nextValue = action === 'decrease' ? Math.max(1, currentValue - 1) : currentValue + 1;
+                const maxValue = parseInt(qtyInput.getAttribute('max') || '0', 10);
+                let nextValue = action === 'decrease' ? Math.max(1, currentValue - 1) : currentValue + 1;
+                if (maxValue > 0) {
+                    nextValue = Math.min(nextValue, maxValue);
+                }
                 qtyInput.value = String(nextValue);
             });
         });

@@ -16,24 +16,24 @@
         <form method="POST" enctype="multipart/form-data" action="/create-listing.php">
             @csrf
             <div class="grid-2 gap-lg">
-                <div class="form-group"><label>Material Name</label><input type="text" name="name" required value="{{ old('name') }}"></div>
-                <div class="form-group"><label>Category</label><select name="category" required><option value="">Select category</option><option>Cement</option><option>Steel</option><option>Wood</option><option>Tiles</option><option>Electrical</option><option>Plumbing</option><option>General</option></select></div>
+                <div class="form-group"><label for="listing-name">Material Name</label><input id="listing-name" type="text" name="name" required value="{{ old('name') }}"></div>
+                <div class="form-group"><label for="listing-category">Category</label><select id="listing-category" name="category" required><option value="">Select category</option><option>Cement</option><option>Steel</option><option>Wood</option><option>Tiles</option><option>Electrical</option><option>Plumbing</option><option>General</option></select></div>
             </div>
-            <div class="form-group"><label>Description</label><textarea name="description" rows="5">{{ old('description') }}</textarea></div>
+            <div class="form-group"><label for="listing-description">Description</label><textarea id="listing-description" name="description" rows="5">{{ old('description') }}</textarea></div>
             <div class="grid-4 gap-lg">
-                <div class="form-group"><label>Price (NGN)</label><input type="number" min="0" step="0.01" name="price" required value="{{ old('price') }}"></div>
-                <div class="form-group"><label>Price Unit</label><select name="price_unit" required>@foreach ($priceUnits as $unit)<option value="{{ $unit }}" {{ old('price_unit', 'item') === $unit ? 'selected' : '' }}>{{ ucfirst(str_replace('_', ' ', $unit)) }}</option>@endforeach</select></div>
-                <div class="form-group"><label>Stock Quantity</label><input type="number" min="0" step="1" name="stock_qty" required value="{{ old('stock_qty', 0) }}"></div>
-                <div class="form-group"><label>Status</label><select name="status"><option value="active">Active</option><option value="inactive">Inactive</option><option value="out_of_stock">Out of Stock</option></select></div>
+                <div class="form-group"><label for="listing-price">Price (NGN)</label><input id="listing-price" type="number" min="0" step="0.01" name="price" required value="{{ old('price') }}"></div>
+                <div class="form-group"><label for="listing-price-unit">Price Unit</label><select id="listing-price-unit" name="price_unit" required>@foreach ($priceUnits as $unit)<option value="{{ $unit }}" {{ old('price_unit', 'item') === $unit ? 'selected' : '' }}>{{ ucfirst(str_replace('_', ' ', $unit)) }}</option>@endforeach</select></div>
+                <div class="form-group"><label for="listing-stock-qty">Stock Quantity</label><input id="listing-stock-qty" type="number" min="0" step="1" name="stock_qty" required value="{{ old('stock_qty', 0) }}"></div>
+                <div class="form-group"><label for="listing-status">Status</label><select id="listing-status" name="status"><option value="active">Active</option><option value="inactive">Inactive</option><option value="out_of_stock">Out of Stock</option></select></div>
             </div>
             <div class="form-group" style="margin-top: 1rem;">
-                <label>Pricing Type</label>
-                <select name="is_negotiable" required>
+                <label for="listing-is-negotiable">Pricing Type</label>
+                <select id="listing-is-negotiable" name="is_negotiable" required>
                     <option value="0" {{ old('is_negotiable', '0') === '0' ? 'selected' : '' }}>Fixed Price</option>
                     <option value="1" {{ old('is_negotiable') === '1' ? 'selected' : '' }}>Negotiable</option>
                 </select>
             </div>
-            <div class="form-group" style="margin-top: 1rem;"><label>Product Images (minimum 3)</label><input type="file" name="images[]" accept="image/jpeg,image/png,image/webp" multiple required></div>
+            <div class="form-group" style="margin-top: 1rem;"><label for="listing-images">Product Images (minimum 3)</label><input id="listing-images" type="file" name="images[]" accept="image/jpeg,image/png,image/webp" multiple required></div>
             <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;"><a href="/manage-listings.php" class="btn btn-outline">Cancel</a><button type="submit" class="btn btn-primary">Publish Listing</button></div>
         </form>
     </div></div>

@@ -4,6 +4,8 @@
 @endphp
 @extends('layouts.app')
 
+@section('meta_description', 'Browse construction materials from Nigerian suppliers, compare prices, stock, ratings, and save products for procurement planning.')
+
 @section('content')
 <div class="container materials-page page-shell">
     <style>
@@ -161,6 +163,10 @@
 
         .material-badge--discount {
             background: var(--accent-danger);
+        }
+
+        .material-badge--negotiable {
+            background: var(--secondary-color);
         }
 
         .material-card__content {
@@ -450,10 +456,7 @@
                         $isNew = $createdTimestamp !== false && $createdTimestamp >= strtotime('-14 days');
 
                         $isNegotiable = (int) ($material->is_negotiable ?? 0) === 1;
-                        $discountPercent = $isNegotiable ? 10 : 0;
-                        $originalPrice = $discountPercent > 0
-                            ? ((float) $material->price / (1 - ($discountPercent / 100)))
-                            : null;
+                        $stockQty = (int) ($material->stock_qty ?? 0);
                     @endphp
 
                     <article class="material-card card">
@@ -462,8 +465,8 @@
                                 @if ($isNew)
                                     <span class="material-badge material-badge--new">New</span>
                                 @endif
-                                @if ($discountPercent > 0)
-                                    <span class="material-badge material-badge--discount">-{{ $discountPercent }}%</span>
+                                @if ($isNegotiable)
+                                    <span class="material-badge material-badge--negotiable">Negotiable</span>
                                 @endif
                             </div>
 
@@ -495,13 +498,10 @@
                                     @endif
                                 </li>
                                 <li>{{ $material->location ?: 'Nigeria' }}</li>
-                                <li>{{ (int) ($material->stock_qty ?? 0) > 0 ? number_format((int) $material->stock_qty) . ' in stock' : 'Out of stock' }}</li>
+                                <li>{{ $stockQty > 0 ? number_format($stockQty) . ' in stock' : 'Out of stock' }}</li>
                             </ul>
 
                             <div class="material-price-wrap">
-                                @if ($originalPrice !== null)
-                                <span class="material-price-original">{{ $formatMoney($originalPrice) }}</span>
-                                @endif
                                 <span class="material-price-current">{{ $formatMoney((float) $material->price) }}</span>
                                 <span style="font-size: 0.8rem; color: var(--neutral-600);">/ {{ $unit }}</span>
                             </div>
@@ -511,13 +511,15 @@
                             @endif
 
                             <div class="material-actions">
-                                @if ($legacyUserId > 0)
+                                @if ($legacyUserId > 0 && $stockQty > 0)
                                     <form method="POST" action="/cart/add.php">
                                         @csrf
                                         <input type="hidden" name="material_id" value="{{ (int) $material->id }}">
                                         <input type="hidden" name="quantity" value="1">
                                         <button type="submit" class="btn btn-success">Add to basket</button>
                                     </form>
+                                @elseif ($stockQty <= 0)
+                                    <button type="button" class="btn btn-outline" disabled>Out of stock</button>
                                 @else
                                     <a href="/login.php" class="btn btn-success" style="text-decoration: none;">Login to add to basket</a>
                                 @endif
@@ -580,7 +582,7 @@
     <div style="width: 100%; max-width: 460px; background: white; border-radius: var(--rounded-lg); box-shadow: var(--shadow-xl); padding: 1.2rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.8rem;">
             <h3 style="margin: 0; font-size: 1.2rem;">Save Product</h3>
-            <button id="closeSaveProductModal" type="button" style="border: 0; background: transparent; font-size: 1.3rem; cursor: pointer;">×</button>
+            <button id="closeSaveProductModal" type="button" aria-label="Close save product dialog" style="border: 0; background: transparent; font-size: 1.3rem; cursor: pointer;">×</button>
         </div>
         <p id="saveProductLabel" style="margin: 0 0 1rem; color: var(--neutral-600);">Choose where to save this product.</p>
         <form method="POST" action="/saved-products">

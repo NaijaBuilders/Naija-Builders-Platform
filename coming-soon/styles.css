@@ -42,7 +42,7 @@ a {
 
 .hero-media {
   animation: slowZoom 18s ease-in-out infinite alternate;
-  background-image: url("assets/hero.jpg");
+  background-image: url("./assets/hero.jpg");
   background-position: center;
   background-size: cover;
   inset: 0;

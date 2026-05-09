@@ -691,6 +691,88 @@ a:hover {
     }
 }
 
+/* ===== Production Polish Utilities ===== */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible {
+    outline: 3px solid rgba(52, 152, 219, 0.38);
+    outline-offset: 3px;
+}
+
+.btn[aria-disabled="true"],
+.btn:disabled,
+.placeholder-btn-lg:disabled,
+.placeholder-btn-sm:disabled {
+    opacity: 0.58;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.empty-state {
+    padding: 2rem 1.2rem;
+    text-align: center;
+    color: var(--neutral-600);
+}
+
+.empty-state h3 {
+    margin: 0 0 0.45rem;
+    color: var(--neutral-900);
+}
+
+.empty-state p {
+    max-width: 44rem;
+    margin: 0 auto 1rem;
+}
+
+.summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--neutral-200);
+    color: var(--neutral-700);
+}
+
+.summary-row--total {
+    margin-top: 0.15rem;
+    border-bottom: 0;
+    color: var(--neutral-900);
+    font-size: 1.02rem;
+}
+
+.summary-note {
+    margin: 0.35rem 0 1rem;
+    color: var(--neutral-600);
+    font-size: 0.86rem;
+    line-height: 1.55;
+}
+
+.text-note {
+    color: var(--neutral-600);
+    font-size: 0.86rem;
+    line-height: 1.5;
+}
+
+.material-badge--negotiable {
+    background: var(--secondary-color);
+}
+
+html[data-theme="dark"] .empty-state h3,
+html[data-theme="dark"] .summary-row--total {
+    color: var(--neutral-50);
+}
+
+html[data-theme="dark"] .summary-row,
+html[data-theme="dark"] .summary-note,
+html[data-theme="dark"] .text-note {
+    color: var(--neutral-300);
+}
+
 @media (max-width: 480px) {
     .navbar-container {
         padding: 0 0.55rem;
@@ -1394,6 +1476,69 @@ a:hover {
 
 .top-icon-mark {
     font-size: 1rem;
+}
+
+.top-icon--saved {
+    color: var(--primary-color);
+    overflow: hidden;
+}
+
+.top-icon--saved::after {
+    content: '';
+    position: absolute;
+    right: 9px;
+    bottom: 8px;
+    width: 6px;
+    height: 6px;
+    border-radius: var(--rounded-full);
+    background: var(--secondary-color);
+    box-shadow: 0 0 0 2px var(--white);
+}
+
+.top-icon--saved:hover {
+    background: var(--primary-color);
+    color: var(--white);
+}
+
+.top-icon--saved:hover::after {
+    background: var(--white);
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+.top-icon-mark--save {
+    width: 22px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: currentColor;
+    line-height: 0;
+}
+
+.save-ribbon-icon {
+    width: 22px;
+    height: 24px;
+    display: block;
+    overflow: visible;
+    filter: drop-shadow(0 5px 7px rgba(11, 42, 91, 0.16));
+}
+
+.save-ribbon-icon__body {
+    fill: rgba(11, 42, 91, 0.08);
+    stroke: currentColor;
+    stroke-width: 2.15;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.save-ribbon-icon__crease,
+.save-ribbon-icon__notch {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.45;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.72;
 }
 
 .top-badge {
@@ -2267,6 +2412,19 @@ html[data-theme="dark"] .top-icon,
 html[data-theme="dark"] .btn-user-profile {
     background: #15233a;
     border-color: #2a3b5a;
+}
+
+html[data-theme="dark"] .top-icon--saved::after {
+    box-shadow: 0 0 0 2px #15233a;
+}
+
+html[data-theme="dark"] .top-icon--saved:hover {
+    background: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+html[data-theme="dark"] .top-icon--saved:hover::after {
+    box-shadow: 0 0 0 2px var(--secondary-color);
 }
 
 html[data-theme="dark"] .navbar-search-input {
