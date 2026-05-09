@@ -1,11 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   dashboardService,
+  listingService,
   messageService,
   orderService,
   productService,
   userService,
   type ProductListParams,
+  type SupplierListingListParams,
 } from '../services';
 import type {
   Category,
@@ -15,6 +17,7 @@ import type {
   Order,
   Product,
   QuickAction,
+  SupplierListing,
   UserRole,
 } from '../types';
 
@@ -88,6 +91,20 @@ export function useProduct(productId: string) {
 
 export function useCategories() {
   return useResource<Category[]>(() => productService.listCategories(), [], []);
+}
+
+export function useSupplierListings(
+  role: UserRole,
+  params: SupplierListingListParams = {}
+) {
+  return useResource<SupplierListing[]>(
+    () =>
+      role === 'supplier'
+        ? listingService.listSupplierListings(params)
+        : Promise.resolve([]),
+    [role, params.search, params.status],
+    []
+  );
 }
 
 export function useOrders(role: UserRole) {

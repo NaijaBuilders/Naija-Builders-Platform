@@ -134,11 +134,44 @@ export interface DashboardStat {
   tone: StatusTone;
 }
 
+export type QuickActionTarget =
+  | 'createListing'
+  | 'manageStock'
+  | 'orders'
+  | 'messages';
+
 export interface QuickAction {
   id: string;
   title: string;
   description: string;
   icon: string;
+  target: QuickActionTarget;
+}
+
+export type ListingStatus = 'active' | 'inactive' | 'out_of_stock';
+
+export interface SupplierListing {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  unit: string;
+  stockCount: number;
+  status: ListingStatus;
+  negotiable: boolean;
+  created_at: string;
+}
+
+export interface SupplierListingCreatePayload {
+  name: string;
+  category: string;
+  description: string;
+  price: string;
+  price_unit: string;
+  stock_qty: string;
+  status: ListingStatus;
+  is_negotiable: boolean;
+  imageUris: string[];
 }
 
 export interface UserPreferences {

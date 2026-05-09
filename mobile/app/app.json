@@ -18,7 +18,13 @@
       "supportsTablet": true
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow NaijaBuilders to select product photos for supplier listings."
+        }
+      ]
     ]
   }
 }

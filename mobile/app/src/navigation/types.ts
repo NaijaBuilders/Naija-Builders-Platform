@@ -1,3 +1,5 @@
+import type { NavigatorScreenParams } from '@react-navigation/native';
+
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
@@ -9,14 +11,6 @@ export type AuthStackParamList = {
   ForgotPassword: undefined;
 };
 
-export type MainTabParamList = {
-  Home: undefined;
-  Browse: undefined;
-  Orders: undefined;
-  Messages: undefined;
-  Profile: undefined;
-};
-
 export type HomeStackParamList = {
   HomeMain: undefined;
   ProductDetail: { productId: string };
@@ -25,6 +19,7 @@ export type HomeStackParamList = {
 export type BrowseStackParamList = {
   BrowseMain: undefined;
   ProductDetail: { productId: string };
+  CreateListing: undefined;
 };
 
 export type OrdersStackParamList = {
@@ -40,4 +35,12 @@ export type MessagesStackParamList = {
 export type ProfileStackParamList = {
   ProfileMain: undefined;
   Settings: undefined;
+};
+
+export type MainTabParamList = {
+  Home: NavigatorScreenParams<HomeStackParamList> | undefined;
+  Browse: NavigatorScreenParams<BrowseStackParamList> | undefined;
+  Orders: NavigatorScreenParams<OrdersStackParamList> | undefined;
+  Messages: NavigatorScreenParams<MessagesStackParamList> | undefined;
+  Profile: NavigatorScreenParams<ProfileStackParamList> | undefined;
 };

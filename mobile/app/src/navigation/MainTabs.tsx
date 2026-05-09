@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useAppState } from '../context/AppContext';
 import { theme } from '../theme';
 import {
   BrowseStack,
@@ -28,6 +29,9 @@ const tabIcons: Record<
 };
 
 export function MainTabs() {
+  const { currentRole } = useAppState();
+  const browseLabel = currentRole === 'supplier' ? 'Listings' : 'Browse';
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -60,7 +64,11 @@ export function MainTabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeStack} />
-      <Tab.Screen name="Browse" component={BrowseStack} />
+      <Tab.Screen
+        name="Browse"
+        component={BrowseStack}
+        options={{ title: browseLabel }}
+      />
       <Tab.Screen name="Orders" component={OrdersStack} />
       <Tab.Screen name="Messages" component={MessagesStack} />
       <Tab.Screen name="Profile" component={ProfileStack} />

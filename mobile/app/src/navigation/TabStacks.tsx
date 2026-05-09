@@ -2,6 +2,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { BrowseScreen } from '../screens/BrowseScreen';
 import { ChatScreen } from '../screens/ChatScreen';
+import { CreateListingScreen } from '../screens/CreateListingScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { MessagesScreen } from '../screens/MessagesScreen';
 import { OrderDetailScreen } from '../screens/OrderDetailScreen';
@@ -38,6 +39,10 @@ export function BrowseStack() {
     <BrowseStackNavigator.Navigator screenOptions={defaultStackScreenOptions}>
       <BrowseStackNavigator.Screen name="BrowseMain" component={BrowseScreen} />
       <BrowseStackNavigator.Screen name="ProductDetail" component={ProductDetailScreen} />
+      <BrowseStackNavigator.Screen
+        name="CreateListing"
+        component={CreateListingScreen}
+      />
     </BrowseStackNavigator.Navigator>
   );
 }
