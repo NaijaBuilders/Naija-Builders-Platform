@@ -15,11 +15,27 @@ deploy/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+coverage/
+*.lcov
 
 # Environment files with machine-specific or secret values
 .env
 .env.*
 !.env.example
+
+# Laravel local dependencies, build output, and runtime artifacts
+laravel-app/auth.json
+laravel-app/node_modules/
+laravel-app/vendor/
+laravel-app/public/build/
+laravel-app/public/hot
+laravel-app/public/storage/
+laravel-app/storage/*.key
+laravel-app/storage/pail/
+laravel-app/database/*.sqlite*
+laravel-app/.phpunit.cache/
+laravel-app/.phpunit.result.cache
+
 mobile/app/node_modules/
 mobile/app/.expo/
 mobile/app/.expo-*/
