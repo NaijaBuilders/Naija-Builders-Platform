@@ -1,11 +1,21 @@
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import React from 'react';
+import React, { useCallback } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Avatar, Badge, Button, Card, Header, Loader, Screen } from '../components';
+import {
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  FloatingBackButton,
+  Header,
+  Loader,
+  Screen,
+} from '../components';
 import { useAppState } from '../context/AppContext';
 import { useCompany } from '../hooks/useMarketplaceData';
-import type { ProfileStackParamList } from '../navigation/types';
+import type { MainTabParamList, ProfileStackParamList } from '../navigation/types';
 import { theme } from '../theme';
 import type { UserRole } from '../types';
 
@@ -19,17 +29,33 @@ export function ProfileScreen() {
     useNavigation<NativeStackNavigationProp<ProfileStackParamList, 'ProfileMain'>>();
   const { currentRole, signOut, user } = useAppState();
   const { data: company } = useCompany();
+  const goHome = useCallback(() => {
+    navigation
+      .getParent<BottomTabNavigationProp<MainTabParamList>>()
+      ?.navigate('Home', { screen: 'HomeMain' });
+  }, [navigation]);
 
   if (!user) {
     return (
-      <Screen scroll={false} contentContainerStyle={styles.center}>
+      <Screen
+        scroll={false}
+        contentContainerStyle={styles.center}
+        floating={
+          <FloatingBackButton fallback={goHome} hideWhenUnavailable={false} />
+        }
+      >
         <Loader label="Loading profile" />
       </Screen>
     );
   }
 
   return (
-    <Screen>
+    <Screen
+      contentContainerStyle={styles.contentWithFloatingBack}
+      floating={
+        <FloatingBackButton fallback={goHome} hideWhenUnavailable={false} />
+      }
+    >
       <Header
         eyebrow="Account"
         title="Profile"
@@ -101,6 +127,9 @@ const styles = StyleSheet.create({
   center: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  contentWithFloatingBack: {
+    paddingTop: 86,
   },
   profileCard: {
     alignItems: 'center',

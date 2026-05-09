@@ -1,6 +1,14 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Button, Card, Header, Input, Loader, Screen } from '../components';
+import {
+  Button,
+  Card,
+  FloatingBackButton,
+  Header,
+  Input,
+  Loader,
+  Screen,
+} from '../components';
 import { useConversation } from '../hooks/useMarketplaceData';
 import { messageService } from '../services';
 import { theme } from '../theme';
@@ -24,7 +32,7 @@ export function ChatScreen({ route }: ChatScreenProps) {
   const [sendError, setSendError] = useState('');
   const [sending, setSending] = useState(false);
 
-  const handleSend = async () => {
+  const handleSend = useCallback(async () => {
     const body = draft.trim();
 
     if (!body) {
@@ -43,11 +51,15 @@ export function ChatScreen({ route }: ChatScreenProps) {
     } finally {
       setSending(false);
     }
-  };
+  }, [draft, refresh, route.params.conversationId]);
 
   if (loading) {
     return (
-      <Screen scroll={false} contentContainerStyle={styles.center}>
+      <Screen
+        scroll={false}
+        contentContainerStyle={styles.center}
+        floating={<FloatingBackButton />}
+      >
         <Loader label="Loading chat" />
       </Screen>
     );
@@ -55,7 +67,11 @@ export function ChatScreen({ route }: ChatScreenProps) {
 
   if (!conversation) {
     return (
-      <Screen scroll={false} contentContainerStyle={styles.center}>
+      <Screen
+        scroll={false}
+        contentContainerStyle={styles.center}
+        floating={<FloatingBackButton />}
+      >
         <Text style={styles.empty}>
           {error?.message || 'Conversation not found.'}
         </Text>
@@ -64,7 +80,10 @@ export function ChatScreen({ route }: ChatScreenProps) {
   }
 
   return (
-    <Screen>
+    <Screen
+      contentContainerStyle={styles.contentWithFloatingBack}
+      floating={<FloatingBackButton />}
+    >
       <Header
         eyebrow={conversation.company}
         title={conversation.participantName}
@@ -123,6 +142,9 @@ const styles = StyleSheet.create({
   center: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  contentWithFloatingBack: {
+    paddingTop: 70,
   },
   messageRow: {
     alignItems: 'flex-start',

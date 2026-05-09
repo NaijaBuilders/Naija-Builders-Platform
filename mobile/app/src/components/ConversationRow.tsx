@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { theme } from '../theme';
 import type { Conversation } from '../types';
@@ -16,11 +16,15 @@ export const ConversationRow = React.memo(function ConversationRow({
   conversation,
   onPress,
 }: ConversationRowProps) {
+  const handlePress = useCallback(() => {
+    onPress?.(conversation);
+  }, [conversation, onPress]);
+
   return (
     <Card animationIndex={animationIndex} style={styles.card}>
       <Pressable
         disabled={!onPress}
-        onPress={() => onPress?.(conversation)}
+        onPress={handlePress}
         style={styles.pressable}
       >
         <Avatar name={conversation.participantName} size={46} />

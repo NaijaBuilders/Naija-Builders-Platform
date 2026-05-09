@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Switch, Text, View } from 'react-native';
-import { Card, Header, Screen } from '../components';
+import { Card, FloatingBackButton, Header, Screen } from '../components';
 import { useAppState } from '../context/AppContext';
 import { userService } from '../services';
 import { theme } from '../theme';
@@ -50,7 +50,10 @@ export function SettingsScreen() {
   };
 
   return (
-    <Screen>
+    <Screen
+      contentContainerStyle={styles.contentWithFloatingBack}
+      floating={<FloatingBackButton />}
+    >
       <Header
         eyebrow="Account"
         title="Settings"
@@ -80,6 +83,9 @@ export function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
+  contentWithFloatingBack: {
+    paddingTop: 70,
+  },
   sectionTitle: {
     color: theme.colors.text,
     fontSize: theme.typography.section,

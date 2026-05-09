@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { theme } from '../theme';
 import type { Order, OrderStatus } from '../types';
@@ -24,10 +24,13 @@ export const OrderCard = React.memo(function OrderCard({
   order,
 }: OrderCardProps) {
   const status = statusColors[order.status];
+  const handlePress = useCallback(() => {
+    onPress?.(order);
+  }, [onPress, order]);
 
   return (
     <Card animationIndex={animationIndex} style={styles.card}>
-      <Pressable disabled={!onPress} onPress={() => onPress?.(order)}>
+      <Pressable disabled={!onPress} onPress={handlePress}>
         <View style={styles.top}>
           <View style={styles.copy}>
             <Text style={styles.reference}>{order.reference}</Text>

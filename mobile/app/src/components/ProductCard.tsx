@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { theme } from '../theme';
 import type { Product } from '../types';
@@ -21,15 +21,25 @@ export const ProductCard = React.memo(function ProductCard({
   const supplierMeta = [product.supplierName, product.location]
     .filter(Boolean)
     .join(' - ');
+  const handlePress = useCallback(() => {
+    onPress?.(product);
+  }, [onPress, product]);
 
   return (
     <Card animationIndex={animationIndex} style={styles.card}>
       <Pressable
         disabled={!onPress}
-        onPress={() => onPress?.(product)}
+        onPress={handlePress}
         style={styles.pressable}
       >
-        <Image source={product.image} resizeMode="cover" style={styles.image} />
+        <Image
+          fadeDuration={120}
+          progressiveRenderingEnabled
+          resizeMethod="resize"
+          resizeMode="cover"
+          source={product.image}
+          style={styles.image}
+        />
         <View style={styles.body}>
           <View style={styles.row}>
             <Badge label={product.category} tone="primary" />
@@ -53,7 +63,7 @@ export const ProductCard = React.memo(function ProductCard({
               title={product.inStock ? 'View' : 'Notify'}
               variant={product.inStock ? 'primary' : 'outline'}
               style={styles.button}
-              onPress={() => onPress?.(product)}
+              onPress={handlePress}
             />
           </View>
         </View>

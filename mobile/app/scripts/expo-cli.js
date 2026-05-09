@@ -40,15 +40,15 @@ function getPidsForPorts(ports) {
   return Array.from(pids);
 }
 
-function clearExpoPorts() {
-  if (!args.includes('start')) {
+function clearExpoPorts(runArgs = args) {
+  if (!runArgs.includes('start')) {
     return;
   }
 
-  const requestedPortIndex = args.indexOf('--port');
+  const requestedPortIndex = runArgs.indexOf('--port');
   const metroPort =
-    requestedPortIndex >= 0 && args[requestedPortIndex + 1]
-      ? Number(args[requestedPortIndex + 1])
+    requestedPortIndex >= 0 && runArgs[requestedPortIndex + 1]
+      ? Number(runArgs[requestedPortIndex + 1])
       : 8081;
   const portsToClear = [
     Number.isInteger(metroPort) ? metroPort : 8081,
@@ -123,8 +123,6 @@ function getChildEnv(runArgs) {
   return childEnv;
 }
 
-clearExpoPorts();
-
 function usesTunnel(runArgs) {
   return (
     runArgs.includes('--tunnel') ||
@@ -162,6 +160,8 @@ function toLanArgs(runArgs) {
 }
 
 function runExpo(runArgs, hasRetriedWithLan = false) {
+  clearExpoPorts(runArgs);
+
   const child = spawn(process.execPath, [expoCli, ...runArgs], {
     cwd: projectRoot,
     env: getChildEnv(runArgs),

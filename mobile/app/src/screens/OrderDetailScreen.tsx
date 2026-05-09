@@ -1,6 +1,13 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Badge, Card, Header, Loader, Screen } from '../components';
+import {
+  Badge,
+  Card,
+  FloatingBackButton,
+  Header,
+  Loader,
+  Screen,
+} from '../components';
 import { useOrder } from '../hooks/useMarketplaceData';
 import { theme } from '../theme';
 import { formatCurrency } from '../utils/format';
@@ -18,7 +25,11 @@ export function OrderDetailScreen({ route }: OrderDetailScreenProps) {
 
   if (loading) {
     return (
-      <Screen scroll={false} contentContainerStyle={styles.center}>
+      <Screen
+        scroll={false}
+        contentContainerStyle={styles.center}
+        floating={<FloatingBackButton />}
+      >
         <Loader label="Loading order" />
       </Screen>
     );
@@ -26,7 +37,11 @@ export function OrderDetailScreen({ route }: OrderDetailScreenProps) {
 
   if (!order) {
     return (
-      <Screen scroll={false} contentContainerStyle={styles.center}>
+      <Screen
+        scroll={false}
+        contentContainerStyle={styles.center}
+        floating={<FloatingBackButton />}
+      >
         <Text style={styles.empty}>
           {error?.message || 'Order details could not be loaded.'}
         </Text>
@@ -35,7 +50,10 @@ export function OrderDetailScreen({ route }: OrderDetailScreenProps) {
   }
 
   return (
-    <Screen>
+    <Screen
+      contentContainerStyle={styles.contentWithFloatingBack}
+      floating={<FloatingBackButton />}
+    >
       <Header
         eyebrow={order.reference}
         title={order.title}
@@ -85,6 +103,9 @@ const styles = StyleSheet.create({
   center: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  contentWithFloatingBack: {
+    paddingTop: 70,
   },
   card: {
     gap: theme.spacing.md,

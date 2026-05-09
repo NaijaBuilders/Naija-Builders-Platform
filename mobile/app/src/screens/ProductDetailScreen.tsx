@@ -1,6 +1,14 @@
 import React from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Badge, Button, Card, Header, Loader, Screen } from '../components';
+import {
+  Badge,
+  Button,
+  Card,
+  FloatingBackButton,
+  Header,
+  Loader,
+  Screen,
+} from '../components';
 import { useProduct } from '../hooks/useMarketplaceData';
 import { theme } from '../theme';
 import { formatCurrency } from '../utils/format';
@@ -18,7 +26,11 @@ export function ProductDetailScreen({ route }: ProductDetailScreenProps) {
 
   if (loading) {
     return (
-      <Screen scroll={false} contentContainerStyle={styles.center}>
+      <Screen
+        scroll={false}
+        contentContainerStyle={styles.center}
+        floating={<FloatingBackButton tint="auto" />}
+      >
         <Loader label="Loading product" />
       </Screen>
     );
@@ -26,7 +38,11 @@ export function ProductDetailScreen({ route }: ProductDetailScreenProps) {
 
   if (!product) {
     return (
-      <Screen scroll={false} contentContainerStyle={styles.center}>
+      <Screen
+        scroll={false}
+        contentContainerStyle={styles.center}
+        floating={<FloatingBackButton tint="auto" />}
+      >
         <Text style={styles.empty}>
           {error?.message || 'Product not found.'}
         </Text>
@@ -35,21 +51,37 @@ export function ProductDetailScreen({ route }: ProductDetailScreenProps) {
   }
 
   return (
-    <Screen>
+    <Screen
+      contentContainerStyle={styles.contentWithFloatingBack}
+      floating={<FloatingBackButton tint="auto" />}
+    >
       <Header
         eyebrow={product.category}
         title={product.name}
         subtitle={`${product.location} - ${product.supplierName}`}
       />
 
-      <Image source={product.images[0]} resizeMode="cover" style={styles.heroImage} />
+      <Image
+        fadeDuration={120}
+        progressiveRenderingEnabled
+        resizeMethod="resize"
+        resizeMode="cover"
+        source={product.images[0]}
+        style={styles.heroImage}
+      />
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.imageRail}
       >
         {product.images.map((image, index) => (
-          <Image key={`${product.id}-${index}`} source={image} style={styles.image} />
+          <Image
+            fadeDuration={80}
+            key={`${product.id}-${index}`}
+            resizeMethod="resize"
+            source={image}
+            style={styles.image}
+          />
         ))}
       </ScrollView>
 
@@ -101,6 +133,9 @@ const styles = StyleSheet.create({
   center: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  contentWithFloatingBack: {
+    paddingTop: 70,
   },
   imageRail: {
     gap: theme.spacing.sm,

@@ -1,21 +1,36 @@
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   FlatList,
   ListRenderItemInfo,
+  Platform,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ConversationRow, Header, Loader } from '../components';
+import {
+  ConversationRow,
+  FloatingBackButton,
+  Header,
+  Loader,
+} from '../components';
 import { useConversations } from '../hooks/useMarketplaceData';
 import { useScreenAnimation } from '../hooks/useScreenAnimation';
-import type { MessagesStackParamList } from '../navigation/types';
+import type { MainTabParamList, MessagesStackParamList } from '../navigation/types';
 import { theme } from '../theme';
 import type { Conversation } from '../types';
+
+const listPerformanceProps = {
+  initialNumToRender: 8,
+  maxToRenderPerBatch: 8,
+  removeClippedSubviews: Platform.OS === 'android',
+  updateCellsBatchingPeriod: 50,
+  windowSize: 7,
+};
 
 export function MessagesScreen() {
   const navigation =
@@ -30,13 +45,60 @@ export function MessagesScreen() {
       ),
     [conversations]
   );
+  const keyExtractor = useCallback((item: Conversation) => item.id, []);
+  const openConversation = useCallback(
+    (conversation: Conversation) => {
+      navigation.navigate('Chat', { conversationId: conversation.id });
+    },
+    [navigation]
+  );
+  const goHome = useCallback(() => {
+    navigation
+      .getParent<BottomTabNavigationProp<MainTabParamList>>()
+      ?.navigate('Home', { screen: 'HomeMain' });
+  }, [navigation]);
+  const renderConversation = useCallback(
+    ({ item, index }: ListRenderItemInfo<Conversation>) => (
+      <ConversationRow
+        animationIndex={index}
+        conversation={item}
+        onPress={openConversation}
+      />
+    ),
+    [openConversation]
+  );
+  const header = useMemo(
+    () => (
+      <>
+        <Header
+          eyebrow="Inbox"
+          title="Messages"
+          subtitle="Conversations from your account."
+        />
+        <View style={styles.inboxBar}>
+          <View>
+            <Text style={styles.inboxValue}>{conversations.length}</Text>
+            <Text style={styles.inboxLabel}>Conversations</Text>
+          </View>
+          <View style={styles.inboxDivider} />
+          <View>
+            <Text style={styles.inboxValue}>{unreadTotal}</Text>
+            <Text style={styles.inboxLabel}>Unread</Text>
+          </View>
+        </View>
+        <Text style={styles.sectionTitle}>Recent conversations</Text>
+      </>
+    ),
+    [conversations.length, unreadTotal]
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <Animated.View style={[styles.container, animatedStyle]}>
         <FlatList
+          {...listPerformanceProps}
           data={conversations}
-          keyExtractor={(item) => item.id}
+          keyExtractor={keyExtractor}
           ListEmptyComponent={
             loading ? (
               <Loader label="Loading messages" />
@@ -46,40 +108,13 @@ export function MessagesScreen() {
               </Text>
             )
           }
-          ListHeaderComponent={
-            <>
-              <Header
-                eyebrow="Inbox"
-                title="Messages"
-                subtitle="Conversations from your account."
-              />
-              <View style={styles.inboxBar}>
-                <View>
-                  <Text style={styles.inboxValue}>{conversations.length}</Text>
-                  <Text style={styles.inboxLabel}>Conversations</Text>
-                </View>
-                <View style={styles.inboxDivider} />
-                <View>
-                  <Text style={styles.inboxValue}>{unreadTotal}</Text>
-                  <Text style={styles.inboxLabel}>Unread</Text>
-                </View>
-              </View>
-              <Text style={styles.sectionTitle}>Recent conversations</Text>
-            </>
-          }
-          renderItem={({ item, index }: ListRenderItemInfo<Conversation>) => (
-            <ConversationRow
-              animationIndex={index}
-              conversation={item}
-              onPress={(conversation) =>
-                navigation.navigate('Chat', { conversationId: conversation.id })
-              }
-            />
-          )}
+          ListHeaderComponent={header}
+          renderItem={renderConversation}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.content}
+          contentContainerStyle={styles.contentWithFloatingBack}
         />
       </Animated.View>
+      <FloatingBackButton fallback={goHome} hideWhenUnavailable={false} />
     </SafeAreaView>
   );
 }
@@ -95,6 +130,11 @@ const styles = StyleSheet.create({
   content: {
     padding: theme.spacing.lg,
     paddingBottom: theme.spacing.xxl,
+  },
+  contentWithFloatingBack: {
+    padding: theme.spacing.lg,
+    paddingBottom: theme.spacing.xxl,
+    paddingTop: 86,
   },
   inboxBar: {
     alignItems: 'center',

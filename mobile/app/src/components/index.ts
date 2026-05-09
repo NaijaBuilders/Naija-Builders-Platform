@@ -3,6 +3,7 @@ export * from './Badge';
 export * from './Button';
 export * from './Card';
 export * from './ConversationRow';
+export * from './FloatingBackButton';
 export * from './Header';
 export * from './Input';
 export * from './Loader';

@@ -15,10 +15,12 @@ type ScreenProps = {
   children: React.ReactNode;
   scroll?: boolean;
   contentContainerStyle?: StyleProp<ViewStyle>;
+  floating?: React.ReactNode;
 };
 
 export function Screen({
   children,
+  floating,
   scroll = true,
   contentContainerStyle,
 }: ScreenProps) {
@@ -26,26 +28,37 @@ export function Screen({
 
   if (!scroll) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <Animated.View
-          style={[styles.content, styles.flex, animatedStyle, contentContainerStyle]}
-        >
-          {children}
-        </Animated.View>
-      </SafeAreaView>
+      <View style={styles.safeArea}>
+        <SafeAreaView style={styles.flex}>
+          <Animated.View
+            style={[
+              styles.content,
+              styles.flex,
+              animatedStyle,
+              contentContainerStyle,
+            ]}
+          >
+            {children}
+          </Animated.View>
+        </SafeAreaView>
+        {floating}
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, contentContainerStyle]}
-      >
-        <Animated.View style={animatedStyle}>{children}</Animated.View>
-      </ScrollView>
-    </SafeAreaView>
+    <View style={styles.safeArea}>
+      <SafeAreaView style={styles.flex}>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.content, contentContainerStyle]}
+        >
+          <Animated.View style={animatedStyle}>{children}</Animated.View>
+        </ScrollView>
+      </SafeAreaView>
+      {floating}
+    </View>
   );
 }
 

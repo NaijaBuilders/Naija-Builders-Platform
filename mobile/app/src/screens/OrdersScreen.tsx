@@ -1,16 +1,32 @@
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import React, { useMemo } from 'react';
-import { FlatList, ListRenderItemInfo, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import {
+  FlatList,
+  ListRenderItemInfo,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import Animated from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Header, Loader, OrderCard } from '../components';
+import { FloatingBackButton, Header, Loader, OrderCard } from '../components';
 import { useOrders } from '../hooks/useMarketplaceData';
 import { useScreenAnimation } from '../hooks/useScreenAnimation';
 import { useAppState } from '../context/AppContext';
-import type { OrdersStackParamList } from '../navigation/types';
+import type { MainTabParamList, OrdersStackParamList } from '../navigation/types';
 import { theme } from '../theme';
 import type { Order } from '../types';
+
+const listPerformanceProps = {
+  initialNumToRender: 7,
+  maxToRenderPerBatch: 7,
+  removeClippedSubviews: Platform.OS === 'android',
+  updateCellsBatchingPeriod: 50,
+  windowSize: 7,
+};
 
 export function OrdersScreen() {
   const navigation =
@@ -34,13 +50,56 @@ export function OrdersScreen() {
     ],
     [orderList]
   );
+  const keyExtractor = useCallback((item: Order) => item.id, []);
+  const openOrder = useCallback(
+    (order: Order) => {
+      navigation.navigate('OrderDetail', { orderId: order.id });
+    },
+    [navigation]
+  );
+  const goHome = useCallback(() => {
+    navigation
+      .getParent<BottomTabNavigationProp<MainTabParamList>>()
+      ?.navigate('Home', { screen: 'HomeMain' });
+  }, [navigation]);
+  const renderOrder = useCallback(
+    ({ item, index }: ListRenderItemInfo<Order>) => (
+      <OrderCard animationIndex={index} order={item} onPress={openOrder} />
+    ),
+    [openOrder]
+  );
+  const header = useMemo(
+    () => (
+      <>
+        <Header
+          eyebrow={currentRole}
+          title="Orders"
+          subtitle="Orders connected to your account."
+        />
+        <View style={styles.summaryStrip}>
+          {orderSummary.map((item, index) => (
+            <View key={item.label} style={styles.summaryItem}>
+              <Text style={styles.summaryValue}>{item.value}</Text>
+              <Text style={styles.summaryLabel}>{item.label}</Text>
+              {index < orderSummary.length - 1 ? (
+                <View style={styles.summaryDivider} />
+              ) : null}
+            </View>
+          ))}
+        </View>
+        <Text style={styles.sectionTitle}>Recent orders</Text>
+      </>
+    ),
+    [currentRole, orderSummary]
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <Animated.View style={[styles.container, animatedStyle]}>
         <FlatList
+          {...listPerformanceProps}
           data={orderList}
-          keyExtractor={(item) => item.id}
+          keyExtractor={keyExtractor}
           ListEmptyComponent={
             loading ? (
               <Loader label="Loading orders" />
@@ -50,40 +109,13 @@ export function OrdersScreen() {
               </Text>
             )
           }
-          ListHeaderComponent={
-            <>
-              <Header
-                eyebrow={currentRole}
-                title="Orders"
-                subtitle="Orders connected to your account."
-              />
-              <View style={styles.summaryStrip}>
-                {orderSummary.map((item, index) => (
-                  <View key={item.label} style={styles.summaryItem}>
-                    <Text style={styles.summaryValue}>{item.value}</Text>
-                    <Text style={styles.summaryLabel}>{item.label}</Text>
-                    {index < orderSummary.length - 1 ? (
-                      <View style={styles.summaryDivider} />
-                    ) : null}
-                  </View>
-                ))}
-              </View>
-              <Text style={styles.sectionTitle}>Recent orders</Text>
-            </>
-          }
-          renderItem={({ item, index }: ListRenderItemInfo<Order>) => (
-            <OrderCard
-              animationIndex={index}
-              order={item}
-              onPress={(order) =>
-                navigation.navigate('OrderDetail', { orderId: order.id })
-              }
-            />
-          )}
+          ListHeaderComponent={header}
+          renderItem={renderOrder}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.content}
+          contentContainerStyle={styles.contentWithFloatingBack}
         />
       </Animated.View>
+      <FloatingBackButton fallback={goHome} hideWhenUnavailable={false} />
     </SafeAreaView>
   );
 }
@@ -99,6 +131,11 @@ const styles = StyleSheet.create({
   content: {
     padding: theme.spacing.lg,
     paddingBottom: theme.spacing.xxl,
+  },
+  contentWithFloatingBack: {
+    padding: theme.spacing.lg,
+    paddingBottom: theme.spacing.xxl,
+    paddingTop: 86,
   },
   summaryStrip: {
     backgroundColor: theme.colors.surface,
