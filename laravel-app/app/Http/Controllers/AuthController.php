@@ -75,6 +75,7 @@ class AuthController extends Controller
             return redirect('/login.php?error=invalid_credentials');
         }
 
+        $request->session()->regenerate();
         $request->session()->put('legacy_user_id', (int) $user->id);
         $request->session()->put('legacy_user', [
             'id' => (int) $user->id,
@@ -193,6 +194,7 @@ class AuthController extends Controller
 
         $userId = DB::table('users')->insertGetId($insertPayload);
 
+        $request->session()->regenerate();
         $request->session()->put('legacy_user_id', (int) $userId);
         $request->session()->put('legacy_user', [
             'id' => (int) $userId,
@@ -332,6 +334,8 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         $request->session()->flush();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return redirect('/index.php');
     }

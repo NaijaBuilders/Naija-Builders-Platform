@@ -20,7 +20,11 @@
             <div class="card">
                 <div class="card-body" style="padding: 0;">
                     @if (count($items) === 0)
-                        <div style="padding: 1.2rem; color: var(--neutral-600);">Your cart is empty.</div>
+                        <div class="empty-state">
+                            <h3>Your cart is empty</h3>
+                            <p>Browse materials and add the products you want to compare or request from suppliers.</p>
+                            <a href="/materials.php" class="btn btn-primary">Browse Materials</a>
+                        </div>
                     @else
                         @foreach ($items as $item)
                             <div class="cart-item-row" style="display: grid; grid-template-columns: 96px 1fr auto; gap: 1rem; align-items: center; padding: 1rem 1.2rem; border-bottom: 1px solid var(--neutral-200);">
@@ -35,6 +39,7 @@
                                     <h4 style="margin: 0 0 0.35rem; font-size: 1rem;">{{ $item['name'] }}</h4>
                                     <p style="margin: 0 0 0.35rem; color: var(--neutral-600); font-size: 0.9rem;">{{ $item['category'] }} · {{ $item['company'] !== '' ? $item['company'] : 'Supplier' }}</p>
                                     <p style="margin: 0; color: var(--primary-color); font-weight: 700;">{{ $formatMoney($item['price']) }}</p>
+                                    <a href="/messages.php?receiver_id={{ (int) $item['supplier_id'] }}&material_id={{ (int) $item['id'] }}" class="text-note" style="display: inline-block; margin-top: 0.35rem;">Message supplier</a>
                                 </div>
                                 <div class="cart-item-actions" style="display: flex; flex-direction: column; gap: 0.6rem; align-items: flex-end;">
                                     <form method="POST" action="/cart/update.php" style="display: flex; gap: 0.5rem; align-items: center;">
@@ -61,8 +66,16 @@
             <div class="card">
                 <div class="card-body">
                     <h3 class="cart-summary-title">Order Summary</h3>
-                    <div class="flex-between" style="margin-bottom: 0.7rem;"><span>Total</span><strong>{{ $formatMoney($total) }}</strong></div>
-                    <button class="btn btn-primary btn-block" type="button">Checkout</button>
+                    <div class="summary-row"><span>Subtotal</span><strong>{{ $formatMoney($total) }}</strong></div>
+                    <div class="summary-row"><span>Delivery</span><span>Supplier quote</span></div>
+                    <div class="summary-row"><span>Taxes / fees</span><span>Confirmed by supplier</span></div>
+                    <div class="summary-row summary-row--total"><span>Estimated total</span><strong>{{ $formatMoney($total) }}</strong></div>
+                    <p class="summary-note">Cart totals use listed product prices only. Delivery, taxes, and final order terms are confirmed with suppliers.</p>
+                    @if (count($items) > 0)
+                        <a href="/messages.php" class="btn btn-primary btn-block" style="text-decoration: none;">Contact Suppliers to Order</a>
+                    @else
+                        <a href="/materials.php" class="btn btn-primary btn-block" style="text-decoration: none;">Browse Materials</a>
+                    @endif
                 </div>
             </div>
         </div>

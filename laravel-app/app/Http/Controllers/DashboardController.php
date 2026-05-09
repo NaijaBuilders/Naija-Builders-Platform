@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\MoneyCalculator;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -61,11 +62,11 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        $inventoryValue = (float) DB::table('materials')
+        $inventoryValue = MoneyCalculator::amount(DB::table('materials')
             ->where('supplier_id', $currentUserId)
             ->where('status', 'active')
             ->where('stock_qty', '>', 0)
-            ->sum(DB::raw('price * stock_qty'));
+            ->sum(DB::raw('price * stock_qty')));
 
         $lowStockListings = (int) DB::table('materials')
             ->where('supplier_id', $currentUserId)
@@ -79,19 +80,13 @@ class DashboardController extends Controller
             ->where('stock_qty', '<=', 0)
             ->count();
 
-        $activeListingRate = $totalListings > 0
-            ? round(($activeListings / $totalListings) * 100, 1)
-            : 0.0;
+        $activeListingRate = MoneyCalculator::percentage($activeListings, $totalListings);
 
         $activeCatalogBase = max($activeListings, 0);
 
-        $lowStockRate = $activeCatalogBase > 0
-            ? round(($lowStockListings / $activeCatalogBase) * 100, 1)
-            : 0.0;
+        $lowStockRate = MoneyCalculator::percentage($lowStockListings, $activeCatalogBase);
 
-        $outOfStockRate = $activeCatalogBase > 0
-            ? round(($outOfStockListings / $activeCatalogBase) * 100, 1)
-            : 0.0;
+        $outOfStockRate = MoneyCalculator::percentage($outOfStockListings, $activeCatalogBase);
 
         if ($hasPriceUnit) {
             $unitDistribution = DB::table('materials')
@@ -103,7 +98,7 @@ class DashboardController extends Controller
                 ->get()
                 ->map(function ($unit) use ($activeCatalogBase) {
                     $count = (int) ($unit->total ?? 0);
-                    $unit->ratio = $activeCatalogBase > 0 ? round(($count / $activeCatalogBase) * 100, 1) : 0.0;
+                    $unit->ratio = MoneyCalculator::percentage($count, $activeCatalogBase);
                     return $unit;
                 });
 
@@ -154,7 +149,7 @@ class DashboardController extends Controller
                 return (object) [
                     'month_label' => $month->format('M Y'),
                     'month_key' => $key,
-                    'total_sales' => (float) ($row->total_sales ?? 0),
+                    'total_sales' => MoneyCalculator::amount($row->total_sales ?? 0),
                     'total_orders' => (int) ($row->total_orders ?? 0),
                 ];
             });
@@ -236,7 +231,7 @@ class DashboardController extends Controller
                 ->where('buyer_id', $currentUserId)
                 ->whereIn('order_status', ['pending', 'processing'])
                 ->count();
-            $totalSpent = (float) DB::table('orders')->where('buyer_id', $currentUserId)->sum('total_amount');
+            $totalSpent = MoneyCalculator::amount(DB::table('orders')->where('buyer_id', $currentUserId)->sum('total_amount'));
 
             $recentOrders = DB::table('orders as o')
                 ->join('users as u', 'u.id', '=', 'o.supplier_id')

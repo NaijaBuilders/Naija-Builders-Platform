@@ -6,6 +6,7 @@ use App\Support\CurrencyManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class ProfileController extends Controller
 {
@@ -92,6 +93,10 @@ class ProfileController extends Controller
         $bankName = trim((string) $request->input('bank_name', ''));
         $accountNumber = trim((string) $request->input('account_number', ''));
 
+        if ($fullName === '' || $email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || $phone === '' || $location === '') {
+            return redirect('/edit-profile.php?error=invalid_profile')->withInput();
+        }
+
         $emailOwner = DB::table('users')
             ->where('email', $email)
             ->where('id', '<>', $currentUserId)
@@ -109,9 +114,15 @@ class ProfileController extends Controller
                 return redirect('/edit-profile.php?error=image_upload');
             }
 
-            $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+            $allowedMimeTypes = [
+                'image/jpeg' => ['jpg', 'jpeg'],
+                'image/png' => ['png'],
+                'image/webp' => ['webp'],
+            ];
             $extension = strtolower((string) $image->getClientOriginalExtension());
-            if (!in_array($extension, $allowedExtensions, true)) {
+            $mimeType = (string) $image->getMimeType();
+
+            if (!isset($allowedMimeTypes[$mimeType]) || !in_array($extension, $allowedMimeTypes[$mimeType], true)) {
                 return redirect('/edit-profile.php?error=image_invalid');
             }
 
@@ -124,7 +135,7 @@ class ProfileController extends Controller
                 mkdir($uploadDir, 0755, true);
             }
 
-            $filename = 'user_' . $currentUserId . '_' . time() . '.' . $extension;
+            $filename = 'user_' . $currentUserId . '_' . Str::lower(Str::random(12)) . '.' . $extension;
             $image->move($uploadDir, $filename);
             $newProfileImagePath = 'assets/images/profile/' . $filename;
 

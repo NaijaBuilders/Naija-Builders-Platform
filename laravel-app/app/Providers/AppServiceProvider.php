@@ -22,7 +22,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (config('database.default') !== 'mysql') {
+        if (config('database.default') !== 'mysql' && !$this->app->environment('testing')) {
             throw new RuntimeException('This application is configured for MySQL only. Set DB_CONNECTION=mysql in your .env file.');
         }
 

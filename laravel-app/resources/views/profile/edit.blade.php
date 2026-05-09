@@ -37,6 +37,9 @@
     @if (($errorCode ?? '') === 'email_exists')
         <div class="alert alert-danger">The email address is already in use by another account.</div>
     @endif
+    @if (($errorCode ?? '') === 'invalid_profile')
+        <div class="alert alert-danger">Please provide a valid name, email, phone number, and location.</div>
+    @endif
     @if (($errorCode ?? '') === 'image_invalid')
         <div class="alert alert-danger">Profile picture must be a JPG, PNG, or WEBP image.</div>
     @endif

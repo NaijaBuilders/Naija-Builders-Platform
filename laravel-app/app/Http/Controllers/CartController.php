@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\MoneyCalculator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -18,6 +19,7 @@ class CartController extends Controller
                 ->leftJoin('users as u', 'u.id', '=', 'm.supplier_id')
                 ->select([
                     'm.id',
+                    'm.supplier_id',
                     'm.name',
                     'm.price',
                     'm.stock_qty',
@@ -31,7 +33,7 @@ class CartController extends Controller
         }
 
         $items = [];
-        $total = 0;
+        $lineTotals = [];
         foreach ($cart as $materialId => $entry) {
             $materialId = (int) $materialId;
             $quantity = max(1, (int) ($entry['quantity'] ?? 1));
@@ -40,15 +42,16 @@ class CartController extends Controller
                 continue;
             }
 
-            $lineTotal = (float) $material->price * $quantity;
-            $total += $lineTotal;
+            $lineTotal = MoneyCalculator::lineTotal($material->price, $quantity);
+            $lineTotals[] = $lineTotal;
 
             $items[] = [
                 'id' => $materialId,
+                'supplier_id' => (int) $material->supplier_id,
                 'name' => (string) $material->name,
                 'category' => (string) ($material->category ?? 'General'),
                 'company' => (string) ($material->company ?? ''),
-                'price' => (float) $material->price,
+                'price' => MoneyCalculator::amount($material->price),
                 'stock_qty' => (int) $material->stock_qty,
                 'quantity' => $quantity,
                 'image_path' => (string) ($material->image_path ?? ''),
@@ -58,7 +61,7 @@ class CartController extends Controller
 
         return view('cart.index', [
             'items' => $items,
-            'total' => $total,
+            'total' => MoneyCalculator::total($lineTotals),
         ]);
     }
 
@@ -72,14 +75,14 @@ class CartController extends Controller
             ->where('id', $materialId)
             ->first();
 
-        if (!$material || $material->status !== 'active') {
+        if (!$material || $material->status !== 'active' || (int) $material->stock_qty <= 0) {
             return back()->with('error', 'Product is not available.');
         }
 
         $cart = (array) $request->session()->get('cart', []);
         $existingQty = (int) ($cart[$materialId]['quantity'] ?? 0);
         $newQty = $existingQty + $quantity;
-        $maxQty = max(1, (int) $material->stock_qty);
+        $maxQty = (int) $material->stock_qty;
 
         $cart[$materialId] = [
             'quantity' => min($newQty, $maxQty),
@@ -101,7 +104,14 @@ class CartController extends Controller
         }
 
         $stockQty = (int) DB::table('materials')->where('id', $materialId)->value('stock_qty');
-        $cart[$materialId]['quantity'] = min($quantity, max(1, $stockQty));
+        if ($stockQty <= 0) {
+            unset($cart[$materialId]);
+            $request->session()->put('cart', $cart);
+
+            return redirect('/cart.php')->with('error', 'Item is currently out of stock and was removed from your cart.');
+        }
+
+        $cart[$materialId]['quantity'] = min($quantity, $stockQty);
 
         $request->session()->put('cart', $cart);
 

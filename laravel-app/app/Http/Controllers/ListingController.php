@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\MoneyCalculator;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -120,7 +121,8 @@ class ListingController extends Controller
         $name = trim((string) $request->input('name', ''));
         $category = trim((string) $request->input('category', ''));
         $description = trim((string) $request->input('description', ''));
-        $price = (float) $request->input('price', 0);
+        $priceInput = $request->input('price', 0);
+        $price = is_numeric($priceInput) ? MoneyCalculator::amount($priceInput) : 0.0;
         $priceUnit = trim((string) $request->input('price_unit', 'item'));
         $isNegotiable = (string) $request->input('is_negotiable', '0') === '1';
         $stockQty = (int) $request->input('stock_qty', 0);
