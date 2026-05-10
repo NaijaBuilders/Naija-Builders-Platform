@@ -35,6 +35,7 @@ export type MessagesStackParamList = {
 export type ProfileStackParamList = {
   ProfileMain: undefined;
   Settings: undefined;
+  SupplierOnboarding: undefined;
 };
 
 export type MainTabParamList = {

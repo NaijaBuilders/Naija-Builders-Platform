@@ -5,15 +5,10 @@ import axios, {
 } from 'axios';
 
 const DEFAULT_API_BASE_URL =
-  'https://api-dev.naijabuilders.com/api/mobile';
+  'http://127.0.0.1:8080/api/mobile';
 const STAGING_API_HOST = 'api-dev.naijabuilders.com';
 const AUTH_TOKEN_STORAGE_KEY = 'naijabuilders.mobile.auth_token';
 const API_BASE_URL_STORAGE_KEY = 'naijabuilders.mobile.api_base_url';
-const LEGACY_DEV_API_BASE_URLS = new Set([
-  'http://192.168.0.51:8081/api/mobile',
-  'http://192.168.0.51:8080/api/mobile',
-  'http://192.168.0.51/shop/legacy/Naijabuilders/laravel-app/public/api/mobile',
-]);
 
 function normalizeApiBaseUrl(url: string) {
   let normalizedUrl = url.trim().replace(/\/+$/, '');
@@ -39,13 +34,6 @@ function normalizeApiBaseUrl(url: string) {
     );
   } else if (normalizedUrl === `https://${STAGING_API_HOST}`) {
     normalizedUrl = DEFAULT_API_BASE_URL;
-  }
-
-  if (
-    LEGACY_DEV_API_BASE_URLS.has(normalizedUrl) ||
-    /^https?:\/\/192\.168\.0\.51(?::\d+)?\/api\/mobile$/.test(normalizedUrl)
-  ) {
-    return DEFAULT_API_BASE_URL;
   }
 
   return normalizedUrl;
@@ -130,30 +118,58 @@ export async function setApiBaseUrl(nextUrl: string) {
 
 export class ApiServiceError extends Error {
   status?: number;
+  validationErrors?: Record<string, string[]>;
 
-  constructor(message: string, status?: number) {
+  constructor(
+    message: string,
+    status?: number,
+    validationErrors?: Record<string, string[]>
+  ) {
     super(message);
     this.name = 'ApiServiceError';
     this.status = status;
+    this.validationErrors = validationErrors;
   }
+}
+
+function validationMessage(errors: Record<string, string[]>): string {
+  const firstField = Object.keys(errors)[0];
+  const firstMessage = firstField ? errors[firstField]?.[0] : '';
+
+  return firstMessage || 'Please check the highlighted fields.';
 }
 
 export function handleServiceError(error: unknown): never {
   if (error instanceof AxiosError) {
+    if (error.response?.status === 401) {
+      void setAuthToken(null);
+      throw new ApiServiceError('Your session has expired. Please sign in again.', 401);
+    }
+
     if (error.code === 'ECONNABORTED' || /timeout/i.test(error.message)) {
       throw new ApiServiceError(
         `Could not reach the backend at ${apiBaseUrl}. Try a tunnel URL or make sure your phone can open the API URL in Safari.`
       );
     }
 
-    const message =
+    const validationErrors =
       typeof error.response?.data === 'object' &&
       error.response?.data &&
-      'message' in error.response.data
-        ? String(error.response.data.message)
-        : error.message;
+      'errors' in error.response.data &&
+      typeof error.response.data.errors === 'object'
+        ? (error.response.data.errors as Record<string, string[]>)
+        : undefined;
 
-    throw new ApiServiceError(message, error.response?.status);
+    const message =
+      validationErrors
+        ? validationMessage(validationErrors)
+        : typeof error.response?.data === 'object' &&
+            error.response?.data &&
+            'message' in error.response.data
+          ? String(error.response.data.message)
+          : error.message;
+
+    throw new ApiServiceError(message, error.response?.status, validationErrors);
   }
 
   if (error instanceof Error) {

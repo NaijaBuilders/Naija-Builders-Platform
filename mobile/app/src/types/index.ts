@@ -31,6 +31,8 @@ export interface UserProfile {
   company?: string;
   phone?: string;
   location?: string;
+  kyc_status?: string;
+  is_verified_badge?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -195,4 +197,68 @@ export interface SignupPayload {
   role: UserRole;
   company?: string;
   termsAccepted: boolean;
+}
+
+export type SupplierOnboardingStatus =
+  | 'DRAFT'
+  | 'SUBMITTED'
+  | 'VERIFYING'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'MANUAL_REVIEW'
+  | 'MORE_INFO_REQUIRED'
+  | 'SUSPENDED';
+
+export interface SupplierBusinessDetailsPayload {
+  cac_number: string;
+  business_name: string;
+  business_type: string;
+  business_address: string;
+  state: string;
+  contact_name?: string;
+  contact_email?: string;
+  contact_phone?: string;
+}
+
+export interface SupplierIdentityVerificationPayload {
+  bvn?: string;
+  nin?: string;
+  id_document_type?: string;
+  selfieUri?: string;
+  idDocumentUri?: string;
+}
+
+export interface SupplierBankDetailsPayload {
+  bank_name: string;
+  bank_code: string;
+  account_number: string;
+  account_name?: string;
+}
+
+export interface SupplierOnboardingApplication {
+  id: number;
+  status: SupplierOnboardingStatus;
+  current_stage: string;
+  supplier_message?: string | null;
+  more_info_message?: string | null;
+  business: {
+    cac_number?: string | null;
+    business_name?: string | null;
+    business_type?: string | null;
+    state?: string | null;
+  };
+  identity: {
+    bvn?: string | null;
+    nin?: string | null;
+    id_document_type?: string | null;
+  };
+  bank: {
+    bank_name?: string | null;
+    bank_code?: string | null;
+    account_number?: string | null;
+    account_name?: string | null;
+  };
+  submitted_at?: string | null;
+  decided_at?: string | null;
+  updated_at?: string | null;
 }

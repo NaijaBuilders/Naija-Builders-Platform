@@ -24,6 +24,7 @@ type LaravelUser = {
   business_category?: string;
   business_address?: string;
   is_verified_badge?: boolean | number;
+  kyc_status?: string;
   created_at?: string;
   updated_at?: string;
 };
@@ -105,6 +106,9 @@ export function mapLaravelUser(user: LaravelUser): UserProfile {
     company: user.company ? String(user.company) : undefined,
     phone: user.phone ? String(user.phone) : undefined,
     location: user.location ? String(user.location) : undefined,
+    kyc_status: user.kyc_status ? String(user.kyc_status) : undefined,
+    is_verified_badge:
+      user.is_verified_badge === true || Number(user.is_verified_badge) === 1,
     created_at: String(user.created_at ?? timestamp),
     updated_at: String(user.updated_at ?? timestamp),
   };

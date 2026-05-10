@@ -105,6 +105,16 @@ export function ProfileScreen() {
         </View>
       </Card>
 
+      {currentRole === 'supplier' ? (
+        <View style={styles.verificationAction}>
+          <Button
+            title="Supplier verification"
+            onPress={() => navigation.navigate('SupplierOnboarding')}
+            variant={company?.verified ? 'outline' : 'primary'}
+          />
+        </View>
+      ) : null}
+
       <View style={styles.actions}>
         <Button
           title="Settings"
@@ -185,6 +195,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: theme.spacing.sm,
     marginTop: theme.spacing.lg,
+  },
+  verificationAction: {
+    marginTop: theme.spacing.md,
   },
   actionButton: {
     flex: 1,

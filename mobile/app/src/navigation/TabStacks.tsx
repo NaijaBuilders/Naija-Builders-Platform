@@ -10,6 +10,7 @@ import { OrdersScreen } from '../screens/OrdersScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { ProductDetailScreen } from '../screens/ProductDetailScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
+import { SupplierOnboardingScreen } from '../screens/SupplierOnboardingScreen';
 import { defaultStackScreenOptions } from './transitionOptions';
 import type {
   BrowseStackParamList,
@@ -70,6 +71,10 @@ export function ProfileStack() {
     <ProfileStackNavigator.Navigator screenOptions={defaultStackScreenOptions}>
       <ProfileStackNavigator.Screen name="ProfileMain" component={ProfileScreen} />
       <ProfileStackNavigator.Screen name="Settings" component={SettingsScreen} />
+      <ProfileStackNavigator.Screen
+        name="SupplierOnboarding"
+        component={SupplierOnboardingScreen}
+      />
     </ProfileStackNavigator.Navigator>
   );
 }

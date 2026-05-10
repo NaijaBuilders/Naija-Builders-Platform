@@ -5,4 +5,5 @@ export * from './listingService';
 export * from './messageService';
 export * from './orderService';
 export * from './productService';
+export * from './supplierOnboardingService';
 export * from './userService';

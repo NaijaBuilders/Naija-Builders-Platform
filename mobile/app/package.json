@@ -12,6 +12,7 @@
     "dev:api": "node scripts/dev-api.js",
     "dev:mobile": "node scripts/expo-cli.js start --host lan --port 8081 --clear",
     "dev:mobile:tunnel": "node scripts/expo-cli.js start --tunnel --port 8081 --clear",
+    "typecheck": "tsc --noEmit",
     "android": "node scripts/expo-cli.js start --android --host lan --port 8081",
     "ios": "node scripts/expo-cli.js start --ios --host lan --port 8081",
     "web": "node scripts/expo-cli.js start --web --port 8081"
