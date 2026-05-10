@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\Security\SensitiveData;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Http\RedirectResponse;
 
 class AuthController extends Controller
 {
@@ -71,7 +72,7 @@ class AuthController extends Controller
             return redirect('/login.php?error=db_unavailable');
         }
 
-        if (!$user || !Hash::check($password, $user->password_hash)) {
+        if (! $user || ! Hash::check($password, $user->password_hash)) {
             return redirect('/login.php?error=invalid_credentials');
         }
 
@@ -106,7 +107,8 @@ class AuthController extends Controller
         $signupPath = $accountType === 'supplier' ? '/signup.php?type=supplier' : '/signup.php';
         $signupErrorPath = static function (string $basePath, string $errorCode): string {
             $separator = str_contains($basePath, '?') ? '&' : '?';
-            return $basePath . $separator . 'error=' . $errorCode;
+
+            return $basePath.$separator.'error='.$errorCode;
         };
         $hasAcceptedTermsFlow = (bool) $request->session()->get('terms_and_agreement_accepted', false);
         $password = (string) $request->input('password', '');
@@ -116,11 +118,11 @@ class AuthController extends Controller
             return redirect($signupErrorPath($signupPath, 'missing_fields'))->withInput();
         }
 
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return redirect($signupErrorPath($signupPath, 'invalid_email'))->withInput();
         }
 
-        if (!in_array($accountType, ['builder', 'supplier'], true)) {
+        if (! in_array($accountType, ['builder', 'supplier'], true)) {
             $accountType = 'builder';
         }
 
@@ -132,7 +134,7 @@ class AuthController extends Controller
             return redirect($signupErrorPath($signupPath, 'passwords_do_not_match'))->withInput();
         }
 
-        if (!$hasAcceptedTermsFlow) {
+        if (! $hasAcceptedTermsFlow) {
             return redirect($signupErrorPath($signupPath, 'terms_not_accepted'))->withInput();
         }
 
@@ -220,7 +222,7 @@ class AuthController extends Controller
 
     public function showSupplierKyc(Request $request)
     {
-        if (!$request->session()->has('legacy_user_id')) {
+        if (! $request->session()->has('legacy_user_id')) {
             return redirect('/login.php');
         }
 
@@ -262,7 +264,7 @@ class AuthController extends Controller
 
     public function submitSupplierKyc(Request $request): RedirectResponse
     {
-        if (!$request->session()->has('legacy_user_id')) {
+        if (! $request->session()->has('legacy_user_id')) {
             return redirect('/login.php');
         }
 
@@ -308,7 +310,7 @@ class AuthController extends Controller
         }
 
         if (Schema::hasColumn('users', 'account_number')) {
-            $updatePayload['account_number'] = $accountNumber;
+            $updatePayload['account_number'] = SensitiveData::maskDigits($accountNumber);
         }
 
         if (Schema::hasColumn('users', 'kyc_status')) {

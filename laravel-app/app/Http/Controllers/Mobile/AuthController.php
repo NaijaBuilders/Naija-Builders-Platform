@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Mobile;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\SupplierOnboarding\SupplierOnboardingService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +13,8 @@ use Illuminate\Support\Facades\Schema;
 
 class AuthController extends Controller
 {
+    public function __construct(private readonly SupplierOnboardingService $onboarding) {}
+
     public function login(Request $request)
     {
         $validated = $request->validate([
@@ -25,6 +28,9 @@ class AuthController extends Controller
                     'id',
                     'full_name',
                     'email',
+                    'phone',
+                    'company',
+                    'location',
                     'role',
                     'password_hash',
                     'profile_image_path',
@@ -38,7 +44,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Database is unavailable.'], 503);
         }
 
-        if (!$user || !Hash::check($validated['password'], (string) $user->password_hash)) {
+        if (! $user || ! Hash::check($validated['password'], (string) $user->password_hash)) {
             return response()->json(['message' => 'Invalid credentials.'], 422);
         }
 
@@ -68,7 +74,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Passwords do not match.'], 422);
         }
 
-        if (!$validated['terms_accepted']) {
+        if (! $validated['terms_accepted']) {
             return response()->json(['message' => 'Terms must be accepted before registration.'], 422);
         }
 
@@ -76,7 +82,7 @@ class AuthController extends Controller
         if ($accountType === 'buyer') {
             $accountType = 'builder';
         }
-        if (!in_array($accountType, ['builder', 'supplier'], true)) {
+        if (! in_array($accountType, ['builder', 'supplier'], true)) {
             $accountType = 'builder';
         }
 
@@ -137,11 +143,19 @@ class AuthController extends Controller
         }
 
         $userId = (int) DB::table('users')->insertGetId($insertPayload);
+        $userModel = User::query()->findOrFail($userId);
+        if ($accountType === 'supplier') {
+            $this->onboarding->captureRegistrationSignals($userModel, $request, $validated['phone']);
+        }
+
         $user = DB::table('users')
             ->select([
                 'id',
                 'full_name',
                 'email',
+                'phone',
+                'company',
+                'location',
                 'role',
                 'profile_image_path',
                 Schema::hasColumn('users', 'subscription_plan') ? 'subscription_plan' : DB::raw("'standard' as subscription_plan"),
@@ -167,6 +181,9 @@ class AuthController extends Controller
                 'id',
                 'full_name',
                 'email',
+                'phone',
+                'company',
+                'location',
                 'role',
                 'profile_image_path',
                 Schema::hasColumn('users', 'subscription_plan') ? 'subscription_plan' : DB::raw("'standard' as subscription_plan"),
@@ -176,7 +193,7 @@ class AuthController extends Controller
             ->where('id', $userId)
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'User not found.'], 404);
         }
 
@@ -198,6 +215,7 @@ class AuthController extends Controller
     private function createMobileToken(int $userId): string
     {
         $user = User::query()->findOrFail($userId);
+
         return $user->createToken('mobile')->plainTextToken;
     }
 
@@ -208,6 +226,9 @@ class AuthController extends Controller
             'email' => (string) $user->email,
             'name' => (string) ($user->full_name ?? 'User'),
             'role' => (string) ($user->role ?? 'builder'),
+            'phone' => (string) ($user->phone ?? ''),
+            'company' => (string) ($user->company ?? ''),
+            'location' => (string) ($user->location ?? ''),
             'profile_image_path' => (string) ($user->profile_image_path ?? ''),
             'subscription_plan' => (string) ($user->subscription_plan ?? 'standard'),
             'is_verified_badge' => (int) ($user->is_verified_badge ?? 0) === 1,

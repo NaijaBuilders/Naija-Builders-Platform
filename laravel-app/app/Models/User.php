@@ -19,9 +19,22 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'full_name',
         'email',
-        'password',
+        'phone',
+        'company',
+        'business_category',
+        'location',
+        'business_address',
+        'business_description',
+        'bank_name',
+        'account_number',
+        'role',
+        'password_hash',
+        'kyc_status',
+        'kyc_submitted_at',
+        'kyc_verified_at',
+        'is_verified_badge',
     ];
 
     /**
@@ -30,7 +43,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $hidden = [
-        'password',
+        'password_hash',
         'remember_token',
     ];
 
@@ -42,8 +55,14 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'kyc_submitted_at' => 'datetime',
+            'kyc_verified_at' => 'datetime',
+            'is_verified_badge' => 'boolean',
         ];
+    }
+
+    public function getAuthPassword(): string
+    {
+        return (string) $this->password_hash;
     }
 }

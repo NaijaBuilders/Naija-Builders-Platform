@@ -35,4 +35,19 @@ return [
         ],
     ],
 
+    'kyc' => [
+        'provider' => env('KYC_PROVIDER', 'fake'),
+        'mode' => env('KYC_MODE', 'sandbox'),
+        'face_match_threshold' => (int) env('KYC_FACE_MATCH_THRESHOLD', 80),
+        'prembly' => [
+            'base_url' => env('PREMBLY_BASE_URL', 'https://sandbox.prembly.example'),
+            'api_key' => env('PREMBLY_API_KEY'),
+        ],
+        'dojah' => [
+            'base_url' => env('DOJAH_BASE_URL', 'https://sandbox.dojah.example'),
+            'app_id' => env('DOJAH_APP_ID'),
+            'secret_key' => env('DOJAH_SECRET_KEY'),
+        ],
+    ],
+
 ];

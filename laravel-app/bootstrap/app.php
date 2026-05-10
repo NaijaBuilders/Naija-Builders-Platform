@@ -15,9 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->use([
             \App\Http\Middleware\CheckDatabaseHealth::class,
         ]);
-        
+
         $middleware->alias([
             'legacy.auth' => \App\Http\Middleware\EnsureLegacyAuth::class,
+            'mobile.admin' => \App\Http\Middleware\EnsureMobileAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

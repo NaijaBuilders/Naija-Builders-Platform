@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Support\CurrencyManager;
+use App\Support\Security\SensitiveData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -82,7 +83,7 @@ class ProfileController extends Controller
 
         $firstName = trim((string) $request->input('first_name', ''));
         $lastName = trim((string) $request->input('last_name', ''));
-        $fullName = trim($firstName . ' ' . $lastName);
+        $fullName = trim($firstName.' '.$lastName);
         $email = trim((string) $request->input('email', ''));
         $phone = trim((string) $request->input('phone', ''));
         $company = trim((string) $request->input('company', ''));
@@ -93,7 +94,7 @@ class ProfileController extends Controller
         $bankName = trim((string) $request->input('bank_name', ''));
         $accountNumber = trim((string) $request->input('account_number', ''));
 
-        if ($fullName === '' || $email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || $phone === '' || $location === '') {
+        if ($fullName === '' || $email === '' || ! filter_var($email, FILTER_VALIDATE_EMAIL) || $phone === '' || $location === '') {
             return redirect('/edit-profile.php?error=invalid_profile')->withInput();
         }
 
@@ -110,7 +111,7 @@ class ProfileController extends Controller
         if ($request->hasFile('profile_picture')) {
             $image = $request->file('profile_picture');
 
-            if (!$image || !$image->isValid()) {
+            if (! $image || ! $image->isValid()) {
                 return redirect('/edit-profile.php?error=image_upload');
             }
 
@@ -122,7 +123,7 @@ class ProfileController extends Controller
             $extension = strtolower((string) $image->getClientOriginalExtension());
             $mimeType = (string) $image->getMimeType();
 
-            if (!isset($allowedMimeTypes[$mimeType]) || !in_array($extension, $allowedMimeTypes[$mimeType], true)) {
+            if (! isset($allowedMimeTypes[$mimeType]) || ! in_array($extension, $allowedMimeTypes[$mimeType], true)) {
                 return redirect('/edit-profile.php?error=image_invalid');
             }
 
@@ -131,13 +132,13 @@ class ProfileController extends Controller
             }
 
             $uploadDir = public_path('assets/images/profile');
-            if (!is_dir($uploadDir)) {
+            if (! is_dir($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
             }
 
-            $filename = 'user_' . $currentUserId . '_' . Str::lower(Str::random(12)) . '.' . $extension;
+            $filename = 'user_'.$currentUserId.'_'.Str::lower(Str::random(12)).'.'.$extension;
             $image->move($uploadDir, $filename);
-            $newProfileImagePath = 'assets/images/profile/' . $filename;
+            $newProfileImagePath = 'assets/images/profile/'.$filename;
 
             $previousPath = (string) ($currentUser->profile_image_path ?? '');
             if ($previousPath !== '' && str_starts_with($previousPath, 'assets/images/profile/')) {
@@ -158,7 +159,7 @@ class ProfileController extends Controller
             'business_address' => $businessAddress,
             'business_description' => $businessDescription,
             'bank_name' => $bankName,
-            'account_number' => $accountNumber,
+            'account_number' => SensitiveData::maskDigits($accountNumber),
             'updated_at' => now(),
         ];
 
@@ -177,7 +178,7 @@ class ProfileController extends Controller
         $legacyUser['location'] = $location;
         if ($newProfileImagePath !== null) {
             $legacyUser['profile_image_path'] = $newProfileImagePath;
-        } elseif (!isset($legacyUser['profile_image_path'])) {
+        } elseif (! isset($legacyUser['profile_image_path'])) {
             $legacyUser['profile_image_path'] = (string) ($currentUser->profile_image_path ?? '');
         }
         $request->session()->put('legacy_user', $legacyUser);
@@ -219,20 +220,20 @@ class ProfileController extends Controller
             'session_timeout_short' => (string) $request->input('session_timeout_short', '0') === '1',
         ];
 
-        if (!in_array($settings['language'], ['en', 'ha', 'yo', 'ig'], true)) {
+        if (! in_array($settings['language'], ['en', 'ha', 'yo', 'ig'], true)) {
             $settings['language'] = 'en';
         }
 
-        if (!in_array($settings['timezone'], ['Africa/Lagos', 'UTC', 'Europe/London', 'America/New_York'], true)) {
+        if (! in_array($settings['timezone'], ['Africa/Lagos', 'UTC', 'Europe/London', 'America/New_York'], true)) {
             $settings['timezone'] = 'Africa/Lagos';
         }
 
-        if (!in_array($settings['currency_mode'], ['auto', 'manual'], true)) {
+        if (! in_array($settings['currency_mode'], ['auto', 'manual'], true)) {
             $settings['currency_mode'] = 'auto';
         }
 
         $currencyManager = app(CurrencyManager::class);
-        if (!$currencyManager->isSupported($settings['currency'])) {
+        if (! $currencyManager->isSupported($settings['currency'])) {
             $settings['currency'] = 'NGN';
         }
 

@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Services\Kyc\Contracts\KycProvider;
+use App\Services\Kyc\Providers\DojahKycProvider;
+use App\Services\Kyc\Providers\FakeKycProvider;
+use App\Services\Kyc\Providers\PremblyKycProvider;
 use App\Support\CurrencyManager;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
@@ -14,7 +18,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(KycProvider::class, function ($app): KycProvider {
+            return match ((string) config('services.kyc.provider', 'fake')) {
+                'prembly' => $app->make(PremblyKycProvider::class),
+                'dojah' => $app->make(DojahKycProvider::class),
+                default => $app->make(FakeKycProvider::class),
+            };
+        });
     }
 
     /**
@@ -22,7 +32,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (config('database.default') !== 'mysql' && !$this->app->environment('testing')) {
+        if (config('database.default') !== 'mysql' && ! $this->app->environment('testing')) {
             throw new RuntimeException('This application is configured for MySQL only. Set DB_CONNECTION=mysql in your .env file.');
         }
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Mobile\AdminSupplierOnboardingController;
 use App\Http\Controllers\Mobile\AuthController;
 use App\Http\Controllers\Mobile\CartController;
 use App\Http\Controllers\Mobile\DashboardController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Mobile\ProfileController;
 use App\Http\Controllers\Mobile\SavedMaterialController;
 use App\Http\Controllers\Mobile\StaticPageController;
 use App\Http\Controllers\Mobile\SubscriptionController;
+use App\Http\Controllers\Mobile\SupplierOnboardingController;
 use App\Http\Controllers\Mobile\SupportController;
 use Illuminate\Support\Facades\Route;
 
@@ -59,6 +61,21 @@ Route::prefix('mobile')->group(function (): void {
         Route::post('/profile', [ProfileController::class, 'update']);
         Route::get('/settings', [ProfileController::class, 'settings']);
         Route::post('/settings', [ProfileController::class, 'saveSettings']);
+
+        Route::get('/supplier/onboarding/status', [SupplierOnboardingController::class, 'status']);
+        Route::get('/supplier/onboarding/applications/{application}', [SupplierOnboardingController::class, 'show']);
+        Route::post('/supplier/onboarding/business-details', [SupplierOnboardingController::class, 'businessDetails']);
+        Route::post('/supplier/onboarding/identity-verification', [SupplierOnboardingController::class, 'identity']);
+        Route::post('/supplier/onboarding/bank-details', [SupplierOnboardingController::class, 'bankDetails']);
+        Route::post('/supplier/onboarding/submit', [SupplierOnboardingController::class, 'submit']);
+
+        Route::middleware('mobile.admin')->prefix('admin/supplier-onboarding')->group(function (): void {
+            Route::get('/manual-review', [AdminSupplierOnboardingController::class, 'index']);
+            Route::get('/{application}', [AdminSupplierOnboardingController::class, 'show']);
+            Route::post('/{application}/approve', [AdminSupplierOnboardingController::class, 'approve']);
+            Route::post('/{application}/reject', [AdminSupplierOnboardingController::class, 'reject']);
+            Route::post('/{application}/more-info', [AdminSupplierOnboardingController::class, 'moreInfo']);
+        });
 
         Route::get('/saved-products', [SavedMaterialController::class, 'index']);
         Route::post('/saved-products', [SavedMaterialController::class, 'store']);

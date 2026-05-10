@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Mobile;
 
 use App\Http\Controllers\Controller;
 use App\Support\CurrencyManager;
+use App\Support\Security\SensitiveData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -81,7 +82,7 @@ class ProfileController extends Controller
 
         $firstName = trim((string) $request->input('first_name', ''));
         $lastName = trim((string) $request->input('last_name', ''));
-        $fullName = trim($firstName . ' ' . $lastName);
+        $fullName = trim($firstName.' '.$lastName);
         $email = trim((string) $request->input('email', ''));
         $phone = trim((string) $request->input('phone', ''));
         $company = trim((string) $request->input('company', ''));
@@ -105,13 +106,13 @@ class ProfileController extends Controller
         if ($request->hasFile('profile_picture')) {
             $image = $request->file('profile_picture');
 
-            if (!$image || !$image->isValid()) {
+            if (! $image || ! $image->isValid()) {
                 return response()->json(['message' => 'Image upload failed.'], 422);
             }
 
             $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
             $extension = strtolower((string) $image->getClientOriginalExtension());
-            if (!in_array($extension, $allowedExtensions, true)) {
+            if (! in_array($extension, $allowedExtensions, true)) {
                 return response()->json(['message' => 'Invalid image type.'], 422);
             }
 
@@ -120,13 +121,13 @@ class ProfileController extends Controller
             }
 
             $uploadDir = public_path('assets/images/profile');
-            if (!is_dir($uploadDir)) {
+            if (! is_dir($uploadDir)) {
                 mkdir($uploadDir, 0755, true);
             }
 
-            $filename = 'user_' . $currentUserId . '_' . time() . '.' . $extension;
+            $filename = 'user_'.$currentUserId.'_'.time().'.'.$extension;
             $image->move($uploadDir, $filename);
-            $newProfileImagePath = 'assets/images/profile/' . $filename;
+            $newProfileImagePath = 'assets/images/profile/'.$filename;
 
             $previousPath = (string) ($currentUser->profile_image_path ?? '');
             if ($previousPath !== '' && str_starts_with($previousPath, 'assets/images/profile/')) {
@@ -147,7 +148,7 @@ class ProfileController extends Controller
             'business_address' => $businessAddress,
             'business_description' => $businessDescription,
             'bank_name' => $bankName,
-            'account_number' => $accountNumber,
+            'account_number' => SensitiveData::maskDigits($accountNumber),
             'updated_at' => now(),
         ];
 
@@ -195,20 +196,20 @@ class ProfileController extends Controller
             'session_timeout_short' => (string) $request->input('session_timeout_short', '0') === '1',
         ];
 
-        if (!in_array($settings['language'], ['en', 'ha', 'yo', 'ig'], true)) {
+        if (! in_array($settings['language'], ['en', 'ha', 'yo', 'ig'], true)) {
             $settings['language'] = 'en';
         }
 
-        if (!in_array($settings['timezone'], ['Africa/Lagos', 'UTC', 'Europe/London', 'America/New_York'], true)) {
+        if (! in_array($settings['timezone'], ['Africa/Lagos', 'UTC', 'Europe/London', 'America/New_York'], true)) {
             $settings['timezone'] = 'Africa/Lagos';
         }
 
-        if (!in_array($settings['currency_mode'], ['auto', 'manual'], true)) {
+        if (! in_array($settings['currency_mode'], ['auto', 'manual'], true)) {
             $settings['currency_mode'] = 'auto';
         }
 
         $currencyManager = app(CurrencyManager::class);
-        if (!$currencyManager->isSupported($settings['currency'])) {
+        if (! $currencyManager->isSupported($settings['currency'])) {
             $settings['currency'] = 'NGN';
         }
 
@@ -219,6 +220,6 @@ class ProfileController extends Controller
 
     private function settingsCacheKey(int $userId): string
     {
-        return 'mobile_settings_' . $userId;
+        return 'mobile_settings_'.$userId;
     }
 }
