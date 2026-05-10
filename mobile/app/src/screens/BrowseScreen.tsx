@@ -67,6 +67,13 @@ function BuyerBrowseScreen() {
   const categoriesResource = useCategories();
   const productResource = useProducts('buyer', { category, search: query });
 
+  useFocusEffect(
+    useCallback(() => {
+      categoriesResource.refresh();
+      productResource.refresh();
+    }, [categoriesResource.refresh, productResource.refresh])
+  );
+
   const categories = useMemo<Category[]>(
     () => [
       {
