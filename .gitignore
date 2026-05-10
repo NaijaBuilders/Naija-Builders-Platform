@@ -7,8 +7,8 @@ Thumbs.db
 .idea/
 .vscode/
 
-# Local deployment bundles and temporary cPanel files
-deploy/
+# Local deployment bundles, generated reports, and temporary cPanel files
+/deploy/
 
 # Logs and local runtime output
 *.log

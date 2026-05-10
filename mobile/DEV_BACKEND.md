@@ -1,12 +1,12 @@
 # Mobile Development Backend
 
-The mobile app defaults to the cPanel staging API:
+The mobile app defaults to the local development API:
 
 ```text
-https://api-dev.naijabuilders.com/api/mobile
+http://127.0.0.1:8080/api/mobile
 ```
 
-Use the local Laravel server only when you specifically need to test against WAMP.
+Use a LAN or tunnel URL on a physical phone when `127.0.0.1` points to the phone instead of your PC. Do not use production API URLs for development supplier onboarding tests.
 
 ## 1. Start the Laravel API
 
