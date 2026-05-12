@@ -12,6 +12,7 @@ use App\Models\VerificationDecision;
 use App\Services\Kyc\Contracts\KycProvider;
 use App\Services\Kyc\Data\DecisionResult;
 use App\Services\Kyc\Data\VerificationResult;
+use App\Support\NameFormatter;
 use App\Support\Security\SensitiveData;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -68,7 +69,7 @@ class SupplierOnboardingService
             'business_type' => $data['business_type'],
             'business_address' => $data['business_address'],
             'state' => $data['state'],
-            'contact_name' => $data['contact_name'] ?? $user->full_name ?? null,
+            'contact_name' => NameFormatter::title((string) ($data['contact_name'] ?? $user->full_name ?? '')),
             'contact_email' => $data['contact_email'] ?? $user->email ?? null,
             'contact_phone' => $data['contact_phone'] ?? $user->phone ?? null,
         ])->save();
@@ -278,7 +279,7 @@ class SupplierOnboardingService
             'id' => (int) $application->id,
             'supplier' => [
                 'id' => (int) $application->user_id,
-                'name' => (string) ($application->user->full_name ?? ''),
+                'name' => NameFormatter::title((string) ($application->user->full_name ?? '')),
                 'email' => (string) ($application->user->email ?? ''),
                 'phone' => SensitiveData::maskDigits((string) ($application->user->phone ?? '')),
             ],
@@ -310,6 +311,7 @@ class SupplierOnboardingService
                 'check_type' => $check->check_type,
                 'status' => $check->status,
                 'provider' => $check->provider,
+                'provider_reference' => $check->provider_reference,
                 'reason_codes' => $check->reason_codes ?? [],
                 'normalized_result' => $check->normalized_result ?? [],
                 'checked_at' => optional($check->checked_at)->toISOString(),
@@ -318,6 +320,8 @@ class SupplierOnboardingService
                 'decision' => $decision->decision,
                 'previous_status' => $decision->previous_status,
                 'new_status' => $decision->new_status,
+                'provider' => $decision->provider,
+                'provider_references' => $decision->provider_references ?? [],
                 'triggered_checks' => $decision->triggered_checks ?? [],
                 'internal_reason_codes' => $decision->internal_reason_codes ?? [],
                 'reviewer_id' => $decision->reviewer_id,
@@ -329,6 +333,8 @@ class SupplierOnboardingService
                 'decision' => $log->decision,
                 'previous_status' => $log->previous_status,
                 'new_status' => $log->new_status,
+                'provider' => $log->provider,
+                'provider_references' => $log->provider_references ?? [],
                 'triggered_checks' => $log->triggered_checks ?? [],
                 'internal_reason_codes' => $log->internal_reason_codes ?? [],
                 'reviewer_id' => $log->reviewer_id,
@@ -355,6 +361,7 @@ class SupplierOnboardingService
         VerificationCheck::query()->create([
             'supplier_application_id' => $application->id,
             'provider' => $result->provider,
+            'provider_reference' => $this->providerReferenceFromResult($result),
             'check_type' => $result->checkType,
             'status' => $result->status,
             'reason_codes' => $result->reasonCodes,
@@ -362,6 +369,44 @@ class SupplierOnboardingService
             'checked_at' => now(),
         ]);
 
+        $this->applyCheckSideEffects($application, $result);
+
+        return $result;
+    }
+
+    public function applyProviderWebhookResult(VerificationCheck $check, VerificationResult $result): SupplierApplication
+    {
+        return DB::transaction(function () use ($check, $result): SupplierApplication {
+            $check->loadMissing('application');
+            $application = $check->application;
+            $previousStatus = (string) $application->status;
+
+            $check->forceFill([
+                'provider' => $result->provider,
+                'provider_reference' => $this->providerReferenceFromResult($result) ?: $check->provider_reference,
+                'status' => $result->status,
+                'reason_codes' => $result->reasonCodes,
+                'normalized_result' => $result->toArray(),
+                'checked_at' => now(),
+            ])->save();
+
+            $this->applyCheckSideEffects($application, $result);
+            $this->writeAudit($application, 'PROVIDER_WEBHOOK_RECEIVED', null, $previousStatus, (string) $application->status, [$result->checkType], $result->reasonCodes, null, null);
+
+            if (in_array($application->status, [SupplierApplication::STATUS_VERIFYING, SupplierApplication::STATUS_SUBMITTED], true)) {
+                $checks = $this->latestChecks($application);
+                if ($checks->has('cac_lookup') && $checks->has('identity') && $checks->has('bank') && $checks->has('aml_pep')) {
+                    $decision = $this->decisionEngine->decide($checks->values());
+                    $this->persistDecision($application, $decision, $previousStatus, null, null);
+                }
+            }
+
+            return $application->refresh();
+        });
+    }
+
+    private function applyCheckSideEffects(SupplierApplication $application, VerificationResult $result): void
+    {
         $updates = [];
         if (array_key_exists('face_match_score', $result->data)) {
             $updates['face_match_score'] = (int) $result->data['face_match_score'];
@@ -379,8 +424,6 @@ class SupplierOnboardingService
         if ($updates !== []) {
             $application->forceFill($updates)->save();
         }
-
-        return $result;
     }
 
     /**
@@ -399,7 +442,10 @@ class SupplierOnboardingService
                     (string) $check->status,
                     (string) $check->provider,
                     $check->reason_codes ?? [],
-                    $check->normalized_result['data'] ?? []
+                    array_filter(array_merge(
+                        $check->normalized_result['data'] ?? [],
+                        ['reference' => $check->provider_reference]
+                    ), fn ($value): bool => $value !== null && $value !== '')
                 ),
             ]);
     }
@@ -488,6 +534,8 @@ class SupplierOnboardingService
 
     private function persistDecision(SupplierApplication $application, DecisionResult $decision, string $previousStatus, ?User $reviewer, ?string $notes): void
     {
+        $providerReferences = $this->providerReferences($application);
+
         $application->fill([
             'status' => $decision->newStatus,
             'supplier_message' => $decision->newStatus === SupplierApplication::STATUS_REJECTED
@@ -501,6 +549,8 @@ class SupplierOnboardingService
             'decision' => $decision->decision,
             'previous_status' => $previousStatus,
             'new_status' => $decision->newStatus,
+            'provider' => (string) ($application->provider ?: $this->provider->name()),
+            'provider_references' => $providerReferences,
             'triggered_checks' => $decision->triggeredChecks,
             'internal_reason_codes' => $decision->reasonCodes,
             'reviewer_id' => $reviewer?->id,
@@ -539,11 +589,41 @@ class SupplierOnboardingService
             'decision' => $decision,
             'previous_status' => $previousStatus,
             'new_status' => $newStatus,
+            'provider' => (string) ($application->provider ?: $this->provider->name()),
+            'provider_references' => $this->providerReferences($application),
             'triggered_checks' => $triggeredChecks,
             'internal_reason_codes' => $reasonCodes,
             'reviewer_id' => $reviewer?->id,
             'notes' => $notes,
         ]);
+    }
+
+    private function providerReferenceFromResult(VerificationResult $result): ?string
+    {
+        $reference = $result->data['reference'] ?? null;
+
+        if (! is_scalar($reference)) {
+            return null;
+        }
+
+        $reference = trim((string) $reference);
+
+        return $reference === '' ? null : substr($reference, 0, 191);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function providerReferences(SupplierApplication $application): array
+    {
+        return VerificationCheck::query()
+            ->where('supplier_application_id', $application->id)
+            ->whereNotNull('provider_reference')
+            ->pluck('provider_reference')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private function syncUserVerificationStatus(SupplierApplication $application): void

@@ -5,23 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class VerificationCheck extends Model
+class PremblyWebhookEvent extends Model
 {
     protected $fillable = [
-        'supplier_application_id',
-        'provider',
+        'token',
+        'event_hash',
         'provider_reference',
-        'check_type',
+        'supplier_application_id',
         'status',
-        'reason_codes',
-        'normalized_result',
-        'checked_at',
+        'received_at',
+        'processed_at',
     ];
 
     protected $casts = [
-        'reason_codes' => 'array',
-        'normalized_result' => 'array',
-        'checked_at' => 'datetime',
+        'received_at' => 'datetime',
+        'processed_at' => 'datetime',
     ];
 
     public function application(): BelongsTo

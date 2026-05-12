@@ -27,7 +27,7 @@ class SupplierApplication extends Model
 
     public const STATUS_SUSPENDED = 'SUSPENDED';
 
-    public const GENERIC_REJECTION_MESSAGE = 'We could not verify your supplier application at this time.';
+    public const GENERIC_REJECTION_MESSAGE = 'Your verification could not be approved at this time.';
 
     protected $fillable = [
         'user_id',

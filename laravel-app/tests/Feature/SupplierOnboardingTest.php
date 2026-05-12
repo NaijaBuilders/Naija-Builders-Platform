@@ -179,6 +179,26 @@ class SupplierOnboardingTest extends TestCase
         $response->assertOk()->assertJsonFragment(['CAC_INVALID_OR_UNREGISTERED']);
     }
 
+    public function test_sensitive_identity_and_bank_values_are_not_stored_raw(): void
+    {
+        $supplier = User::factory()->supplier()->create();
+
+        $this->submitApplication($supplier);
+
+        $application = SupplierApplication::query()->where('user_id', $supplier->id)->firstOrFail();
+        $storedApplication = json_encode($application->getAttributes(), JSON_THROW_ON_ERROR);
+        $storedChecks = DB::table('verification_checks')->pluck('normalized_result')->implode(' ');
+        $storedSignals = DB::table('risk_signals')->get()->map(fn ($signal) => json_encode((array) $signal, JSON_THROW_ON_ERROR))->implode(' ');
+
+        $this->assertStringNotContainsString('12345678901', $storedApplication);
+        $this->assertStringNotContainsString('1234567890', $storedApplication);
+        $this->assertStringNotContainsString('08012345678', $storedSignals);
+        $this->assertStringNotContainsString('12345678901', $storedChecks);
+        $this->assertStringNotContainsString('1234567890', $storedChecks);
+        $this->assertSame('*******8901', $application->bvn_mask);
+        $this->assertSame('******7890', $application->account_number_mask);
+    }
+
     public function test_unauthorized_users_cannot_access_admin_review_routes(): void
     {
         $supplier = User::factory()->supplier()->create();

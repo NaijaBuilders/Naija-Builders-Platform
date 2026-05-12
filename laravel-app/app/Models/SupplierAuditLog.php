@@ -14,6 +14,8 @@ class SupplierAuditLog extends Model
         'decision',
         'previous_status',
         'new_status',
+        'provider',
+        'provider_references',
         'triggered_checks',
         'internal_reason_codes',
         'reviewer_id',
@@ -23,6 +25,7 @@ class SupplierAuditLog extends Model
     protected $casts = [
         'triggered_checks' => 'array',
         'internal_reason_codes' => 'array',
+        'provider_references' => 'array',
     ];
 
     public function application(): BelongsTo
