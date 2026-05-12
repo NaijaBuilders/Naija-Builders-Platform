@@ -18,16 +18,17 @@ class ListingController extends Controller
     public function index(Request $request)
     {
         $currentUserId = (int) $request->user()->id;
-        if (!$this->isSupplier($currentUserId)) {
+        if (! $this->isSupplier($currentUserId)) {
             return response()->json(['message' => 'Supplier listings only.'], 403);
         }
 
-        if (!$this->isSupplierKycApproved($currentUserId)) {
+        if (! $this->isSupplierKycApproved($currentUserId)) {
             return response()->json(['message' => 'KYC approval required.'], 403);
         }
 
         $hasPriceUnit = Schema::hasColumn('materials', 'price_unit');
         $hasIsNegotiable = Schema::hasColumn('materials', 'is_negotiable');
+        $hasMaterialImages = Schema::hasTable('material_images');
 
         $search = trim((string) $request->query('search', ''));
         $status = trim((string) $request->query('status', ''));
@@ -45,7 +46,7 @@ class ListingController extends Controller
             ->where('supplier_id', $currentUserId);
 
         if ($search !== '') {
-            $query->where('name', 'like', '%' . $search . '%');
+            $query->where('name', 'like', '%'.$search.'%');
         }
 
         if ($status !== '') {
@@ -61,6 +62,38 @@ class ListingController extends Controller
         }
 
         $listings = $query->orderByDesc('created_at')->get();
+        $listingImages = collect();
+
+        if ($hasMaterialImages && $listings->isNotEmpty()) {
+            $listingImages = DB::table('material_images')
+                ->select(['material_id', 'image_path', 'display_order'])
+                ->whereIn('material_id', $listings->pluck('id')->map(fn ($id) => (int) $id)->all())
+                ->orderBy('display_order')
+                ->orderBy('id')
+                ->get()
+                ->groupBy('material_id');
+        }
+
+        $listings = $listings->map(function ($listing) use ($listingImages, $request) {
+            $images = $listingImages->get((int) $listing->id, collect())
+                ->map(function ($image) use ($request) {
+                    $imagePath = (string) ($image->image_path ?? '');
+
+                    return [
+                        'image_path' => $imagePath,
+                        'image_url' => $this->publicAssetUrl($request, $imagePath),
+                        'display_order' => (int) ($image->display_order ?? 0),
+                    ];
+                })
+                ->values();
+
+            $firstImage = $images->first();
+            $listing->image_path = (string) ($firstImage['image_path'] ?? '');
+            $listing->image_url = (string) ($firstImage['image_url'] ?? '');
+            $listing->images = $images;
+
+            return $listing;
+        });
 
         $categories = DB::table('materials')
             ->select('category')
@@ -101,11 +134,11 @@ class ListingController extends Controller
     public function store(Request $request)
     {
         $currentUserId = (int) $request->user()->id;
-        if (!$this->isSupplier($currentUserId)) {
+        if (! $this->isSupplier($currentUserId)) {
             return response()->json(['message' => 'Supplier listings only.'], 403);
         }
 
-        if (!$this->isSupplierKycApproved($currentUserId)) {
+        if (! $this->isSupplierKycApproved($currentUserId)) {
             return response()->json(['message' => 'KYC approval required.'], 403);
         }
 
@@ -133,11 +166,11 @@ class ListingController extends Controller
             return response()->json(['message' => 'Please provide valid listing details.'], 422);
         }
 
-        if (!in_array($status, ['active', 'inactive', 'out_of_stock'], true)) {
+        if (! in_array($status, ['active', 'inactive', 'out_of_stock'], true)) {
             $status = 'active';
         }
 
-        if (!in_array($priceUnit, self::PRICE_UNITS, true)) {
+        if (! in_array($priceUnit, self::PRICE_UNITS, true)) {
             $priceUnit = 'item';
         }
 
@@ -177,12 +210,12 @@ class ListingController extends Controller
             $materialId = DB::table('materials')->insertGetId($materialPayload);
 
             $uploadDirectory = public_path('assets/images/listings');
-            if (!File::isDirectory($uploadDirectory)) {
+            if (! File::isDirectory($uploadDirectory)) {
                 File::makeDirectory($uploadDirectory, 0775, true);
             }
 
             foreach ($images as $index => $image) {
-                if (!$image->isValid()) {
+                if (! $image->isValid()) {
                     throw new \RuntimeException('One or more image uploads failed. Please try again.');
                 }
 
@@ -198,14 +231,14 @@ class ListingController extends Controller
                     default => null,
                 };
 
-                if (!$extension) {
+                if (! $extension) {
                     throw new \RuntimeException('Only JPG, PNG, and WEBP images are allowed.');
                 }
 
-                $filename = 'material-' . $materialId . '-supplier-' . $currentUserId . '-' . ($index + 1) . '-' . Str::lower(Str::random(10)) . '.' . $extension;
+                $filename = 'material-'.$materialId.'-supplier-'.$currentUserId.'-'.($index + 1).'-'.Str::lower(Str::random(10)).'.'.$extension;
                 $image->move($uploadDirectory, $filename);
 
-                $relativePath = 'assets/images/listings/' . $filename;
+                $relativePath = 'assets/images/listings/'.$filename;
                 $uploadedPaths[] = $relativePath;
 
                 $imagePayload = [
@@ -248,11 +281,11 @@ class ListingController extends Controller
     public function destroy(Request $request, int $listingId)
     {
         $currentUserId = (int) $request->user()->id;
-        if (!$this->isSupplier($currentUserId)) {
+        if (! $this->isSupplier($currentUserId)) {
             return response()->json(['message' => 'Supplier listings only.'], 403);
         }
 
-        if (!$this->isSupplierKycApproved($currentUserId)) {
+        if (! $this->isSupplierKycApproved($currentUserId)) {
             return response()->json(['message' => 'KYC approval required.'], 403);
         }
 
@@ -273,7 +306,7 @@ class ListingController extends Controller
 
     private function isSupplierKycApproved(int $userId): bool
     {
-        if (!Schema::hasColumn('users', 'kyc_status')) {
+        if (! Schema::hasColumn('users', 'kyc_status')) {
             return true;
         }
 
@@ -290,5 +323,20 @@ class ListingController extends Controller
         }
 
         return $kycStatus === 'approved';
+    }
+
+    private function publicAssetUrl(Request $request, string $path): string
+    {
+        $path = trim($path);
+
+        if ($path === '') {
+            return '';
+        }
+
+        if (preg_match('/^https?:\/\//i', $path) === 1) {
+            return $path;
+        }
+
+        return rtrim($request->getSchemeAndHttpHost(), '/').'/'.ltrim($path, '/');
     }
 }

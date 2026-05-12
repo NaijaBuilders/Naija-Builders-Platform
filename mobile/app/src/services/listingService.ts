@@ -4,6 +4,7 @@ import type {
   SupplierListingCreatePayload,
 } from '../types';
 import { apiClient, handleServiceError } from './apiClient';
+import { assetSource } from './adapters';
 
 export type SupplierListingListParams = {
   search?: string;
@@ -19,6 +20,8 @@ type LaravelListing = {
   stock_qty?: number | string;
   status?: string;
   is_negotiable?: boolean | number | string;
+  image_path?: string;
+  image_url?: string;
   created_at?: string;
 };
 
@@ -43,6 +46,9 @@ function mapSupplierListing(listing: LaravelListing): SupplierListing {
     category: String(listing.category ?? 'General'),
     price: Number(listing.price ?? 0),
     unit: String(listing.price_unit ?? 'item'),
+    image: listing.image_url
+      ? { uri: String(listing.image_url) }
+      : assetSource(listing.image_path),
     stockCount: Number(listing.stock_qty ?? 0),
     status: normalizeStatus(listing.status),
     negotiable:
