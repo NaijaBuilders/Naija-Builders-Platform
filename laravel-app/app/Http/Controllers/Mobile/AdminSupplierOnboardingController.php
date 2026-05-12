@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Mobile\SupplierOnboarding\AdminReviewActionRequest;
 use App\Models\SupplierApplication;
 use App\Services\SupplierOnboarding\SupplierOnboardingService;
+use App\Support\NameFormatter;
 
 class AdminSupplierOnboardingController extends Controller
 {
@@ -21,7 +22,7 @@ class AdminSupplierOnboardingController extends Controller
             ->map(fn (SupplierApplication $application): array => [
                 'id' => (int) $application->id,
                 'supplier_id' => (int) $application->user_id,
-                'supplier_name' => (string) ($application->user->full_name ?? ''),
+                'supplier_name' => NameFormatter::title((string) ($application->user->full_name ?? '')),
                 'business_name' => (string) ($application->business_name ?? ''),
                 'status' => (string) $application->status,
                 'current_stage' => (string) $application->current_stage,

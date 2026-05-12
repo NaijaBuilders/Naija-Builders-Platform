@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Mobile;
 
 use App\Http\Controllers\Controller;
+use App\Support\NameFormatter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -11,7 +12,7 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        if (!Schema::hasTable('orders')) {
+        if (! Schema::hasTable('orders')) {
             return response()->json(['data' => []]);
         }
 
@@ -32,7 +33,7 @@ class OrderController extends Controller
 
     public function show(Request $request, int $orderId)
     {
-        if (!Schema::hasTable('orders')) {
+        if (! Schema::hasTable('orders')) {
             return response()->json(['message' => 'Orders table does not exist.'], 404);
         }
 
@@ -45,7 +46,7 @@ class OrderController extends Controller
             })
             ->first();
 
-        if (!$order) {
+        if (! $order) {
             return response()->json(['message' => 'Order not found.'], 404);
         }
 
@@ -81,7 +82,7 @@ class OrderController extends Controller
 
     private function orderItems(int $orderId): array
     {
-        if (!Schema::hasTable('order_items')) {
+        if (! Schema::hasTable('order_items')) {
             return [];
         }
 
@@ -116,14 +117,14 @@ class OrderController extends Controller
     private function orderPayload(object $order, array $items): array
     {
         $supplierName = trim((string) ($order->supplier_company ?? '')) ?:
-            trim((string) ($order->supplier_name ?? 'Supplier'));
+            NameFormatter::title((string) ($order->supplier_name ?? 'Supplier'));
         $buyerName = trim((string) ($order->buyer_company ?? '')) ?:
-            trim((string) ($order->buyer_name ?? 'Buyer'));
+            NameFormatter::title((string) ($order->buyer_name ?? 'Buyer'));
 
         return [
             'id' => (string) $order->id,
-            'reference' => 'NB-' . $order->id,
-            'title' => 'Order NB-' . $order->id,
+            'reference' => 'NB-'.$order->id,
+            'title' => 'Order NB-'.$order->id,
             'buyer_id' => (string) $order->buyer_id,
             'supplier_id' => (string) $order->supplier_id,
             'buyer_name' => $buyerName,

@@ -441,7 +441,7 @@
                     @php
                         $supplierName = trim((string) ($material->company ?? '')) !== ''
                             ? (string) $material->company
-                            : (string) ($material->full_name ?? 'Supplier');
+                            : \App\Support\NameFormatter::title((string) ($material->full_name ?? 'Supplier'));
                         $unit = ucfirst(str_replace('_', ' ', (string) ($material->price_unit ?? 'item')));
                         $isSaved = in_array((int) $material->id, $savedMaterialIds, true);
                         $cardImagePath = trim((string) ($material->image_path ?? ''));

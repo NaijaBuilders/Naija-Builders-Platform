@@ -880,7 +880,7 @@
                             @foreach ($productReviews as $review)
                                 <article class="review-item" style="margin-bottom: 0.6rem;">
                                     <div class="review-head">
-                                        <h5>{{ trim((string) ($review->reviewer_company ?? '')) !== '' ? $review->reviewer_company : ($review->reviewer_full_name ?: 'Verified Buyer') }}</h5>
+                                        <h5>{{ trim((string) ($review->reviewer_company ?? '')) !== '' ? $review->reviewer_company : \App\Support\NameFormatter::title((string) ($review->reviewer_full_name ?? 'Verified Buyer'), 'Verified Buyer') }}</h5>
                                         <span class="stars" aria-label="Product review stars">
                                             @for ($star = 1; $star <= 5; $star++)
                                                 <span class="{{ $star <= (int) $review->rating ? '' : 'star-empty' }}">&#9733;</span>
@@ -937,7 +937,7 @@
                             @foreach ($supplierReviews as $review)
                                 <article class="review-item" style="margin-bottom: 0.6rem;">
                                     <div class="review-head">
-                                        <h5>{{ trim((string) ($review->reviewer_company ?? '')) !== '' ? $review->reviewer_company : ($review->reviewer_full_name ?: 'Verified Buyer') }}</h5>
+                                        <h5>{{ trim((string) ($review->reviewer_company ?? '')) !== '' ? $review->reviewer_company : \App\Support\NameFormatter::title((string) ($review->reviewer_full_name ?? 'Verified Buyer'), 'Verified Buyer') }}</h5>
                                         <span class="stars" aria-label="Supplier review stars">
                                             @for ($star = 1; $star <= 5; $star++)
                                                 <span class="{{ $star <= (int) $review->rating ? '' : 'star-empty' }}">&#9733;</span>

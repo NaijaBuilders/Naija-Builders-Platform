@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers\Mobile;
 
-use Carbon\Carbon;
 use App\Http\Controllers\Controller;
+use App\Support\NameFormatter;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -54,7 +55,7 @@ class DashboardController extends Controller
             return response()->json(['message' => 'Buyer dashboard only.'], 403);
         }
 
-        $cartItems = (array) Cache::get('mobile_cart_' . $currentUserId, []);
+        $cartItems = (array) Cache::get('mobile_cart_'.$currentUserId, []);
 
         $cartItemCount = 0;
         foreach ($cartItems as $entry) {
@@ -232,6 +233,7 @@ class DashboardController extends Controller
                 ->map(function ($unit) use ($activeCatalogBase) {
                     $count = (int) ($unit->total ?? 0);
                     $unit->ratio = $activeCatalogBase > 0 ? round(($count / $activeCatalogBase) * 100, 1) : 0.0;
+
                     return $unit;
                 });
 
@@ -305,7 +307,12 @@ class DashboardController extends Controller
             ->where('m.receiver_id', $currentUserId)
             ->orderByDesc('m.created_at')
             ->limit(5)
-            ->get();
+            ->get()
+            ->map(function ($message) {
+                $message->sender_name = NameFormatter::title((string) ($message->sender_name ?? 'User'));
+
+                return $message;
+            });
 
         $analyticsUpdatedAt = now();
 
@@ -341,7 +348,7 @@ class DashboardController extends Controller
 
         return [
             'id' => (int) ($user->id ?? $userId),
-            'name' => (string) ($user->full_name ?? 'User'),
+            'name' => NameFormatter::title((string) ($user->full_name ?? 'User')),
             'email' => (string) ($user->email ?? ''),
             'role' => (string) ($user->role ?? 'builder'),
             'profile_image_path' => (string) ($user->profile_image_path ?? ''),

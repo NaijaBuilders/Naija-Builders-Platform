@@ -48,7 +48,7 @@
 
     <div class="grid-3 gap-lg saved-products-page__grid">
         @forelse ($savedMaterials as $savedItem)
-            @php($supplierName = trim((string) ($savedItem->company ?? '')) !== '' ? (string) $savedItem->company : (string) ($savedItem->full_name ?? 'Supplier'))
+            @php($supplierName = trim((string) ($savedItem->company ?? '')) !== '' ? (string) $savedItem->company : \App\Support\NameFormatter::title((string) ($savedItem->full_name ?? 'Supplier')))
             <article class="card">
                 <div class="card-body">
                     <p style="margin: 0 0 0.35rem; font-size: 0.78rem; color: var(--neutral-500); text-transform: uppercase; letter-spacing: 0.04em;">{{ $savedItem->saved_category_name ?: 'General Saves' }}</p>

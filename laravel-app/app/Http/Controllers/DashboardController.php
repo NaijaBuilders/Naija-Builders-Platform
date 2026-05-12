@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Support\MoneyCalculator;
+use App\Support\NameFormatter;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -99,6 +100,7 @@ class DashboardController extends Controller
                 ->map(function ($unit) use ($activeCatalogBase) {
                     $count = (int) ($unit->total ?? 0);
                     $unit->ratio = MoneyCalculator::percentage($count, $activeCatalogBase);
+
                     return $unit;
                 });
 
@@ -172,7 +174,12 @@ class DashboardController extends Controller
             ->where('m.receiver_id', $currentUserId)
             ->orderByDesc('m.created_at')
             ->limit(5)
-            ->get();
+            ->get()
+            ->map(function ($message) {
+                $message->sender_name = NameFormatter::title((string) ($message->sender_name ?? 'User'));
+
+                return $message;
+            });
 
         $analyticsUpdatedAt = now();
 

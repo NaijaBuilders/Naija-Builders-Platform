@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\NameFormatter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -18,13 +19,13 @@ class MaterialsController extends Controller
         $location = trim((string) $request->query('location', ''));
         $priceUnit = trim((string) $request->query('price_unit', ''));
         $sortBy = trim((string) $request->query('sort_by', 'newest'));
-        if (!in_array($sortBy, ['newest', 'top_sellers', 'price_low', 'price_high'], true)) {
+        if (! in_array($sortBy, ['newest', 'top_sellers', 'price_low', 'price_high'], true)) {
             $sortBy = 'newest';
         }
 
         $perPage = (int) $request->query('per_page', 12);
         $perPageOptions = [6, 12, 24, 48];
-        if (!in_array($perPage, $perPageOptions, true)) {
+        if (! in_array($perPage, $perPageOptions, true)) {
             $perPage = 12;
         }
 
@@ -78,8 +79,8 @@ class MaterialsController extends Controller
 
         if ($search !== '') {
             $query->where(function ($subQuery) use ($search): void {
-                $subQuery->where('m.name', 'like', '%' . $search . '%')
-                    ->orWhere('m.description', 'like', '%' . $search . '%');
+                $subQuery->where('m.name', 'like', '%'.$search.'%')
+                    ->orWhere('m.description', 'like', '%'.$search.'%');
             });
         }
 
@@ -228,7 +229,7 @@ class MaterialsController extends Controller
             ->where('m.status', 'active')
             ->first();
 
-        if (!$material) {
+        if (! $material) {
             return redirect('/materials.php');
         }
 
@@ -241,9 +242,11 @@ class MaterialsController extends Controller
             ->get();
 
         $mainImagePath = (string) (($images->first()->image_path ?? '') ?: '');
-        $supplierName = trim((string) ($material->company ?? '')) !== '' ? (string) $material->company : (string) ($material->full_name ?? 'Supplier');
+        $supplierName = trim((string) ($material->company ?? '')) !== ''
+            ? (string) $material->company
+            : NameFormatter::title((string) ($material->full_name ?? 'Supplier'));
         $stockQuantity = (int) ($material->stock_qty ?? 0);
-        $stockLabel = $stockQuantity > 0 ? number_format($stockQuantity) . ' in stock' : 'Out of stock';
+        $stockLabel = $stockQuantity > 0 ? number_format($stockQuantity).' in stock' : 'Out of stock';
         $stockColor = $stockQuantity > 0 ? 'var(--accent-success)' : 'var(--accent-danger)';
         $isSaved = false;
 
@@ -269,88 +272,98 @@ class MaterialsController extends Controller
             }
         }
 
-            $hasProductReviewsTable = Schema::hasTable('product_reviews');
-            $hasSupplierReviewsTable = Schema::hasTable('supplier_reviews');
+        $hasProductReviewsTable = Schema::hasTable('product_reviews');
+        $hasSupplierReviewsTable = Schema::hasTable('supplier_reviews');
 
-            $productReviews = collect();
-            $supplierReviews = collect();
-            $productRatingAvg = null;
-            $productRatingCount = 0;
-            $supplierRatingAvg = null;
-            $supplierRatingCount = 0;
-            $currentUserProductRating = null;
-            $currentUserSupplierRating = null;
+        $productReviews = collect();
+        $supplierReviews = collect();
+        $productRatingAvg = null;
+        $productRatingCount = 0;
+        $supplierRatingAvg = null;
+        $supplierRatingCount = 0;
+        $currentUserProductRating = null;
+        $currentUserSupplierRating = null;
 
+        if ($hasProductReviewsTable) {
+            $productReviews = DB::table('product_reviews as pr')
+                ->leftJoin('users as ru', 'ru.id', '=', 'pr.user_id')
+                ->select([
+                    'pr.rating',
+                    'pr.review_text',
+                    'pr.created_at',
+                    'ru.full_name as reviewer_full_name',
+                    'ru.company as reviewer_company',
+                ])
+                ->where('pr.material_id', $productId)
+                ->orderByDesc('pr.created_at')
+                ->limit(self::REVIEW_PAGE_LIMIT)
+                ->get()
+                ->map(function ($review) {
+                    $review->reviewer_full_name = NameFormatter::title((string) ($review->reviewer_full_name ?? 'Verified Buyer'), 'Verified Buyer');
+
+                    return $review;
+                });
+
+            $productRatingSummary = DB::table('product_reviews')
+                ->selectRaw('ROUND(AVG(rating), 1) as avg_rating, COUNT(*) as total_reviews')
+                ->where('material_id', $productId)
+                ->first();
+
+            $productRatingAvg = $productRatingSummary && $productRatingSummary->avg_rating !== null
+                ? (float) $productRatingSummary->avg_rating
+                : null;
+            $productRatingCount = (int) ($productRatingSummary->total_reviews ?? 0);
+        }
+
+        if ($hasSupplierReviewsTable) {
+            $supplierReviews = DB::table('supplier_reviews as sr')
+                ->leftJoin('users as ru', 'ru.id', '=', 'sr.user_id')
+                ->select([
+                    'sr.rating',
+                    'sr.review_text',
+                    'sr.created_at',
+                    'ru.full_name as reviewer_full_name',
+                    'ru.company as reviewer_company',
+                ])
+                ->where('sr.supplier_id', (int) $material->supplier_id)
+                ->orderByDesc('sr.created_at')
+                ->limit(self::REVIEW_PAGE_LIMIT)
+                ->get()
+                ->map(function ($review) {
+                    $review->reviewer_full_name = NameFormatter::title((string) ($review->reviewer_full_name ?? 'Verified Buyer'), 'Verified Buyer');
+
+                    return $review;
+                });
+
+            $supplierRatingSummary = DB::table('supplier_reviews')
+                ->selectRaw('ROUND(AVG(rating), 1) as avg_rating, COUNT(*) as total_reviews')
+                ->where('supplier_id', (int) $material->supplier_id)
+                ->first();
+
+            $supplierRatingAvg = $supplierRatingSummary && $supplierRatingSummary->avg_rating !== null
+                ? (float) $supplierRatingSummary->avg_rating
+                : null;
+            $supplierRatingCount = (int) ($supplierRatingSummary->total_reviews ?? 0);
+        }
+
+        $currentUserId = (int) $request->session()->get('legacy_user_id', 0);
+        if ($currentUserId > 0) {
             if ($hasProductReviewsTable) {
-                $productReviews = DB::table('product_reviews as pr')
-                    ->leftJoin('users as ru', 'ru.id', '=', 'pr.user_id')
-                    ->select([
-                        'pr.rating',
-                        'pr.review_text',
-                        'pr.created_at',
-                        'ru.full_name as reviewer_full_name',
-                        'ru.company as reviewer_company',
-                    ])
-                    ->where('pr.material_id', $productId)
-                    ->orderByDesc('pr.created_at')
-                    ->limit(self::REVIEW_PAGE_LIMIT)
-                    ->get();
-
-                $productRatingSummary = DB::table('product_reviews')
-                    ->selectRaw('ROUND(AVG(rating), 1) as avg_rating, COUNT(*) as total_reviews')
+                $currentUserProductRating = DB::table('product_reviews')
                     ->where('material_id', $productId)
-                    ->first();
-
-                $productRatingAvg = $productRatingSummary && $productRatingSummary->avg_rating !== null
-                    ? (float) $productRatingSummary->avg_rating
-                    : null;
-                $productRatingCount = (int) ($productRatingSummary->total_reviews ?? 0);
+                    ->where('user_id', $currentUserId)
+                    ->value('rating');
+                $currentUserProductRating = $currentUserProductRating !== null ? (int) $currentUserProductRating : null;
             }
 
             if ($hasSupplierReviewsTable) {
-                $supplierReviews = DB::table('supplier_reviews as sr')
-                    ->leftJoin('users as ru', 'ru.id', '=', 'sr.user_id')
-                    ->select([
-                        'sr.rating',
-                        'sr.review_text',
-                        'sr.created_at',
-                        'ru.full_name as reviewer_full_name',
-                        'ru.company as reviewer_company',
-                    ])
-                    ->where('sr.supplier_id', (int) $material->supplier_id)
-                    ->orderByDesc('sr.created_at')
-                    ->limit(self::REVIEW_PAGE_LIMIT)
-                    ->get();
-
-                $supplierRatingSummary = DB::table('supplier_reviews')
-                    ->selectRaw('ROUND(AVG(rating), 1) as avg_rating, COUNT(*) as total_reviews')
+                $currentUserSupplierRating = DB::table('supplier_reviews')
                     ->where('supplier_id', (int) $material->supplier_id)
-                    ->first();
-
-                $supplierRatingAvg = $supplierRatingSummary && $supplierRatingSummary->avg_rating !== null
-                    ? (float) $supplierRatingSummary->avg_rating
-                    : null;
-                $supplierRatingCount = (int) ($supplierRatingSummary->total_reviews ?? 0);
+                    ->where('user_id', $currentUserId)
+                    ->value('rating');
+                $currentUserSupplierRating = $currentUserSupplierRating !== null ? (int) $currentUserSupplierRating : null;
             }
-
-            $currentUserId = (int) $request->session()->get('legacy_user_id', 0);
-            if ($currentUserId > 0) {
-                if ($hasProductReviewsTable) {
-                    $currentUserProductRating = DB::table('product_reviews')
-                        ->where('material_id', $productId)
-                        ->where('user_id', $currentUserId)
-                        ->value('rating');
-                    $currentUserProductRating = $currentUserProductRating !== null ? (int) $currentUserProductRating : null;
-                }
-
-                if ($hasSupplierReviewsTable) {
-                    $currentUserSupplierRating = DB::table('supplier_reviews')
-                        ->where('supplier_id', (int) $material->supplier_id)
-                        ->where('user_id', $currentUserId)
-                        ->value('rating');
-                    $currentUserSupplierRating = $currentUserSupplierRating !== null ? (int) $currentUserSupplierRating : null;
-                }
-            }
+        }
 
         return view('materials.show', compact(
             'material',
@@ -375,7 +388,7 @@ class MaterialsController extends Controller
 
     public function rateProduct(Request $request)
     {
-        if (!Schema::hasTable('product_reviews')) {
+        if (! Schema::hasTable('product_reviews')) {
             return back()->with('save_error', 'Product reviews are not available yet.');
         }
 
@@ -396,7 +409,7 @@ class MaterialsController extends Controller
             ->where('status', 'active')
             ->first();
 
-        if (!$material) {
+        if (! $material) {
             return back()->with('save_error', 'Product was not found.');
         }
 
@@ -419,7 +432,7 @@ class MaterialsController extends Controller
 
     public function rateSupplier(Request $request)
     {
-        if (!Schema::hasTable('supplier_reviews')) {
+        if (! Schema::hasTable('supplier_reviews')) {
             return back()->with('save_error', 'Supplier reviews are not available yet.');
         }
 
@@ -438,7 +451,7 @@ class MaterialsController extends Controller
             ->where('id', (int) $validated['supplier_id'])
             ->exists();
 
-        if (!$supplierExists) {
+        if (! $supplierExists) {
             return back()->with('save_error', 'Supplier was not found.');
         }
 

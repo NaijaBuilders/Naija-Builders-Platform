@@ -1,6 +1,7 @@
 @php
     $legacyUser = session('legacy_user');
     $legacyUserRole = (string) ($legacyUser['role'] ?? '');
+    $legacyUserName = \App\Support\NameFormatter::title((string) ($legacyUser['name'] ?? 'User'));
     $isSupplier = $legacyUserRole === 'supplier';
     $supplierKycStatus = (string) ($legacyUser['kyc_status'] ?? 'approved');
     if ($supplierKycStatus === '') {
@@ -160,11 +161,11 @@
                         @if (($legacyUser['profile_image_path'] ?? '') !== '')
                             <img
                                 src="/{{ $legacyUser['profile_image_path'] }}"
-                                alt="{{ $legacyUser['name'] ?? 'User' }}"
+                                alt="{{ $legacyUserName }}"
                                 class="user-avatar"
                             >
                         @else
-                            <span class="user-avatar">{{ strtoupper(substr($legacyUser['name'] ?? 'U', 0, 1)) }}</span>
+                            <span class="user-avatar">{{ strtoupper(substr($legacyUserName, 0, 1)) }}</span>
                         @endif
                         @if ($isVerifiedUser)
                             <span title="Verified account" style="position: absolute; right: -3px; bottom: -3px; width: 18px; height: 18px; border-radius: 999px; background: var(--secondary-color); color: white; border: 2px solid white; display: inline-flex; align-items: center; justify-content: center; font-size: 0.62rem; font-weight: 700;">✓</span>

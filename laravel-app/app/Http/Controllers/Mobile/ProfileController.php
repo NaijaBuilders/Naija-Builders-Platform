@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Mobile;
 
 use App\Http\Controllers\Controller;
 use App\Support\CurrencyManager;
+use App\Support\NameFormatter;
 use App\Support\Security\SensitiveData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -58,7 +59,7 @@ class ProfileController extends Controller
             ->where('id', $currentUserId)
             ->first();
 
-        $fullName = trim((string) ($user->full_name ?? ''));
+        $fullName = NameFormatter::title((string) ($user->full_name ?? ''));
         $nameParts = preg_split('/\s+/', $fullName, 2);
         $firstName = $nameParts[0] ?? '';
         $lastName = $nameParts[1] ?? '';
@@ -82,7 +83,7 @@ class ProfileController extends Controller
 
         $firstName = trim((string) $request->input('first_name', ''));
         $lastName = trim((string) $request->input('last_name', ''));
-        $fullName = trim($firstName.' '.$lastName);
+        $fullName = NameFormatter::title(trim($firstName.' '.$lastName));
         $email = trim((string) $request->input('email', ''));
         $phone = trim((string) $request->input('phone', ''));
         $company = trim((string) $request->input('company', ''));

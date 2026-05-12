@@ -4,7 +4,7 @@
 @section('content')
 <div class="container dashboard-page dashboard-page--buyer" style="padding-top: 2rem; padding-bottom: 2rem;">
     <div style="background: linear-gradient(135deg, var(--secondary-color), var(--primary-color)); color: white; padding: 2rem; border-radius: var(--rounded-lg); margin-bottom: 2rem;">
-        <h1 style="color: white; margin: 0 0 0.5rem;">Welcome, {{ $currentUser['name'] ?? 'Buyer' }}</h1>
+        <h1 style="color: white; margin: 0 0 0.5rem;">Welcome, {{ \App\Support\NameFormatter::title((string) ($currentUser['name'] ?? 'Buyer')) }}</h1>
         <p style="margin: 0; color: rgba(255, 255, 255, 0.9);">Track your orders, discover materials, and connect with suppliers.</p>
     </div>
 
@@ -42,7 +42,7 @@
                 <thead style="background-color: var(--neutral-50);"><tr><th style="padding: 1rem; text-align: left;">Order #</th><th style="padding: 1rem; text-align: left;">Supplier</th><th style="padding: 1rem; text-align: left;">Status</th><th style="padding: 1rem; text-align: left;">Amount</th><th style="padding: 1rem; text-align: left;">Date</th></tr></thead>
                 <tbody>
                     @forelse ($recentOrders as $order)
-                        @php($supplierName = trim((string) ($order->company ?? '')) !== '' ? (string) $order->company : (string) ($order->full_name ?? 'Supplier'))
+                        @php($supplierName = trim((string) ($order->company ?? '')) !== '' ? (string) $order->company : \App\Support\NameFormatter::title((string) ($order->full_name ?? 'Supplier')))
                         <tr style="border-bottom: 1px solid var(--neutral-200);"><td style="padding: 1rem;">#{{ $order->id }}</td><td style="padding: 1rem;">{{ $supplierName }}</td><td style="padding: 1rem;">{{ ucfirst((string) $order->order_status) }}</td><td style="padding: 1rem;">{{ $formatMoney((float) $order->total_amount) }}</td><td style="padding: 1rem;">{{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y') }}</td></tr>
                     @empty
                         <tr><td colspan="5" style="padding: 1rem; color: var(--neutral-600);">No orders yet. Start by browsing available materials.</td></tr>
@@ -59,7 +59,7 @@
         </div>
         <div class="materials-grid" style="padding: 1.5rem;">
             @forelse ($recommendedMaterials as $material)
-                @php($supplierName = trim((string) ($material->company ?? '')) !== '' ? (string) $material->company : (string) ($material->full_name ?? 'Supplier'))
+                @php($supplierName = trim((string) ($material->company ?? '')) !== '' ? (string) $material->company : \App\Support\NameFormatter::title((string) ($material->full_name ?? 'Supplier')))
                 <article class="card" style="border: 1px solid var(--neutral-200); box-shadow: none;">
                     <div class="card-body">
                         <h4 style="margin-top: 0; margin-bottom: 0.5rem;">{{ $material->name }}</h4>
@@ -103,7 +103,7 @@
         </div>
         <div class="card-body" style="padding-top: 0.5rem;">
             @forelse ($savedMaterials as $savedItem)
-                @php($savedSupplierName = trim((string) ($savedItem->company ?? '')) !== '' ? (string) $savedItem->company : (string) ($savedItem->full_name ?? 'Supplier'))
+                @php($savedSupplierName = trim((string) ($savedItem->company ?? '')) !== '' ? (string) $savedItem->company : \App\Support\NameFormatter::title((string) ($savedItem->full_name ?? 'Supplier')))
                 <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-bottom: 1px solid var(--neutral-200); padding: 0.85rem 0; flex-wrap: wrap;">
                     <div>
                         <h4 style="margin: 0 0 0.35rem; font-size: 1rem;">{{ $savedItem->name }}</h4>

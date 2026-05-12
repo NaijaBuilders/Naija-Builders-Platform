@@ -26,7 +26,7 @@
                     <option value="">Select contact</option>
                     @foreach ($recipients as $recipient)
                         <option value="{{ (int) $recipient->id }}" {{ (int) ($selectedContactId ?? 0) === (int) $recipient->id ? 'selected' : '' }}>
-                            {{ $recipient->full_name }} ({{ $recipient->role }})
+                            {{ \App\Support\NameFormatter::title((string) $recipient->full_name) }} ({{ $recipient->role }})
                         </option>
                     @endforeach
                 </select>
@@ -44,16 +44,17 @@
             <div class="card-body" style="padding-top: 0.35rem; max-height: 560px; overflow-y: auto;">
                 @forelse (($contacts ?? collect()) as $contact)
                     @php($isActive = (int) ($selectedContactId ?? 0) === (int) $contact->id)
+                    @php($contactName = \App\Support\NameFormatter::title((string) $contact->full_name))
                     <a href="/messages.php?contact_id={{ (int) $contact->id }}" class="messages-contact-item {{ $isActive ? 'messages-contact-item-active' : '' }}" style="display: block; text-decoration: none; color: inherit; border: 1px solid {{ $isActive ? 'var(--primary-color)' : 'var(--neutral-200)' }}; border-radius: var(--rounded-md); padding: 0.65rem; margin-bottom: 0.55rem;">
                         <div style="display: flex; align-items: center; gap: 0.6rem;">
                             @if (($contact->profile_image_path ?? '') !== '')
-                                <img src="/{{ $contact->profile_image_path }}" alt="{{ $contact->full_name }}" style="width: 38px; height: 38px; border-radius: 999px; object-fit: cover; border: 1px solid var(--neutral-200); flex-shrink: 0;">
+                                <img src="/{{ $contact->profile_image_path }}" alt="{{ $contactName }}" style="width: 38px; height: 38px; border-radius: 999px; object-fit: cover; border: 1px solid var(--neutral-200); flex-shrink: 0;">
                             @else
-                                <span style="width: 38px; height: 38px; border-radius: 999px; background: var(--neutral-100); border: 1px solid var(--neutral-200); display: inline-flex; align-items: center; justify-content: center; color: var(--neutral-700); font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">{{ strtoupper(substr((string) $contact->full_name, 0, 1)) }}</span>
+                                <span style="width: 38px; height: 38px; border-radius: 999px; background: var(--neutral-100); border: 1px solid var(--neutral-200); display: inline-flex; align-items: center; justify-content: center; color: var(--neutral-700); font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">{{ strtoupper(substr($contactName, 0, 1)) }}</span>
                             @endif
                             <div style="flex: 1; min-width: 0;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem;">
-                                    <strong style="font-size: 0.95rem; color: var(--neutral-900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $contact->full_name }}</strong>
+                                    <strong style="font-size: 0.95rem; color: var(--neutral-900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $contactName }}</strong>
                                     @if ((int) ($contact->unread_count ?? 0) > 0)
                                         <span style="font-size: 0.72rem; background: var(--accent-danger); color: white; border-radius: 999px; padding: 0.12rem 0.45rem;">{{ (int) $contact->unread_count }}</span>
                                     @endif
@@ -72,14 +73,15 @@
         <div class="card messages-thread-panel" style="grid-column: 2 / -1; display: flex; flex-direction: column; min-height: 560px;">
             <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem;">
                 @if ($selectedContact)
+                    @php($selectedContactName = \App\Support\NameFormatter::title((string) $selectedContact->full_name))
                     <div style="display: flex; align-items: center; gap: 0.65rem; min-width: 0;">
                         @if (($selectedContact->profile_image_path ?? '') !== '')
-                            <img src="/{{ $selectedContact->profile_image_path }}" alt="{{ $selectedContact->full_name }}" style="width: 42px; height: 42px; border-radius: 999px; object-fit: cover; border: 1px solid var(--neutral-200); flex-shrink: 0;">
+                            <img src="/{{ $selectedContact->profile_image_path }}" alt="{{ $selectedContactName }}" style="width: 42px; height: 42px; border-radius: 999px; object-fit: cover; border: 1px solid var(--neutral-200); flex-shrink: 0;">
                         @else
-                            <span style="width: 42px; height: 42px; border-radius: 999px; background: var(--neutral-100); border: 1px solid var(--neutral-200); display: inline-flex; align-items: center; justify-content: center; color: var(--neutral-700); font-weight: 700; font-size: 0.9rem; flex-shrink: 0;">{{ strtoupper(substr((string) $selectedContact->full_name, 0, 1)) }}</span>
+                            <span style="width: 42px; height: 42px; border-radius: 999px; background: var(--neutral-100); border: 1px solid var(--neutral-200); display: inline-flex; align-items: center; justify-content: center; color: var(--neutral-700); font-weight: 700; font-size: 0.9rem; flex-shrink: 0;">{{ strtoupper(substr($selectedContactName, 0, 1)) }}</span>
                         @endif
                         <div style="min-width: 0;">
-                            <h3 style="margin: 0; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $selectedContact->full_name }}</h3>
+                            <h3 style="margin: 0; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $selectedContactName }}</h3>
                             <p style="margin: 0; font-size: 0.8rem; color: var(--neutral-600); text-transform: capitalize;">{{ $selectedContact->role }}</p>
                         </div>
                     </div>

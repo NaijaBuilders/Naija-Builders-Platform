@@ -8,6 +8,7 @@ import type {
   UserProfile,
   UserRole,
 } from '../types';
+import { capitalizeWords } from '../utils/format';
 import { getApiOrigin } from './apiClient';
 
 const fallbackImage = require('../../assets/images/dashboard-materials.jpg');
@@ -97,10 +98,11 @@ export function assetSource(path?: string) {
 
 export function mapLaravelUser(user: LaravelUser): UserProfile {
   const timestamp = new Date().toISOString();
+  const name = String(user.name ?? user.full_name ?? 'User');
 
   return {
     id: String(user.id ?? ''),
-    name: String(user.name ?? user.full_name ?? 'User'),
+    name: capitalizeWords(name),
     email: String(user.email ?? ''),
     role: normalizeRole(String(user.role ?? 'builder')),
     company: user.company ? String(user.company) : undefined,
@@ -119,10 +121,10 @@ export function mapLaravelMaterial(
   images: LaravelMaterialImage[] = []
 ): Product {
   const id = String(material.id ?? '');
+  const supplierCompany = String(material.company ?? '').trim();
+  const supplierFullName = String(material.full_name ?? '').trim();
   const supplierName =
-    String(material.company ?? '').trim() ||
-    String(material.full_name ?? '').trim() ||
-    'Supplier';
+    supplierCompany || (supplierFullName ? capitalizeWords(supplierFullName) : 'Supplier');
   const imageSources = images
     .map((image) => image.image_path)
     .filter(Boolean)
@@ -140,7 +142,7 @@ export function mapLaravelMaterial(
     supplierName,
     supplier: {
       id: String(material.supplier_id ?? ''),
-      name: String(material.full_name ?? supplierName),
+      name: supplierFullName ? capitalizeWords(supplierFullName) : supplierName,
       company: supplierName,
       location: String(material.location ?? ''),
       rating: normalizedRating,
@@ -190,7 +192,7 @@ export function mapLaravelContact(
 
   return {
     id,
-    participantName: String(contactData.full_name ?? 'Contact'),
+    participantName: capitalizeWords(String(contactData.full_name ?? 'Contact')),
     company: String(contactData.company ?? 'Company not listed'),
     lastMessage: String(contactData.last_message ?? 'No conversation.'),
     lastMessageAt: contactData.last_message_at ? String(contactData.last_message_at) : 'Now',

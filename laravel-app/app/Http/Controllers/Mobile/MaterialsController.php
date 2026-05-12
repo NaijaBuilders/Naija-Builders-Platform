@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Mobile;
 
 use App\Http\Controllers\Controller;
+use App\Support\NameFormatter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -19,13 +20,13 @@ class MaterialsController extends Controller
         $location = trim((string) $request->query('location', ''));
         $priceUnit = trim((string) $request->query('price_unit', ''));
         $sortBy = trim((string) $request->query('sort_by', 'newest'));
-        if (!in_array($sortBy, ['newest', 'top_sellers', 'price_low', 'price_high'], true)) {
+        if (! in_array($sortBy, ['newest', 'top_sellers', 'price_low', 'price_high'], true)) {
             $sortBy = 'newest';
         }
 
         $perPage = (int) $request->query('per_page', 12);
         $perPageOptions = [6, 12, 24, 48];
-        if (!in_array($perPage, $perPageOptions, true)) {
+        if (! in_array($perPage, $perPageOptions, true)) {
             $perPage = 12;
         }
 
@@ -79,8 +80,8 @@ class MaterialsController extends Controller
 
         if ($search !== '') {
             $query->where(function ($subQuery) use ($search): void {
-                $subQuery->where('m.name', 'like', '%' . $search . '%')
-                    ->orWhere('m.description', 'like', '%' . $search . '%');
+                $subQuery->where('m.name', 'like', '%'.$search.'%')
+                    ->orWhere('m.description', 'like', '%'.$search.'%');
             });
         }
 
@@ -235,7 +236,7 @@ class MaterialsController extends Controller
             ->where('m.status', 'active')
             ->first();
 
-        if (!$material) {
+        if (! $material) {
             return response()->json(['message' => 'Material not found.'], 404);
         }
 
@@ -250,9 +251,9 @@ class MaterialsController extends Controller
         $mainImagePath = (string) (($images->first()->image_path ?? '') ?: '');
         $supplierName = trim((string) ($material->company ?? '')) !== ''
             ? (string) $material->company
-            : (string) ($material->full_name ?? 'Supplier');
+            : NameFormatter::title((string) ($material->full_name ?? 'Supplier'));
         $stockQuantity = (int) ($material->stock_qty ?? 0);
-        $stockLabel = $stockQuantity > 0 ? number_format($stockQuantity) . ' in stock' : 'Out of stock';
+        $stockLabel = $stockQuantity > 0 ? number_format($stockQuantity).' in stock' : 'Out of stock';
         $isSaved = false;
 
         if (Schema::hasTable('saved_materials')) {
@@ -302,7 +303,12 @@ class MaterialsController extends Controller
                 ->where('pr.material_id', $materialId)
                 ->orderByDesc('pr.created_at')
                 ->limit(self::REVIEW_PAGE_LIMIT)
-                ->get();
+                ->get()
+                ->map(function ($review) {
+                    $review->reviewer_full_name = NameFormatter::title((string) ($review->reviewer_full_name ?? 'Verified Buyer'), 'Verified Buyer');
+
+                    return $review;
+                });
 
             $productRatingSummary = DB::table('product_reviews')
                 ->selectRaw('ROUND(AVG(rating), 1) as avg_rating, COUNT(*) as total_reviews')
@@ -328,7 +334,12 @@ class MaterialsController extends Controller
                 ->where('sr.supplier_id', (int) $material->supplier_id)
                 ->orderByDesc('sr.created_at')
                 ->limit(self::REVIEW_PAGE_LIMIT)
-                ->get();
+                ->get()
+                ->map(function ($review) {
+                    $review->reviewer_full_name = NameFormatter::title((string) ($review->reviewer_full_name ?? 'Verified Buyer'), 'Verified Buyer');
+
+                    return $review;
+                });
 
             $supplierRatingSummary = DB::table('supplier_reviews')
                 ->selectRaw('ROUND(AVG(rating), 1) as avg_rating, COUNT(*) as total_reviews')
@@ -382,7 +393,7 @@ class MaterialsController extends Controller
 
     public function rateProduct(Request $request, int $materialId)
     {
-        if (!Schema::hasTable('product_reviews')) {
+        if (! Schema::hasTable('product_reviews')) {
             return response()->json(['message' => 'Product reviews are not available yet.'], 422);
         }
 
@@ -399,7 +410,7 @@ class MaterialsController extends Controller
             ->where('status', 'active')
             ->first();
 
-        if (!$material) {
+        if (! $material) {
             return response()->json(['message' => 'Material was not found.'], 404);
         }
 
@@ -422,7 +433,7 @@ class MaterialsController extends Controller
 
     public function rateSupplier(Request $request, int $supplierId)
     {
-        if (!Schema::hasTable('supplier_reviews')) {
+        if (! Schema::hasTable('supplier_reviews')) {
             return response()->json(['message' => 'Supplier reviews are not available yet.'], 422);
         }
 
@@ -437,7 +448,7 @@ class MaterialsController extends Controller
             ->where('id', $supplierId)
             ->exists();
 
-        if (!$supplierExists) {
+        if (! $supplierExists) {
             return response()->json(['message' => 'Supplier was not found.'], 404);
         }
 

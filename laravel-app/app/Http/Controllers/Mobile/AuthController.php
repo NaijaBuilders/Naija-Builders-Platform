@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Mobile;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\SupplierOnboarding\SupplierOnboardingService;
+use App\Support\NameFormatter;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -107,7 +108,7 @@ class AuthController extends Controller
         $hasKycStatus = Schema::hasColumn('users', 'kyc_status');
 
         $insertPayload = [
-            'full_name' => $validated['name'],
+            'full_name' => NameFormatter::title($validated['name']),
             'email' => $validated['email'],
             'phone' => $validated['phone'],
             'company' => $company,
@@ -224,7 +225,7 @@ class AuthController extends Controller
         return [
             'id' => (int) $user->id,
             'email' => (string) $user->email,
-            'name' => (string) ($user->full_name ?? 'User'),
+            'name' => NameFormatter::title((string) ($user->full_name ?? 'User')),
             'role' => (string) ($user->role ?? 'builder'),
             'phone' => (string) ($user->phone ?? ''),
             'company' => (string) ($user->company ?? ''),
