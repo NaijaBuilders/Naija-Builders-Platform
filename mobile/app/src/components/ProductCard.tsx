@@ -11,12 +11,14 @@ type ProductCardProps = {
   product: Product;
   animationIndex?: number;
   onPress?: (product: Product) => void;
+  variant?: 'compact' | 'marketplace';
 };
 
 export const ProductCard = React.memo(function ProductCard({
   animationIndex,
   onPress,
   product,
+  variant = 'compact',
 }: ProductCardProps) {
   const supplierMeta = [product.supplierName, product.location]
     .filter(Boolean)
@@ -26,20 +28,47 @@ export const ProductCard = React.memo(function ProductCard({
   }, [onPress, product]);
 
   return (
-    <Card animationIndex={animationIndex} style={styles.card}>
+    <Card
+      animationIndex={animationIndex}
+      style={[
+        styles.card,
+        variant === 'marketplace' ? styles.marketplaceCard : null,
+      ]}
+    >
       <Pressable
         disabled={!onPress}
         onPress={handlePress}
-        style={styles.pressable}
+        style={[
+          styles.pressable,
+          variant === 'marketplace' ? styles.marketplacePressable : null,
+        ]}
       >
-        <Image
-          fadeDuration={120}
-          progressiveRenderingEnabled
-          resizeMethod="resize"
-          resizeMode="cover"
-          source={product.image}
-          style={styles.image}
-        />
+        <View
+          style={
+            variant === 'marketplace'
+              ? styles.marketplaceImageWrap
+              : styles.imageWrap
+          }
+        >
+          <Image
+            fadeDuration={120}
+            progressiveRenderingEnabled
+            resizeMethod="resize"
+            resizeMode="cover"
+            source={product.image}
+            style={
+              variant === 'marketplace' ? styles.marketplaceImage : styles.image
+            }
+          />
+          {variant === 'marketplace' ? (
+            <View style={styles.imageOverlay}>
+              <Badge
+                label={product.inStock ? 'Available' : 'Out of stock'}
+                tone={product.inStock ? 'success' : 'warning'}
+              />
+            </View>
+          ) : null}
+        </View>
         <View style={styles.body}>
           <View style={styles.row}>
             <Badge label={product.category} tone="primary" />
@@ -81,10 +110,34 @@ const styles = StyleSheet.create({
   pressable: {
     flexDirection: 'row',
   },
+  marketplaceCard: {
+    borderRadius: theme.radius.md,
+  },
+  marketplacePressable: {
+    flexDirection: 'column',
+  },
+  imageWrap: {
+    backgroundColor: theme.colors.surfaceMuted,
+  },
   image: {
     backgroundColor: theme.colors.surfaceMuted,
     minHeight: 154,
     width: 118,
+  },
+  marketplaceImageWrap: {
+    backgroundColor: theme.colors.surfaceMuted,
+    height: 178,
+    position: 'relative',
+    width: '100%',
+  },
+  marketplaceImage: {
+    height: '100%',
+    width: '100%',
+  },
+  imageOverlay: {
+    bottom: theme.spacing.sm,
+    position: 'absolute',
+    right: theme.spacing.sm,
   },
   body: {
     flex: 1,

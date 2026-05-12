@@ -30,7 +30,7 @@ import type {
 } from '../types';
 
 const GENERIC_REJECTION_MESSAGE =
-  'We could not verify your supplier application at this time.';
+  'Your verification could not be approved at this time.';
 
 const documentTypes = ['national_id', 'voter_card', 'drivers_license', 'passport'];
 
@@ -75,12 +75,12 @@ const statusCopy: Record<
     tone: 'neutral',
   },
   MANUAL_REVIEW: {
-    body: 'Your application is being reviewed by the NaijaBuilders team.',
+    body: "We're verifying your details.",
     label: 'Manual review',
     tone: 'warning',
   },
   MORE_INFO_REQUIRED: {
-    body: 'Please update the requested information and submit again.',
+    body: 'We need a little more information.',
     label: 'More info required',
     tone: 'warning',
   },
@@ -90,7 +90,7 @@ const statusCopy: Record<
     tone: 'danger',
   },
   SUBMITTED: {
-    body: 'Your supplier application has been submitted.',
+    body: "We're verifying your details.",
     label: 'Submitted',
     tone: 'primary',
   },
@@ -100,7 +100,7 @@ const statusCopy: Record<
     tone: 'danger',
   },
   VERIFYING: {
-    body: 'Verification checks are in progress.',
+    body: "We're verifying your details.",
     label: 'Verifying',
     tone: 'primary',
   },
@@ -184,7 +184,9 @@ export function SupplierOnboardingScreen() {
       bvn: '',
       id_document_type:
         nextApplication.identity.id_document_type || current.id_document_type,
+      idDocumentUri: '',
       nin: '',
+      selfieUri: '',
     }));
     setBankForm((current) => ({
       ...current,

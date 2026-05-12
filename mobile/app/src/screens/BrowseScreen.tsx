@@ -4,6 +4,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   FlatList,
+  Image,
   ListRenderItemInfo,
   Platform,
   Pressable,
@@ -92,6 +93,7 @@ function BuyerBrowseScreen() {
       <ProductCard
         animationIndex={index}
         product={item}
+        variant="marketplace"
         onPress={(product) =>
           navigation.navigate('ProductDetail', { productId: product.id })
         }
@@ -349,38 +351,59 @@ const SupplierListingCard = React.memo(function SupplierListingCard({
 
   return (
     <Card animationIndex={animationIndex} style={styles.listingCard}>
-      <View style={styles.listingTop}>
-        <View style={styles.listingCopy}>
-          <Text style={styles.listingCategory}>{listing.category}</Text>
-          <Text numberOfLines={2} style={styles.listingTitle}>
-            {listing.name}
-          </Text>
+      <View style={styles.listingImageWrap}>
+        <Image
+          fadeDuration={120}
+          progressiveRenderingEnabled
+          resizeMethod="resize"
+          resizeMode="cover"
+          source={listing.image}
+          style={styles.listingImage}
+        />
+        <View style={styles.listingImageBadges}>
+          <Badge label={listingStatusLabels[listing.status]} tone={statusTone} />
+          {listing.negotiable ? (
+            <Badge label="Negotiable" tone="primary" />
+          ) : null}
         </View>
-        <Badge label={listingStatusLabels[listing.status]} tone={statusTone} />
       </View>
 
-      <View style={styles.listingMetrics}>
-        <View style={styles.listingMetric}>
-          <Text style={styles.metricLabel}>Price</Text>
-          <Text style={styles.metricValue}>
-            {formatCurrency(listing.price)}
-          </Text>
-          <Text style={styles.metricMeta}>per {listing.unit}</Text>
-        </View>
-        <View style={styles.metricDivider} />
-        <View style={styles.listingMetric}>
-          <Text style={styles.metricLabel}>Stock</Text>
-          <Text style={styles.metricValue}>{listing.stockCount}</Text>
+      <View style={styles.listingBody}>
+        <View style={styles.listingTop}>
+          <View style={styles.listingCopy}>
+            <Text style={styles.listingCategory}>{listing.category}</Text>
+            <Text numberOfLines={2} style={styles.listingTitle}>
+              {listing.name}
+            </Text>
+          </View>
           <Badge
             label={listing.stockCount <= 5 ? 'Low stock' : 'In stock'}
             tone={stockTone}
           />
         </View>
-      </View>
 
-      {listing.negotiable ? (
-        <Text style={styles.negotiable}>Negotiable pricing enabled</Text>
-      ) : null}
+        <View style={styles.listingMetrics}>
+          <View style={styles.listingMetric}>
+            <Text style={styles.metricLabel}>Price</Text>
+            <Text style={styles.metricValue}>
+              {formatCurrency(listing.price)}
+            </Text>
+            <Text style={styles.metricMeta}>per {listing.unit}</Text>
+          </View>
+          <View style={styles.metricDivider} />
+          <View style={styles.listingMetric}>
+            <Text style={styles.metricLabel}>Stock</Text>
+            <Text style={styles.metricValue}>{listing.stockCount}</Text>
+            <Text style={styles.metricMeta}>
+              {listing.stockCount <= 5 ? 'Restock soon' : 'Available'}
+            </Text>
+          </View>
+        </View>
+
+        {listing.negotiable ? (
+          <Text style={styles.negotiable}>Negotiable pricing enabled</Text>
+        ) : null}
+      </View>
     </Card>
   );
 });
@@ -464,8 +487,32 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   listingCard: {
-    gap: theme.spacing.md,
     marginBottom: theme.spacing.md,
+    overflow: 'hidden',
+    padding: 0,
+  },
+  listingImageWrap: {
+    backgroundColor: theme.colors.surfaceMuted,
+    height: 188,
+    position: 'relative',
+    width: '100%',
+  },
+  listingImage: {
+    height: '100%',
+    width: '100%',
+  },
+  listingImageBadges: {
+    bottom: theme.spacing.sm,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.xs,
+    left: theme.spacing.sm,
+    position: 'absolute',
+    right: theme.spacing.sm,
+  },
+  listingBody: {
+    gap: theme.spacing.md,
+    padding: theme.spacing.md,
   },
   listingTop: {
     alignItems: 'flex-start',
