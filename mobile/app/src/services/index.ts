@@ -1,6 +1,7 @@
 export * from './apiClient';
 export * from './authService';
 export * from './dashboardService';
+export * from './kycService';
 export * from './listingService';
 export * from './messageService';
 export * from './orderService';
