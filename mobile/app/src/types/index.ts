@@ -158,6 +158,7 @@ export interface SupplierListing {
   category: string;
   price: number;
   unit: string;
+  image: ImageSourcePropType;
   stockCount: number;
   status: ListingStatus;
   negotiable: boolean;
@@ -233,6 +234,13 @@ export interface SupplierBankDetailsPayload {
   bank_code: string;
   account_number: string;
   account_name?: string;
+}
+
+export type EmailVerificationStatus = 'VERIFIED' | 'REVIEWING' | 'NOT_VERIFIED';
+
+export interface EmailVerificationResult {
+  status: EmailVerificationStatus;
+  provider: string;
 }
 
 export interface SupplierOnboardingApplication {

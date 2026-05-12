@@ -4,10 +4,12 @@ use App\Http\Controllers\Mobile\AdminSupplierOnboardingController;
 use App\Http\Controllers\Mobile\AuthController;
 use App\Http\Controllers\Mobile\CartController;
 use App\Http\Controllers\Mobile\DashboardController;
+use App\Http\Controllers\Mobile\EmailVerificationController;
 use App\Http\Controllers\Mobile\ListingController;
 use App\Http\Controllers\Mobile\MaterialsController;
 use App\Http\Controllers\Mobile\MessageController;
 use App\Http\Controllers\Mobile\OrderController;
+use App\Http\Controllers\Mobile\PremblyWebhookController;
 use App\Http\Controllers\Mobile\ProfileController;
 use App\Http\Controllers\Mobile\SavedMaterialController;
 use App\Http\Controllers\Mobile\StaticPageController;
@@ -15,6 +17,9 @@ use App\Http\Controllers\Mobile\SubscriptionController;
 use App\Http\Controllers\Mobile\SupplierOnboardingController;
 use App\Http\Controllers\Mobile\SupportController;
 use Illuminate\Support\Facades\Route;
+
+Route::post('/kyc/prembly/webhook', PremblyWebhookController::class)
+    ->name('kyc.prembly.webhook');
 
 Route::prefix('mobile')->group(function (): void {
     Route::get('/health', fn () => response()->json([
@@ -61,6 +66,8 @@ Route::prefix('mobile')->group(function (): void {
         Route::post('/profile', [ProfileController::class, 'update']);
         Route::get('/settings', [ProfileController::class, 'settings']);
         Route::post('/settings', [ProfileController::class, 'saveSettings']);
+
+        Route::post('/kyc/email-verification', EmailVerificationController::class);
 
         Route::get('/supplier/onboarding/status', [SupplierOnboardingController::class, 'status']);
         Route::get('/supplier/onboarding/applications/{application}', [SupplierOnboardingController::class, 'show']);
