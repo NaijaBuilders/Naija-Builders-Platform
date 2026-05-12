@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Support\Security\SensitiveData;
+use App\Models\User;
+use App\Services\SupplierOnboarding\SupplierOnboardingService;
+use App\Support\NameFormatter;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Validator;
+use Throwable;
 
 class AuthController extends Controller
 {
@@ -81,7 +85,7 @@ class AuthController extends Controller
         $request->session()->put('legacy_user', [
             'id' => (int) $user->id,
             'email' => $user->email,
-            'name' => $user->full_name,
+            'name' => NameFormatter::title((string) $user->full_name),
             'role' => $user->role,
             'location' => (string) ($user->location ?? ''),
             'profile_image_path' => (string) ($user->profile_image_path ?? ''),
@@ -147,8 +151,10 @@ class AuthController extends Controller
             $company = 'Individual Buyer';
         }
 
+        $formattedName = NameFormatter::title($name);
+
         if ($accountType === 'supplier' && $company === '') {
-            $company = $name;
+            $company = $formattedName;
         }
 
         $hasBusinessCategory = Schema::hasColumn('users', 'business_category');
@@ -159,7 +165,7 @@ class AuthController extends Controller
         $hasKycStatus = Schema::hasColumn('users', 'kyc_status');
 
         $insertPayload = [
-            'full_name' => $name,
+            'full_name' => $formattedName,
             'email' => $email,
             'phone' => $phone,
             'company' => $company,
@@ -201,7 +207,7 @@ class AuthController extends Controller
         $request->session()->put('legacy_user', [
             'id' => (int) $userId,
             'email' => $email,
-            'name' => $name,
+            'name' => $formattedName,
             'company' => $company,
             'role' => $accountType,
             'location' => $location,
@@ -220,7 +226,7 @@ class AuthController extends Controller
         return redirect('/subscription.php');
     }
 
-    public function showSupplierKyc(Request $request)
+    public function showSupplierKyc(Request $request, SupplierOnboardingService $onboarding)
     {
         if (! $request->session()->has('legacy_user_id')) {
             return redirect('/login.php');
@@ -233,36 +239,25 @@ class AuthController extends Controller
 
         $currentUserId = (int) $request->session()->get('legacy_user_id', 0);
 
-        $user = DB::table('users')
-            ->select([
-                'full_name',
-                'email',
-                'phone',
-                'company',
-                Schema::hasColumn('users', 'business_category') ? 'business_category' : DB::raw('NULL as business_category'),
-                'location',
-                Schema::hasColumn('users', 'business_address') ? 'business_address' : DB::raw('NULL as business_address'),
-                Schema::hasColumn('users', 'business_description') ? 'business_description' : DB::raw('NULL as business_description'),
-                Schema::hasColumn('users', 'bank_name') ? 'bank_name' : DB::raw('NULL as bank_name'),
-                Schema::hasColumn('users', 'account_number') ? 'account_number' : DB::raw('NULL as account_number'),
-                Schema::hasColumn('users', 'kyc_status') ? DB::raw("COALESCE(kyc_status, 'approved') as kyc_status") : DB::raw("'approved' as kyc_status"),
-            ])
-            ->where('id', $currentUserId)
-            ->first();
-
-        if ($user) {
-            $legacyUser['kyc_status'] = (string) ($user->kyc_status ?: 'approved');
-            $request->session()->put('legacy_user', $legacyUser);
+        $user = User::query()->find($currentUserId);
+        if (! $user) {
+            return redirect('/login.php');
         }
+
+        $application = $onboarding->applicationForUser($user)->refresh();
+
+        $legacyUser['kyc_status'] = (string) ($user->kyc_status ?: $this->legacyKycStatusFromApplication((string) $application->status));
+        $request->session()->put('legacy_user', $legacyUser);
 
         return view('auth.supplier-kyc', [
             'user' => $user,
+            'application' => $application,
             'successCode' => (string) $request->query('success', ''),
             'errorCode' => (string) $request->query('error', ''),
         ]);
     }
 
-    public function submitSupplierKyc(Request $request): RedirectResponse
+    public function submitSupplierKyc(Request $request, SupplierOnboardingService $onboarding): RedirectResponse
     {
         if (! $request->session()->has('legacy_user_id')) {
             return redirect('/login.php');
@@ -273,64 +268,83 @@ class AuthController extends Controller
             return redirect('/buyer-dashboard.php');
         }
 
-        $company = trim((string) $request->input('company', ''));
-        $businessCategory = trim((string) $request->input('business_category', ''));
-        $location = trim((string) $request->input('location', ''));
-        $businessAddress = trim((string) $request->input('business_address', ''));
-        $businessDescription = trim((string) $request->input('business_description', ''));
-        $bankName = trim((string) $request->input('bank_name', ''));
-        $accountNumber = trim((string) $request->input('account_number', ''));
-
-        if ($company === '' || $businessCategory === '' || $location === '' || $businessAddress === '' || $bankName === '' || $accountNumber === '') {
-            return redirect('/supplier-kyc.php?error=missing_fields')->withInput();
-        }
-
         $currentUserId = (int) $request->session()->get('legacy_user_id', 0);
-
-        $updatePayload = [
-            'company' => $company,
-            'location' => $location,
-            'updated_at' => now(),
-        ];
-
-        if (Schema::hasColumn('users', 'business_category')) {
-            $updatePayload['business_category'] = $businessCategory;
+        $user = User::query()->find($currentUserId);
+        if (! $user) {
+            return redirect('/login.php');
         }
 
-        if (Schema::hasColumn('users', 'business_address')) {
-            $updatePayload['business_address'] = $businessAddress;
+        $validator = Validator::make($request->all(), [
+            'cac_number' => ['required', 'string', 'max:40', 'regex:/^(RC|BN|IT)?[A-Za-z0-9\-\/]{4,30}$/'],
+            'business_name' => ['required', 'string', 'min:2', 'max:191'],
+            'business_type' => ['required', 'string', 'max:80'],
+            'business_address' => ['required', 'string', 'min:5', 'max:255'],
+            'state' => ['required', 'string', 'max:80'],
+            'contact_name' => ['nullable', 'string', 'max:150'],
+            'contact_email' => ['nullable', 'email', 'max:191'],
+            'contact_phone' => ['nullable', 'string', 'max:40'],
+            'bvn' => ['nullable', 'digits:11'],
+            'nin' => ['nullable', 'digits:11'],
+            'id_document_type' => ['nullable', 'string', 'max:40'],
+            'selfie' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'id_document' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
+            'bank_name' => ['required', 'string', 'max:120'],
+            'bank_code' => ['required', 'string', 'alpha_num', 'max:30'],
+            'account_number' => ['required', 'digits_between:10,12'],
+            'account_name' => ['nullable', 'string', 'max:191'],
+        ]);
+
+        $safeInput = $request->except(['bvn', 'nin', 'account_number', 'selfie', 'id_document']);
+        if ($validator->fails()) {
+            return redirect('/supplier-kyc.php?error=invalid_fields')
+                ->withErrors($validator)
+                ->withInput($safeInput);
         }
 
-        if (Schema::hasColumn('users', 'business_description')) {
-            $updatePayload['business_description'] = $businessDescription;
+        $validated = $validator->validated();
+        if (trim((string) ($validated['bvn'] ?? '')) === '' && trim((string) ($validated['nin'] ?? '')) === '') {
+            return redirect('/supplier-kyc.php?error=missing_identity')
+                ->withInput($safeInput);
         }
 
-        if (Schema::hasColumn('users', 'bank_name')) {
-            $updatePayload['bank_name'] = $bankName;
+        try {
+            $onboarding->submitBusinessDetails($user, [
+                'cac_number' => $validated['cac_number'],
+                'business_name' => $validated['business_name'],
+                'business_type' => $validated['business_type'],
+                'business_address' => $validated['business_address'],
+                'state' => $validated['state'],
+                'contact_name' => $validated['contact_name'] ?? $user->full_name,
+                'contact_email' => $validated['contact_email'] ?? $user->email,
+                'contact_phone' => $validated['contact_phone'] ?? $user->phone,
+            ], $request);
+
+            $onboarding->submitIdentity($user, [
+                'bvn' => $validated['bvn'] ?? '',
+                'nin' => $validated['nin'] ?? '',
+                'id_document_type' => $validated['id_document_type'] ?? null,
+            ], $request);
+
+            $onboarding->submitBankDetails($user, [
+                'bank_name' => $validated['bank_name'],
+                'bank_code' => $validated['bank_code'],
+                'account_number' => $validated['account_number'],
+                'account_name' => $validated['account_name'] ?? $validated['business_name'],
+            ], $request);
+
+            $application = $onboarding->submitForDecision($user, $request);
+        } catch (Throwable) {
+            return redirect('/supplier-kyc.php?error=submit_failed')
+                ->withInput($safeInput);
         }
 
-        if (Schema::hasColumn('users', 'account_number')) {
-            $updatePayload['account_number'] = SensitiveData::maskDigits($accountNumber);
-        }
-
-        if (Schema::hasColumn('users', 'kyc_status')) {
-            $updatePayload['kyc_status'] = 'submitted';
-        }
-
-        if (Schema::hasColumn('users', 'kyc_submitted_at')) {
-            $updatePayload['kyc_submitted_at'] = now();
-        }
-
-        DB::table('users')
-            ->where('id', $currentUserId)
-            ->update($updatePayload);
-
-        $legacyUser['company'] = $company;
-        $legacyUser['location'] = $location;
-        $legacyUser['kyc_status'] = Schema::hasColumn('users', 'kyc_status') ? 'submitted' : 'approved';
+        $user->refresh();
+        $legacyUser['company'] = (string) ($user->company ?? $validated['business_name']);
+        $legacyUser['location'] = (string) ($user->location ?? $validated['state']);
+        $legacyUser['kyc_status'] = (string) ($user->kyc_status ?: $this->legacyKycStatusFromApplication((string) $application->status));
         $request->session()->put('legacy_user', $legacyUser);
 
-        return redirect('/supplier-kyc.php?success=submitted');
+        return redirect('/supplier-kyc.php?success=processed');
     }
 
     public function logout(Request $request)
@@ -345,5 +359,18 @@ class AuthController extends Controller
     private function dashboardPathForRole(string $role): string
     {
         return $role === 'supplier' ? '/dashboard.php' : '/buyer-dashboard.php';
+    }
+
+    private function legacyKycStatusFromApplication(string $status): string
+    {
+        return match (strtoupper($status)) {
+            'APPROVED' => 'approved',
+            'REJECTED' => 'rejected',
+            'MANUAL_REVIEW' => 'manual_review',
+            'MORE_INFO_REQUIRED' => 'more_info_required',
+            'VERIFYING' => 'verifying',
+            'SUBMITTED' => 'submitted',
+            default => 'pending',
+        };
     }
 }
