@@ -4,10 +4,11 @@ namespace App\Services\Kyc\Providers;
 
 use App\Models\SupplierApplication;
 use App\Services\Kyc\Contracts\KycProvider;
+use App\Services\Kyc\Contracts\ProgressiveKycProvider;
 use App\Services\Kyc\Data\VerificationResult;
 use Carbon\CarbonImmutable;
 
-class FakeKycProvider implements KycProvider
+class FakeKycProvider implements KycProvider, ProgressiveKycProvider
 {
     public function name(): string
     {
@@ -119,5 +120,89 @@ class FakeKycProvider implements KycProvider
         }
 
         return VerificationResult::passed('aml_pep', $this->name());
+    }
+
+    public function passiveFraudCheck(array $context = []): VerificationResult
+    {
+        $riskReference = strtoupper((string) ($context['risk_reference'] ?? ''));
+
+        if (str_contains($riskReference, 'DUPLICATE') || str_contains($riskReference, 'FRAUD')) {
+            return VerificationResult::manualReview('buyer_tier_1_passive_fraud', $this->name(), ['BUYER_PASSIVE_FRAUD_SIGNAL']);
+        }
+
+        return VerificationResult::passed('buyer_tier_1_passive_fraud', $this->name());
+    }
+
+    public function verifyEmail(array $context = []): VerificationResult
+    {
+        $email = trim((string) ($context['email'] ?? ''));
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return VerificationResult::failed('email', $this->name(), ['EMAIL_INVALID']);
+        }
+
+        $email = strtolower($email);
+        if (str_contains($email, 'invalid') || str_contains($email, 'unverified')) {
+            return VerificationResult::failed('email', $this->name(), ['EMAIL_UNVERIFIABLE']);
+        }
+
+        if (str_contains($email, 'review')) {
+            return VerificationResult::manualReview('email', $this->name(), ['EMAIL_REQUIRES_REVIEW']);
+        }
+
+        return VerificationResult::passed('email', $this->name());
+    }
+
+    public function verifyDocumentWithFace(array $context = []): VerificationResult
+    {
+        $documentReference = strtoupper((string) ($context['id_document_reference'] ?? ''));
+        $faceReference = strtoupper((string) ($context['face_match_reference'] ?? ''));
+        $livenessReference = strtoupper((string) ($context['liveness_reference'] ?? ''));
+
+        if (str_contains($documentReference, 'TAMPERED') || str_contains($documentReference, 'FAKE')) {
+            return VerificationResult::failed('buyer_tier_2_identity', $this->name(), ['ID_DOCUMENT_TAMPERED']);
+        }
+
+        if (str_contains($livenessReference, 'FAIL')) {
+            return VerificationResult::failed('buyer_tier_2_identity', $this->name(), ['LIVENESS_FAILED'], [
+                'liveness_passed' => false,
+            ]);
+        }
+
+        if (str_contains($faceReference, 'LOW')) {
+            return VerificationResult::failed('buyer_tier_2_identity', $this->name(), ['FACE_MATCH_BELOW_THRESHOLD'], [
+                'face_match_score' => 55,
+                'liveness_passed' => true,
+            ]);
+        }
+
+        return VerificationResult::passed('buyer_tier_2_identity', $this->name(), [
+            'face_match_score' => 94,
+            'liveness_passed' => true,
+        ]);
+    }
+
+    public function verifyBillingName(array $context = []): VerificationResult
+    {
+        $accountNumber = preg_replace('/\D+/', '', (string) ($context['account_number'] ?? '')) ?: '';
+
+        if ($accountNumber === '' || str_starts_with($accountNumber, '000')) {
+            return VerificationResult::failed('buyer_tier_3_billing_name', $this->name(), ['BANK_ACCOUNT_UNVERIFIABLE']);
+        }
+
+        if (str_starts_with($accountNumber, '999')) {
+            return VerificationResult::failed('buyer_tier_3_billing_name', $this->name(), ['BANK_NAME_MISMATCH_SIGNIFICANT'], [
+                'name_match_score' => 35,
+            ]);
+        }
+
+        if (str_starts_with($accountNumber, '888')) {
+            return VerificationResult::manualReview('buyer_tier_3_billing_name', $this->name(), ['BANK_NAME_MISMATCH_MINOR'], [
+                'name_match_score' => 74,
+            ]);
+        }
+
+        return VerificationResult::passed('buyer_tier_3_billing_name', $this->name(), [
+            'name_match_score' => 93,
+        ]);
     }
 }

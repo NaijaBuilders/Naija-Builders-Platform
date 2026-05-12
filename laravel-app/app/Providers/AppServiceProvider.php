@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Services\Kyc\Contracts\KycProvider;
+use App\Services\Kyc\Contracts\ProgressiveKycProvider;
+use App\Services\Kyc\KycConfigurationValidator;
 use App\Services\Kyc\Providers\DojahKycProvider;
 use App\Services\Kyc\Providers\FakeKycProvider;
 use App\Services\Kyc\Providers\PremblyKycProvider;
@@ -19,12 +21,16 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(KycProvider::class, function ($app): KycProvider {
-            return match ((string) config('services.kyc.provider', 'fake')) {
+            $app->make(KycConfigurationValidator::class)->validate();
+
+            return match (strtolower((string) config('services.kyc.provider', 'fake'))) {
                 'prembly' => $app->make(PremblyKycProvider::class),
                 'dojah' => $app->make(DojahKycProvider::class),
                 default => $app->make(FakeKycProvider::class),
             };
         });
+
+        $this->app->bind(ProgressiveKycProvider::class, fn ($app): ProgressiveKycProvider => $app->make(KycProvider::class));
     }
 
     /**
@@ -32,6 +38,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->app->make(KycConfigurationValidator::class)->validate();
+
         if (config('database.default') !== 'mysql' && ! $this->app->environment('testing')) {
             throw new RuntimeException('This application is configured for MySQL only. Set DB_CONNECTION=mysql in your .env file.');
         }
