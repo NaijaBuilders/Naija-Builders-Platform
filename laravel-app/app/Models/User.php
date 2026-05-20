@@ -30,11 +30,27 @@ class User extends Authenticatable
         'bank_name',
         'account_number',
         'role',
+        'offers_services',
+        'service_category',
+        'service_areas',
         'password_hash',
         'kyc_status',
         'kyc_submitted_at',
         'kyc_verified_at',
         'is_verified_badge',
+        'registration_ip_hash',
+        'registration_ip_display',
+        'device_fingerprint_hash',
+        'device_fingerprint_display',
+        'email_otp_hash',
+        'email_otp_expires_at',
+        'email_verified_at',
+        'phone_otp_hash',
+        'phone_otp_expires_at',
+        'phone_verified_at',
+        'first_transaction_monitoring',
+        'first_successful_order_id',
+        'first_transaction_completed_at',
     ];
 
     /**
@@ -58,6 +74,13 @@ class User extends Authenticatable
             'kyc_submitted_at' => 'datetime',
             'kyc_verified_at' => 'datetime',
             'is_verified_badge' => 'boolean',
+            'offers_services' => 'boolean',
+            'email_otp_expires_at' => 'datetime',
+            'email_verified_at' => 'datetime',
+            'phone_otp_expires_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
+            'first_transaction_monitoring' => 'boolean',
+            'first_transaction_completed_at' => 'datetime',
         ];
     }
 
