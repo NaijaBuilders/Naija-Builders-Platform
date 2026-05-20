@@ -10,6 +10,7 @@
         default => '',
     };
     $acceptedTerms = (bool) ($termsAccepted ?? false);
+    $serviceTypes = config('service_marketplace.service_types', []);
 @endphp
 @extends('layouts.app')
 
@@ -26,7 +27,7 @@
             <div class="alert alert-success">{{ session('terms_accepted_success') }}</div>
         @endif
 
-        <div class="grid-2 gap-md signup-role-choice">
+        <div class="grid-3 gap-md signup-role-choice">
             <label class="signup-role-option" id="builderLabel">
                 <input type="radio" name="account_type" value="builder" {{ ($accountType ?? 'builder') === 'builder' ? 'checked' : '' }}>
                 <strong>Builder/Buyer</strong>
@@ -36,6 +37,11 @@
                 <input type="radio" name="account_type" value="supplier" {{ ($accountType ?? 'builder') === 'supplier' ? 'checked' : '' }}>
                 <strong>Supplier</strong>
                 <p class="signup-role-meta">Sell materials</p>
+            </label>
+            <label class="signup-role-option" id="serviceProviderLabel">
+                <input type="radio" name="account_type" value="service_provider" {{ ($accountType ?? 'builder') === 'service_provider' ? 'checked' : '' }}>
+                <strong>Offer Services</strong>
+                <p class="signup-role-meta">Architects, engineers, trades</p>
             </label>
         </div>
 
@@ -54,6 +60,25 @@
             <div id="supplierFields" class="signup-supplier-note" style="display: none;">
                 <h4 style="margin: 0 0 0.6rem;">Supplier KYC Happens After Signup</h4>
                 <p style="margin: 0;"><span aria-hidden="true" style="color: #f5b301;">&#9888;</span> <span class="sr-only">Caution:</span> Create your account first. After signup, your dashboard will show a KYC reminder. You must complete KYC before posting materials. <span aria-hidden="true" style="color: #f5b301;">&#9888;</span></p>
+            </div>
+            <div id="serviceProviderFields" class="signup-supplier-note" style="display: none;">
+                <h4 style="margin: 0 0 0.6rem;">Service Provider Account</h4>
+                <p style="margin: 0 0 0.8rem;">Create your account first. Your dashboard will use the supplier workspace, and NaijaBuilders can route service enquiries to you after review.</p>
+                <div class="grid-2 gap-md">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="service_category">Main service</label>
+                        <select id="service_category" name="service_category">
+                            <option value="">Select service</option>
+                            @foreach ($serviceTypes as $value => $label)
+                                <option value="{{ $value }}" {{ old('service_category') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="service_areas">Service areas</label>
+                        <input type="text" id="service_areas" name="service_areas" value="{{ old('service_areas') }}" placeholder="Lagos, Abuja, Ogun">
+                    </div>
+                </div>
             </div>
             <div class="form-group"><label for="password">Password</label><input type="password" id="password" name="password" required minlength="8"></div>
             <div class="form-group"><label for="confirm_password">Confirm Password</label><input type="password" id="confirm_password" name="confirm_password" required></div>
@@ -85,11 +110,16 @@
     const termsAgreementLink = document.getElementById('termsAgreementLink');
 
     const supplierFields = document.getElementById('supplierFields');
+    const serviceProviderFields = document.getElementById('serviceProviderFields');
     const toggleSupplierFields = function (accountType) {
         const isSupplier = accountType === 'supplier';
+        const isServiceProvider = accountType === 'service_provider';
 
         if (supplierFields) {
             supplierFields.style.display = isSupplier ? 'block' : 'none';
+        }
+        if (serviceProviderFields) {
+            serviceProviderFields.style.display = isServiceProvider ? 'block' : 'none';
         }
     };
 
@@ -166,7 +196,12 @@
                 label.style.borderColor = 'var(--neutral-300)';
                 label.style.backgroundColor = 'transparent';
             });
-            const active = this.value === 'builder' ? document.getElementById('builderLabel') : document.getElementById('supplierLabel');
+            const activeLabelMap = {
+                builder: document.getElementById('builderLabel'),
+                supplier: document.getElementById('supplierLabel'),
+                service_provider: document.getElementById('serviceProviderLabel'),
+            };
+            const active = activeLabelMap[this.value] || document.getElementById('builderLabel');
             if (active) {
                 active.style.borderColor = 'var(--primary-color)';
                 active.style.backgroundColor = 'var(--primary-light)';

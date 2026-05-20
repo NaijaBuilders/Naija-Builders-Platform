@@ -15,8 +15,8 @@
             </p>
             <div class="hero-actions">
                 <a href="/materials.php" class="btn btn-primary btn-lg">Browse Materials</a>
-                <a href="/support.php" class="btn btn-outline btn-lg">Request Sourcing Help</a>
-                <a href="/signup.php" class="btn btn-secondary btn-lg">Become a Supplier</a>
+                <a href="/hire-service.php" class="btn btn-outline btn-lg">Hire a Service</a>
+                <a href="/signup.php?type=service_provider" class="btn btn-secondary btn-lg">Offer Services</a>
             </div>
         </div>
         <div class="hero-image" aria-hidden="true"></div>

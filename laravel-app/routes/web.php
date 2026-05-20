@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BuyerKycController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\HireServiceController;
 use App\Http\Controllers\ListingController;
 use App\Http\Controllers\MaterialsController;
 use App\Http\Controllers\MessageController;
@@ -26,6 +28,8 @@ Route::post('/supplier-kyc.php', [AuthController::class, 'submitSupplierKyc'])->
 
 Route::get('/materials.php', [MaterialsController::class, 'index'])->name('materials.index');
 Route::get('/material-detail.php', [MaterialsController::class, 'show'])->name('materials.show');
+Route::get('/hire-service.php', [HireServiceController::class, 'show'])->name('services.hire.show');
+Route::post('/hire-service.php', [HireServiceController::class, 'store'])->name('services.hire.store');
 Route::get('/cart.php', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/add.php', [CartController::class, 'add'])->middleware('legacy.auth')->name('cart.add');
 Route::post('/cart/update.php', [CartController::class, 'update'])->name('cart.update');
@@ -35,6 +39,8 @@ Route::middleware('legacy.auth')->group(function (): void {
     Route::get('/dashboard.php', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/analysis.php', [DashboardController::class, 'analysis'])->name('dashboard.analysis');
     Route::get('/buyer-dashboard.php', [DashboardController::class, 'buyer'])->name('dashboard.buyer');
+    Route::get('/buyer-kyc.php', [BuyerKycController::class, 'show'])->name('buyer.kyc.show');
+    Route::post('/buyer-kyc.php', [BuyerKycController::class, 'submit'])->name('buyer.kyc.submit');
     Route::get('/create-listing.php', [ListingController::class, 'create'])->name('listings.create');
     Route::post('/create-listing.php', [ListingController::class, 'store'])->name('listings.store');
     Route::get('/manage-listings.php', [ListingController::class, 'index'])->name('listings.index');

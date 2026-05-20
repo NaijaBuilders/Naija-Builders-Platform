@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\BuyerOnboarding\BuyerOtpService;
 use App\Services\SupplierOnboarding\SupplierOnboardingService;
 use App\Support\NameFormatter;
+use App\Support\Security\SensitiveData;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,9 +39,12 @@ class AuthController extends Controller
         if ($requestedType === 'buyer') {
             $requestedType = 'builder';
         }
+        if ($this->isServiceProviderIntent($requestedType)) {
+            $requestedType = 'service_provider';
+        }
 
         return view('auth.signup', [
-            'accountType' => in_array($requestedType, ['builder', 'supplier'], true)
+            'accountType' => in_array($requestedType, ['builder', 'supplier', 'service_provider'], true)
                 ? $requestedType
                 : 'builder',
             'errorCode' => (string) $request->query('error', ''),
@@ -104,11 +109,15 @@ class AuthController extends Controller
         $phone = trim((string) $request->input('phone', ''));
         $company = trim((string) $request->input('company', ''));
         $location = trim((string) $request->input('location', ''));
-        $accountType = (string) $request->input('account_type', 'builder');
-        if ($accountType === 'buyer') {
-            $accountType = 'builder';
+        $requestedAccountType = (string) $request->input('account_type', 'builder');
+        if ($requestedAccountType === 'buyer') {
+            $requestedAccountType = 'builder';
         }
-        $signupPath = $accountType === 'supplier' ? '/signup.php?type=supplier' : '/signup.php';
+        $offersServices = $this->isServiceProviderIntent($requestedAccountType);
+        $accountType = $offersServices ? 'supplier' : $requestedAccountType;
+        $signupPath = $offersServices
+            ? '/signup.php?type=service_provider'
+            : ($accountType === 'supplier' ? '/signup.php?type=supplier' : '/signup.php');
         $signupErrorPath = static function (string $basePath, string $errorCode): string {
             $separator = str_contains($basePath, '?') ? '&' : '?';
 
@@ -118,7 +127,7 @@ class AuthController extends Controller
         $password = (string) $request->input('password', '');
         $confirmPassword = (string) $request->input('confirm_password', '');
 
-        if ($name === '' || $email === '' || $phone === '' || $location === '' || $password === '') {
+        if ($name === '' || $email === '' || $phone === '' || $password === '') {
             return redirect($signupErrorPath($signupPath, 'missing_fields'))->withInput();
         }
 
@@ -128,6 +137,7 @@ class AuthController extends Controller
 
         if (! in_array($accountType, ['builder', 'supplier'], true)) {
             $accountType = 'builder';
+            $offersServices = false;
         }
 
         if (mb_strlen($password) < 8) {
@@ -163,6 +173,11 @@ class AuthController extends Controller
         $hasBankName = Schema::hasColumn('users', 'bank_name');
         $hasAccountNumber = Schema::hasColumn('users', 'account_number');
         $hasKycStatus = Schema::hasColumn('users', 'kyc_status');
+        $hasOffersServices = Schema::hasColumn('users', 'offers_services');
+        $hasServiceCategory = Schema::hasColumn('users', 'service_category');
+        $hasServiceAreas = Schema::hasColumn('users', 'service_areas');
+        $serviceCategory = trim((string) $request->input('service_category', ''));
+        $serviceAreas = trim((string) $request->input('service_areas', ''));
 
         $insertPayload = [
             'full_name' => $formattedName,
@@ -177,7 +192,7 @@ class AuthController extends Controller
         ];
 
         if ($hasBusinessCategory) {
-            $insertPayload['business_category'] = null;
+            $insertPayload['business_category'] = $offersServices ? 'Professional Services' : null;
         }
 
         if ($hasBusinessAddress) {
@@ -200,7 +215,35 @@ class AuthController extends Controller
             $insertPayload['kyc_status'] = $accountType === 'supplier' ? 'pending' : 'approved';
         }
 
+        if ($hasOffersServices) {
+            $insertPayload['offers_services'] = $offersServices;
+        }
+
+        if ($hasServiceCategory) {
+            $insertPayload['service_category'] = $offersServices ? ($serviceCategory ?: null) : null;
+        }
+
+        if ($hasServiceAreas) {
+            $insertPayload['service_areas'] = $offersServices ? ($serviceAreas ?: $location) : null;
+        }
+
+        $ip = (string) $request->ip();
+        if (Schema::hasColumn('users', 'registration_ip_hash')) {
+            $insertPayload['registration_ip_hash'] = SensitiveData::fingerprint($ip);
+            $insertPayload['registration_ip_display'] = SensitiveData::maskIp($ip);
+        }
+
+        $deviceFingerprint = (string) ($request->header('X-Device-Fingerprint') ?: $request->input('device_fingerprint', ''));
+        if ($deviceFingerprint !== '' && Schema::hasColumn('users', 'device_fingerprint_hash')) {
+            $insertPayload['device_fingerprint_hash'] = SensitiveData::fingerprint($deviceFingerprint);
+            $insertPayload['device_fingerprint_display'] = SensitiveData::maskToken($deviceFingerprint);
+        }
+
         $userId = DB::table('users')->insertGetId($insertPayload);
+        $user = User::query()->find($userId);
+        if ($user && Schema::hasColumn('users', 'email_otp_hash') && Schema::hasColumn('users', 'phone_otp_hash')) {
+            app(BuyerOtpService::class)->issueBoth($user);
+        }
 
         $request->session()->regenerate();
         $request->session()->put('legacy_user_id', (int) $userId);
@@ -211,6 +254,8 @@ class AuthController extends Controller
             'company' => $company,
             'role' => $accountType,
             'location' => $location,
+            'offers_services' => $offersServices,
+            'service_category' => $offersServices ? ($serviceCategory ?: '') : '',
             'profile_image_path' => '',
             'subscription_plan' => 'standard',
             'is_verified_badge' => false,
@@ -359,6 +404,11 @@ class AuthController extends Controller
     private function dashboardPathForRole(string $role): string
     {
         return $role === 'supplier' ? '/dashboard.php' : '/buyer-dashboard.php';
+    }
+
+    private function isServiceProviderIntent(string $accountType): bool
+    {
+        return in_array($accountType, ['service', 'services', 'service_provider', 'offer_services'], true);
     }
 
     private function legacyKycStatusFromApplication(string $status): string

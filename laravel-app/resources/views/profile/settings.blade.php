@@ -13,6 +13,7 @@
 
     @php($isSupplier = (string) session('legacy_user.role', '') === 'supplier')
     @php($supplierKycStatus = (string) session('legacy_user.kyc_status', 'approved'))
+    @php($isBuyer = !$isSupplier)
 
     @if (($successCode ?? '') === 'settings_saved')
         <div class="alert alert-success settings-page__success" data-auto-fade="3000">Settings updated successfully.</div>
@@ -44,6 +45,30 @@
                         <a href="/supplier-kyc.php" class="btn btn-primary settings-item__action">
                             {{ $supplierKycStatus === 'approved' ? 'Review' : 'Complete' }}
                         </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    @endif
+
+    @if ($isBuyer)
+        <div class="card settings-card settings-card--kyc">
+            <div class="card-header settings-card__header settings-card__header--kyc">
+                <div class="settings-card__head-row">
+                    <div>
+                        <h3>Buyer Verification</h3>
+                        <p>Optional one-time ID check for larger orders</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <ul class="settings-list">
+                    <li class="settings-item">
+                        <div class="settings-item__content">
+                            <p class="settings-item__title">Complete KYC Once</p>
+                            <p class="settings-item__desc">You can keep browsing without ID. If you verify now, we can reuse it when an order needs verification.</p>
+                        </div>
+                        <a href="/buyer-kyc.php" class="btn btn-primary settings-item__action">Open KYC</a>
                     </li>
                 </ul>
             </div>

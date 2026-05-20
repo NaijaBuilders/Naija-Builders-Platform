@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\CurrencyManager;
 use App\Support\MoneyCalculator;
 use App\Support\NameFormatter;
 use Carbon\Carbon;
@@ -312,6 +313,13 @@ class DashboardController extends Controller
                 ->all();
         }
 
+        $currencyManager = app(CurrencyManager::class);
+        $displayCurrency = $currencyManager->effectiveCurrency($currencyManager->resolveForRequest($request));
+        $formatMoney = fn ($amount, ?string $currency = null): string => $currencyManager->formatFromNgn(
+            $amount,
+            $currency ?: $displayCurrency
+        );
+
         return view('dashboard-buyer', compact(
             'currentUser',
             'cartItemCount',
@@ -324,7 +332,8 @@ class DashboardController extends Controller
             'savedCategories',
             'savedMaterials',
             'savedMaterialIds',
-            'selectedSavedCategoryId'
+            'selectedSavedCategoryId',
+            'formatMoney'
         ));
     }
 }

@@ -233,6 +233,7 @@
         <a href="/index.php#home" class="nav-link">Home</a>
         <a href="/index.php#how-it-works" class="nav-link">How It Works</a>
         <a href="/materials.php" class="nav-link">Browse Materials</a>
+        <a href="/hire-service.php" class="nav-link">Hire a Service</a>
         <a href="/index.php#about" class="nav-link">About</a>
         @if (!$isSupplier)
             <a href="/cart.php" class="nav-link">Cart ({{ $cartCount }})</a>
@@ -295,12 +296,14 @@
             <h3>Quick Links</h3>
             <a href="/index.php">Home</a>
             <a href="/materials.php">Materials</a>
+            <a href="/hire-service.php">Hire a Service</a>
             <a href="/index.php#about">About</a>
             <a href="/support.php">Contact Support</a>
         </div>
         <div class="footer-section">
-            <h3>For Suppliers</h3>
+            <h3>For Suppliers & Services</h3>
             <a href="/signup.php">Become a Supplier</a>
+            <a href="/signup.php?type=service_provider">Offer Services</a>
             <a href="/dashboard.php">Dashboard</a>
             <a href="/subscription.php">Pricing</a>
         </div>

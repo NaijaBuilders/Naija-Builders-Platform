@@ -32,6 +32,18 @@
         </div>
     </div>
 
+    <div class="card" style="margin-bottom: 2rem; border: 1px solid rgba(14, 165, 233, 0.22);">
+        <div class="card-body" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <div style="max-width: 680px;">
+                <h3 style="margin: 0 0 0.35rem;">Buyer verification</h3>
+                <p style="margin: 0; color: var(--neutral-600); line-height: 1.55;">
+                    You can browse without KYC. Larger orders may ask for ID, but you can complete verification once now so future eligible orders move faster.
+                </p>
+            </div>
+            <a href="/buyer-kyc.php" class="btn btn-primary" style="text-decoration: none;">Open KYC Page</a>
+        </div>
+    </div>
+
     <div class="card" style="margin-bottom: 2rem;">
         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
             <h3 style="margin: 0;">Recent Orders</h3>
