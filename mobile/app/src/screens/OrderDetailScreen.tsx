@@ -1,14 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import {
   Badge,
+  Button,
   Card,
   FloatingBackButton,
   Header,
+  Input,
   Loader,
   Screen,
 } from '../components';
 import { useOrder } from '../hooks/useMarketplaceData';
+import { orderService } from '../services';
 import { theme } from '../theme';
 import { formatCurrency } from '../utils/format';
 
@@ -21,7 +24,44 @@ type OrderDetailScreenProps = {
 };
 
 export function OrderDetailScreen({ route }: OrderDetailScreenProps) {
-  const { data: order, error, loading } = useOrder(route.params.orderId);
+  const { data: order, error, loading, refresh } = useOrder(route.params.orderId);
+  const [handoverCode, setHandoverCode] = useState('');
+  const [disputeReason, setDisputeReason] = useState('');
+  const [actionLoading, setActionLoading] = useState('');
+  const [actionMessage, setActionMessage] = useState('');
+  const [actionError, setActionError] = useState('');
+
+  const confirmHandover = async () => {
+    setActionLoading('otp');
+    setActionMessage('');
+    setActionError('');
+    try {
+      await orderService.confirmDeliveryOtp(order?.id ?? route.params.orderId, handoverCode);
+      setActionMessage('Delivery confirmed.');
+      setHandoverCode('');
+      refresh();
+    } catch (reason) {
+      setActionError(reason instanceof Error ? reason.message : 'Could not confirm delivery.');
+    } finally {
+      setActionLoading('');
+    }
+  };
+
+  const raiseDispute = async () => {
+    setActionLoading('dispute');
+    setActionMessage('');
+    setActionError('');
+    try {
+      await orderService.raiseDispute(order?.id ?? route.params.orderId, disputeReason);
+      setActionMessage('Dispute raised. Escrow release is on hold.');
+      setDisputeReason('');
+      refresh();
+    } catch (reason) {
+      setActionError(reason instanceof Error ? reason.message : 'Could not raise dispute.');
+    } finally {
+      setActionLoading('');
+    }
+  };
 
   if (loading) {
     return (
@@ -78,6 +118,98 @@ export function OrderDetailScreen({ route }: OrderDetailScreenProps) {
         <Text style={styles.meta}>Delivery: {order.delivery_address}</Text>
         <Text style={styles.meta}>Created: {order.created_at}</Text>
       </Card>
+
+      <Card style={styles.card}>
+        <Text style={styles.sectionTitle}>Order progress</Text>
+        <Text style={styles.meta}>{reviewMessage(order.verificationStatus)}</Text>
+        {order.paymentProvider ? (
+          <Text style={styles.meta}>
+            Payment: {providerName(order.paymentProvider)}
+            {order.paymentCurrency && order.paymentAmount
+              ? ` ${order.paymentCurrency} ${order.paymentAmount.toLocaleString()}`
+              : ''}
+          </Text>
+        ) : null}
+        {order.recipient?.name ? (
+          <Text style={styles.meta}>
+            Recipient: {order.recipient.name} ({order.recipient.phone})
+          </Text>
+        ) : null}
+        {order.delivery?.dispute_window_ends_at ? (
+          <Text style={styles.meta}>
+            {disputeWindowText(order.delivery.dispute_window_ends_at)}
+          </Text>
+        ) : null}
+      </Card>
+
+      {order.verificationStatus === 'requires_kyc' ? (
+        <Card style={styles.card}>
+          <Text style={styles.sectionTitle}>More information needed</Text>
+          <Text style={styles.meta}>
+            We need a little more information before completing this order.
+          </Text>
+        </Card>
+      ) : null}
+
+      {order.delivery?.photos.length ? (
+        <>
+          <Text style={styles.sectionTitle}>Delivery photos</Text>
+          {order.delivery.photos.map((photo, index) => (
+            <Card key={photo.id || `${photo.path}-${index}`} style={styles.itemCard}>
+              <Text style={styles.itemName}>Photo {index + 1}</Text>
+              <Text style={styles.meta}>{photo.captured_at || 'Timestamp pending'}</Text>
+              {photo.gps_lat && photo.gps_lng ? (
+                <Text style={styles.meta}>
+                  GPS: {photo.gps_lat}, {photo.gps_lng}
+                </Text>
+              ) : null}
+            </Card>
+          ))}
+        </>
+      ) : null}
+
+      {order.delivery?.status === 'otp_sent' ? (
+        <Card style={styles.card}>
+          <Text style={styles.sectionTitle}>Handover code</Text>
+          <Input
+            keyboardType="number-pad"
+            label="Code from recipient"
+            onChangeText={setHandoverCode}
+            value={handoverCode}
+          />
+          <Button
+            title="Confirm handover"
+            onPress={confirmHandover}
+            loading={actionLoading === 'otp'}
+            disabled={handoverCode.trim().length !== 6}
+          />
+        </Card>
+      ) : null}
+
+      {order.delivery?.dispute_status === 'window_open' ? (
+        <Card style={styles.card}>
+          <Text style={styles.sectionTitle}>Need help with delivery?</Text>
+          <Text style={styles.meta}>
+            You can raise a dispute before the countdown ends.
+          </Text>
+          <Input
+            label="What happened?"
+            multiline
+            onChangeText={setDisputeReason}
+            value={disputeReason}
+          />
+          <Button
+            title="Raise dispute"
+            onPress={raiseDispute}
+            loading={actionLoading === 'dispute'}
+            disabled={disputeReason.trim().length < 10}
+            variant="outline"
+          />
+        </Card>
+      ) : null}
+
+      {actionMessage ? <Text style={styles.successText}>{actionMessage}</Text> : null}
+      {actionError ? <Text style={styles.errorText}>{actionError}</Text> : null}
 
       <Text style={styles.sectionTitle}>Items</Text>
       {order.items.map((item) => (
@@ -180,4 +312,44 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '900',
   },
+  successText: {
+    color: theme.colors.success,
+    fontWeight: '800',
+    lineHeight: 21,
+    textAlign: 'center',
+  },
+  errorText: {
+    color: theme.colors.danger,
+    fontWeight: '800',
+    lineHeight: 21,
+    textAlign: 'center',
+  },
 });
+
+function reviewMessage(status?: string) {
+  if (status === 'requires_kyc') {
+    return 'We need a little more information before completing this order.';
+  }
+
+  if (status === 'manual_review' || status === 'more_info_requested') {
+    return 'Your order is being reviewed.';
+  }
+
+  if (status === 'rejected') {
+    return 'This order could not be completed.';
+  }
+
+  return 'Your order is moving ahead.';
+}
+
+function providerName(provider: string) {
+  return provider === 'paystack' ? 'Paystack' : provider === 'stripe' ? 'Stripe' : provider;
+}
+
+function disputeWindowText(value: string) {
+  const end = new Date(value).getTime();
+  const remainingMs = end - Date.now();
+  const hours = Math.max(0, Math.ceil(remainingMs / (60 * 60 * 1000)));
+
+  return `You have ${hours} hours to raise a dispute.`;
+}
