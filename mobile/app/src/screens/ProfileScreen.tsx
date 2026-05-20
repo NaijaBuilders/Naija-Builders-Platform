@@ -114,6 +114,17 @@ export function ProfileScreen() {
           />
         </View>
       ) : null}
+      {currentRole === 'buyer' ? (
+        <View style={styles.verificationAction}>
+          <Button
+            title="Account verification"
+            onPress={() => navigation.navigate('BuyerVerification')}
+            variant={
+              user.email_confirmed && user.phone_confirmed ? 'outline' : 'primary'
+            }
+          />
+        </View>
+      ) : null}
 
       <View style={styles.actions}>
         <Button

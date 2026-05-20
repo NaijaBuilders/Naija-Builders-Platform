@@ -18,6 +18,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { fadeIn, fadeOut, layoutTransition } from '../animations';
 import {
   Avatar,
+  Button,
+  Card,
   Header,
   Input,
   Loader,
@@ -299,6 +301,8 @@ function BuyerHome({
 }: BuyerHomeProps) {
   const navigation =
     useNavigation<NativeStackNavigationProp<HomeStackParamList, 'HomeMain'>>();
+  const tabNavigation =
+    navigation.getParent<BottomTabNavigationProp<MainTabParamList>>();
   const animatedStyle = useScreenAnimation();
   const renderProduct = useCallback(
     ({ item, index }: ListRenderItemInfo<Product>) => (
@@ -330,6 +334,34 @@ function BuyerHome({
           containerStyle={styles.search}
         />
 
+        <Card style={styles.buyerKycCard}>
+          <Text style={styles.buyerKycTitle}>Buyer verification</Text>
+          <Text style={styles.buyerKycText}>
+            You can browse without KYC. Larger orders may ask for ID, but you can
+            complete it once now so future eligible orders move faster.
+          </Text>
+          <Button
+            title="Open KYC"
+            onPress={() =>
+              tabNavigation?.navigate('Profile', { screen: 'BuyerVerification' })
+            }
+            variant="outline"
+          />
+        </Card>
+
+        <Card style={styles.buyerKycCard}>
+          <Text style={styles.buyerKycTitle}>Hire a construction professional</Text>
+          <Text style={styles.buyerKycText}>
+            Request an architect, site engineer, surveyor, or skilled trade for
+            your project.
+          </Text>
+          <Button
+            title="Hire a Service"
+            onPress={() => navigation.navigate('HireService')}
+            variant="outline"
+          />
+        </Card>
+
         <View style={styles.listHeader}>
           <Text style={styles.sectionTitle}>Featured products</Text>
           <Text style={styles.count}>
@@ -338,7 +370,16 @@ function BuyerHome({
         </View>
       </>
     ),
-    [firstName, loading, products.length, query, setQuery, userName]
+    [
+      firstName,
+      loading,
+      navigation,
+      products.length,
+      query,
+      setQuery,
+      tabNavigation,
+      userName,
+    ]
   );
 
   return (
@@ -509,6 +550,19 @@ const styles = StyleSheet.create({
   },
   search: {
     marginBottom: theme.spacing.md,
+  },
+  buyerKycCard: {
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.lg,
+  },
+  buyerKycTitle: {
+    color: theme.colors.text,
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  buyerKycText: {
+    color: theme.colors.textMuted,
+    lineHeight: 21,
   },
   empty: {
     color: theme.colors.textMuted,

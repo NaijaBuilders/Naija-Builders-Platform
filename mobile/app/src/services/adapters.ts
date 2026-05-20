@@ -5,6 +5,7 @@ import type {
   ConversationMessage,
   DashboardStat,
   Product,
+  SignupAccountType,
   UserProfile,
   UserRole,
 } from '../types';
@@ -26,6 +27,10 @@ type LaravelUser = {
   business_address?: string;
   is_verified_badge?: boolean | number;
   kyc_status?: string;
+  offers_services?: boolean | number;
+  service_category?: string | null;
+  email_confirmed?: boolean | number;
+  phone_confirmed?: boolean | number;
   created_at?: string;
   updated_at?: string;
 };
@@ -80,7 +85,11 @@ export function normalizeRole(role?: string): UserRole {
   return role === 'supplier' ? 'supplier' : 'buyer';
 }
 
-export function toLaravelAccountType(role: UserRole) {
+export function toLaravelAccountType(role: SignupAccountType) {
+  if (role === 'service_provider') {
+    return 'service_provider';
+  }
+
   return role === 'supplier' ? 'supplier' : 'builder';
 }
 
@@ -109,8 +118,15 @@ export function mapLaravelUser(user: LaravelUser): UserProfile {
     phone: user.phone ? String(user.phone) : undefined,
     location: user.location ? String(user.location) : undefined,
     kyc_status: user.kyc_status ? String(user.kyc_status) : undefined,
+    offers_services:
+      user.offers_services === true || Number(user.offers_services) === 1,
+    service_category: user.service_category ? String(user.service_category) : null,
     is_verified_badge:
       user.is_verified_badge === true || Number(user.is_verified_badge) === 1,
+    email_confirmed:
+      user.email_confirmed === true || Number(user.email_confirmed) === 1,
+    phone_confirmed:
+      user.phone_confirmed === true || Number(user.phone_confirmed) === 1,
     created_at: String(user.created_at ?? timestamp),
     updated_at: String(user.updated_at ?? timestamp),
   };

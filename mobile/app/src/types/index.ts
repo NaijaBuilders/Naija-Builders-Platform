@@ -1,6 +1,7 @@
 import type { ImageSourcePropType } from 'react-native';
 
 export type UserRole = 'buyer' | 'supplier';
+export type SignupAccountType = UserRole | 'service_provider';
 
 export type StatusTone = 'primary' | 'success' | 'warning' | 'danger' | 'neutral';
 
@@ -32,7 +33,11 @@ export interface UserProfile {
   phone?: string;
   location?: string;
   kyc_status?: string;
+  offers_services?: boolean;
+  service_category?: string | null;
   is_verified_badge?: boolean;
+  email_confirmed?: boolean;
+  phone_confirmed?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -99,6 +104,29 @@ export interface Order {
   status: OrderStatus;
   visibleTo: UserRole | 'both';
   delivery_address: string;
+  verificationTier?: number;
+  verificationStatus?: string;
+  reviewStatus?: string | null;
+  paymentProvider?: string | null;
+  paymentMethodType?: string | null;
+  paymentCurrency?: string | null;
+  paymentAmount?: number | null;
+  gatewayRiskLevel?: string | null;
+  recipient?: {
+    name: string;
+    phone: string;
+    relationship?: string | null;
+  };
+  delivery?: {
+    status: string;
+    photos: DeliveryPhoto[];
+    otp_generated_at?: string | null;
+    otp_confirmed_at?: string | null;
+    dispute_window_ends_at?: string | null;
+    dispute_status?: string | null;
+    dispute_outcome?: string | null;
+    escrow_release_at?: string | null;
+  };
   items: Array<{
     id: string;
     name: string;
@@ -107,6 +135,14 @@ export interface Order {
   }>;
   created_at: string;
   updated_at: string;
+}
+
+export interface DeliveryPhoto {
+  id: string;
+  path: string;
+  captured_at: string;
+  gps_lat?: number | null;
+  gps_lng?: number | null;
 }
 
 export interface ConversationMessage {
@@ -195,9 +231,33 @@ export interface SignupPayload {
   location: string;
   password: string;
   confirmPassword: string;
-  role: UserRole;
+  role: SignupAccountType;
   company?: string;
   termsAccepted: boolean;
+}
+
+export interface ServiceOption {
+  value: string;
+  label: string;
+}
+
+export interface ServiceRequestPayload {
+  serviceType: string;
+  projectTitle: string;
+  projectLocation: string;
+  projectDescription: string;
+  budgetRange?: string;
+  preferredStartDate?: string;
+  contactName: string;
+  contactPhone: string;
+  contactEmail: string;
+}
+
+export interface ServiceRequestResult {
+  id: string;
+  serviceType: string;
+  status: string;
+  createdAt?: string;
 }
 
 export type SupplierOnboardingStatus =
@@ -241,6 +301,15 @@ export type EmailVerificationStatus = 'VERIFIED' | 'REVIEWING' | 'NOT_VERIFIED';
 export interface EmailVerificationResult {
   status: EmailVerificationStatus;
   provider: string;
+}
+
+export type OtpChannel = 'email' | 'phone';
+
+export interface BuyerIdSubmissionPayload {
+  documentType: 'nin_slip' | 'international_passport' | 'drivers_licence';
+  verifiedIdName?: string;
+  idDocumentUri?: string;
+  selfieUri?: string;
 }
 
 export interface SupplierOnboardingApplication {

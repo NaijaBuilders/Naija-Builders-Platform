@@ -6,14 +6,22 @@ import { Badge, Button, Card, Header, Input, Screen } from '../components';
 import { useAppState } from '../context/AppContext';
 import type { AuthStackParamList } from '../navigation/types';
 import { theme } from '../theme';
-import type { UserRole } from '../types';
+import type { SignupAccountType } from '../types';
 
 type SignupNavigation = NativeStackNavigationProp<AuthStackParamList, 'Signup'>;
+const signupAccountTypes: Array<{
+  label: string;
+  value: SignupAccountType;
+}> = [
+  { value: 'buyer', label: 'Buyer' },
+  { value: 'supplier', label: 'Supplier' },
+  { value: 'service_provider', label: 'Offer services' },
+];
 
 export function SignupScreen() {
   const navigation = useNavigation<SignupNavigation>();
   const { register } = useAppState();
-  const [role, setRole] = useState<UserRole>('buyer');
+  const [role, setRole] = useState<SignupAccountType>('buyer');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -57,7 +65,7 @@ export function SignupScreen() {
       <Header
         eyebrow="New account"
         title="Signup"
-        subtitle="Create a buyer or supplier account."
+        subtitle="Create a buyer, supplier, or service account."
       />
 
       <Card style={styles.card}>
@@ -96,22 +104,28 @@ export function SignupScreen() {
 
         <Text style={styles.label}>Account type</Text>
         <View style={styles.roleRow}>
-          {(['buyer', 'supplier'] as UserRole[]).map((item) => (
+          {signupAccountTypes.map((item) => (
             <Pressable
-              key={item}
-              onPress={() => setRole(item)}
+              key={item.value}
+              onPress={() => setRole(item.value)}
               style={[
                 styles.roleButton,
-                role === item ? styles.roleButtonActive : null,
+                role === item.value ? styles.roleButtonActive : null,
               ]}
             >
               <Badge
-                label={item === 'buyer' ? 'Buyer' : 'Supplier'}
-                tone={role === item ? 'primary' : 'neutral'}
+                label={item.label}
+                tone={role === item.value ? 'primary' : 'neutral'}
               />
             </Pressable>
           ))}
         </View>
+        {role === 'service_provider' ? (
+          <Text style={styles.helperText}>
+            You will use the supplier workspace, and NaijaBuilders can route
+            service enquiries to you after review.
+          </Text>
+        ) : null}
 
         <Pressable
           onPress={() => setTermsAccepted((current) => !current)}
@@ -120,7 +134,9 @@ export function SignupScreen() {
           <View style={[styles.checkbox, termsAccepted ? styles.checkboxActive : null]}>
             {termsAccepted ? <Text style={styles.checkmark}>OK</Text> : null}
           </View>
-          <Text style={styles.termsText}>I accept the NaijaBuilders terms.</Text>
+          <Text style={styles.termsText}>
+            I accept the NaijaBuilders terms and privacy policy.
+          </Text>
         </Pressable>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -132,7 +148,7 @@ export function SignupScreen() {
             !name.trim() ||
             !email.trim() ||
             !phone.trim() ||
-            !location.trim() ||
+            (role !== 'buyer' && !location.trim()) ||
             password.length < 8 ||
             !confirmPassword ||
             !termsAccepted
@@ -176,6 +192,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: theme.spacing.sm,
+  },
+  helperText: {
+    color: theme.colors.textMuted,
+    fontSize: 13,
+    lineHeight: 18,
   },
   checkbox: {
     alignItems: 'center',

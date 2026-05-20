@@ -1,8 +1,10 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { BrowseScreen } from '../screens/BrowseScreen';
+import { BuyerVerificationScreen } from '../screens/BuyerVerificationScreen';
 import { ChatScreen } from '../screens/ChatScreen';
 import { CreateListingScreen } from '../screens/CreateListingScreen';
+import { HireServiceScreen } from '../screens/HireServiceScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { MessagesScreen } from '../screens/MessagesScreen';
 import { OrderDetailScreen } from '../screens/OrderDetailScreen';
@@ -31,6 +33,7 @@ export function HomeStack() {
     <HomeStackNavigator.Navigator screenOptions={defaultStackScreenOptions}>
       <HomeStackNavigator.Screen name="HomeMain" component={HomeScreen} />
       <HomeStackNavigator.Screen name="ProductDetail" component={ProductDetailScreen} />
+      <HomeStackNavigator.Screen name="HireService" component={HireServiceScreen} />
     </HomeStackNavigator.Navigator>
   );
 }
@@ -74,6 +77,10 @@ export function ProfileStack() {
       <ProfileStackNavigator.Screen
         name="SupplierOnboarding"
         component={SupplierOnboardingScreen}
+      />
+      <ProfileStackNavigator.Screen
+        name="BuyerVerification"
+        component={BuyerVerificationScreen}
       />
     </ProfileStackNavigator.Navigator>
   );

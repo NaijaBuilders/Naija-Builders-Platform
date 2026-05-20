@@ -14,6 +14,7 @@ export type AuthStackParamList = {
 export type HomeStackParamList = {
   HomeMain: undefined;
   ProductDetail: { productId: string };
+  HireService: undefined;
 };
 
 export type BrowseStackParamList = {
@@ -36,6 +37,7 @@ export type ProfileStackParamList = {
   ProfileMain: undefined;
   Settings: undefined;
   SupplierOnboarding: undefined;
+  BuyerVerification: undefined;
 };
 
 export type MainTabParamList = {
