@@ -1,0 +1,271 @@
+openapi: 3.0.3
+info:
+  title: NaijaBuilders Buyer Onboarding API
+  version: "1.0"
+servers:
+  - url: /api/mobile
+security:
+  - bearerAuth: []
+paths:
+  /register:
+    post:
+      security: []
+      summary: Register buyer or supplier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, phone, password, confirm_password, terms_accepted]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                phone: { type: string }
+                password: { type: string, minLength: 8 }
+                confirm_password: { type: string }
+                terms_accepted: { type: boolean }
+                privacy_accepted: { type: boolean }
+                account_type: { type: string, enum: [buyer, builder, supplier, service_provider] }
+                service_category: { type: string }
+                service_areas: { type: string }
+                device_fingerprint: { type: string }
+      responses:
+        "201":
+          description: Registered with mobile token and OTP delivery metadata
+  /otp/send:
+    post:
+      summary: Send email or phone OTP
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel]
+              properties:
+                channel: { type: string, enum: [email, phone] }
+      responses:
+        "200": { description: OTP sent }
+  /otp/confirm:
+    post:
+      summary: Confirm email or phone OTP
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel, otp]
+              properties:
+                channel: { type: string, enum: [email, phone] }
+                otp: { type: string }
+      responses:
+        "200": { description: Channel confirmed }
+  /orders:
+    get:
+      summary: List current user's buyer/supplier orders
+      responses:
+        "200": { description: Order list }
+    post:
+      summary: Place order and return verification/payment result
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderPlacementRequest"
+      responses:
+        "201":
+          description: Order placed or queued for verification/review
+  /orders/{orderId}:
+    get:
+      summary: Show order status, delivery proof, dispute state, and payment/review messages
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200": { description: Order detail }
+  /kyc/buyer/id-document:
+    post:
+      summary: Submit buyer ID document and selfie for transaction-triggered KYC
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [document_type]
+              properties:
+                document_type:
+                  type: string
+                  enum: [nin_slip, international_passport, drivers_licence]
+                verified_id_name: { type: string }
+                id_document: { type: string, format: binary }
+                selfie: { type: string, format: binary }
+      responses:
+        "201": { description: Buyer ID verification record }
+  /orders/{orderId}/delivery/photos:
+    post:
+      summary: Upload supplier delivery photo proof
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [photo]
+              properties:
+                photo: { type: string, format: binary }
+                gps_lat: { type: number }
+                gps_lng: { type: number }
+      responses:
+        "201": { description: Delivery photo stored }
+  /orders/{orderId}/delivery/otp:
+    post:
+      summary: Generate delivery handover OTP after photo proof
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200": { description: OTP sent to nominated recipient }
+  /orders/{orderId}/delivery/otp/confirm:
+    post:
+      summary: Confirm handover OTP and open dispute window
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [otp]
+              properties:
+                otp: { type: string }
+      responses:
+        "200": { description: Delivery confirmed }
+  /orders/{orderId}/disputes:
+    post:
+      summary: Raise order dispute during dispute window
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string }
+      responses:
+        "201": { description: Dispute opened }
+  /admin/buyer-reviews:
+    get:
+      summary: Admin buyer review queue with filters
+      parameters:
+        - { name: trigger_level, in: query, schema: { type: string, enum: [hard, medium] } }
+        - { name: gateway_risk_level, in: query, schema: { type: string, enum: [low, medium, high] } }
+        - { name: min_fraud_score, in: query, schema: { type: integer } }
+        - { name: max_fraud_score, in: query, schema: { type: integer } }
+        - { name: min_order_value, in: query, schema: { type: number } }
+        - { name: max_order_value, in: query, schema: { type: number } }
+        - { name: max_account_age_hours, in: query, schema: { type: integer } }
+      responses:
+        "200": { description: Manual review queue }
+  /admin/buyer-reviews/{orderId}:
+    get:
+      summary: Admin buyer review case detail
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200": { description: Case detail }
+  /admin/buyer-reviews/{orderId}/approve:
+    post:
+      summary: Approve flagged buyer order
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200": { description: Approved and audited }
+  /admin/buyer-reviews/{orderId}/reject:
+    post:
+      summary: Reject flagged buyer order
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200": { description: Rejected and audited }
+  /admin/buyer-reviews/{orderId}/more-info:
+    post:
+      summary: Request more information from buyer
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message: { type: string }
+                notes: { type: string }
+      responses:
+        "200": { description: Request sent and audited }
+  /services/options:
+    get:
+      summary: List service request options
+      responses:
+        "200": { description: Service types and budget ranges }
+  /services/requests:
+    post:
+      summary: Create a construction service request
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceRequest"
+      responses:
+        "201": { description: Service request received }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Sanctum
+  parameters:
+    OrderId:
+      name: orderId
+      in: path
+      required: true
+      schema: { type: integer }
+  schemas:
+    OrderPlacementRequest:
+      type: object
+      required: [delivery_address, recipient_name, recipient_phone]
+      properties:
+        supplier_id: { type: integer }
+        amount_ngn: { type: number }
+        items:
+          type: array
+          items:
+            type: object
+            required: [material_id]
+            properties:
+              material_id: { type: integer }
+              quantity: { type: integer, minimum: 1 }
+        payment_method_type: { type: string, enum: [card, bank_transfer] }
+        payment: { type: object, additionalProperties: true }
+        billing_name: { type: string }
+        billing_country: { type: string }
+        card_country: { type: string }
+        gateway_risk_level: { type: string, enum: [low, medium, high] }
+        delivery_address: { type: string }
+        delivery_country: { type: string }
+        recipient_name: { type: string }
+        recipient_phone: { type: string }
+        recipient_relationship: { type: string }
+    ServiceRequest:
+      type: object
+      required: [service_type, project_title, project_location, project_description, contact_name, contact_phone, contact_email]
+      properties:
+        service_type: { type: string }
+        project_title: { type: string }
+        project_location: { type: string }
+        project_description: { type: string }
+        budget_range: { type: string }
+        preferred_start_date: { type: string, format: date }
+        contact_name: { type: string }
+        contact_phone: { type: string }
+        contact_email: { type: string, format: email }
