@@ -1,9 +1,13 @@
 <?php
 
+use App\Http\Controllers\Mobile\AdminBuyerReviewController;
 use App\Http\Controllers\Mobile\AdminSupplierOnboardingController;
 use App\Http\Controllers\Mobile\AuthController;
+use App\Http\Controllers\Mobile\BuyerKycController;
+use App\Http\Controllers\Mobile\BuyerOtpController;
 use App\Http\Controllers\Mobile\CartController;
 use App\Http\Controllers\Mobile\DashboardController;
+use App\Http\Controllers\Mobile\DeliveryConfirmationController;
 use App\Http\Controllers\Mobile\EmailVerificationController;
 use App\Http\Controllers\Mobile\ListingController;
 use App\Http\Controllers\Mobile\MaterialsController;
@@ -12,6 +16,7 @@ use App\Http\Controllers\Mobile\OrderController;
 use App\Http\Controllers\Mobile\PremblyWebhookController;
 use App\Http\Controllers\Mobile\ProfileController;
 use App\Http\Controllers\Mobile\SavedMaterialController;
+use App\Http\Controllers\Mobile\ServiceRequestController;
 use App\Http\Controllers\Mobile\StaticPageController;
 use App\Http\Controllers\Mobile\SubscriptionController;
 use App\Http\Controllers\Mobile\SupplierOnboardingController;
@@ -57,10 +62,18 @@ Route::prefix('mobile')->group(function (): void {
         Route::delete('/cart/items/{materialId}', [CartController::class, 'remove']);
 
         Route::get('/orders', [OrderController::class, 'index']);
+        Route::post('/orders', [OrderController::class, 'store']);
         Route::get('/orders/{orderId}', [OrderController::class, 'show']);
+        Route::post('/orders/{orderId}/delivery/photos', [DeliveryConfirmationController::class, 'uploadPhoto']);
+        Route::post('/orders/{orderId}/delivery/otp', [DeliveryConfirmationController::class, 'generateOtp']);
+        Route::post('/orders/{orderId}/delivery/otp/confirm', [DeliveryConfirmationController::class, 'confirmOtp']);
+        Route::post('/orders/{orderId}/disputes', [DeliveryConfirmationController::class, 'dispute']);
 
         Route::get('/messages', [MessageController::class, 'index']);
         Route::post('/messages', [MessageController::class, 'store']);
+
+        Route::get('/services/options', [ServiceRequestController::class, 'options']);
+        Route::post('/services/requests', [ServiceRequestController::class, 'store']);
 
         Route::get('/profile', [ProfileController::class, 'show']);
         Route::post('/profile', [ProfileController::class, 'update']);
@@ -68,6 +81,9 @@ Route::prefix('mobile')->group(function (): void {
         Route::post('/settings', [ProfileController::class, 'saveSettings']);
 
         Route::post('/kyc/email-verification', EmailVerificationController::class);
+        Route::post('/otp/send', [BuyerOtpController::class, 'send']);
+        Route::post('/otp/confirm', [BuyerOtpController::class, 'confirm']);
+        Route::post('/kyc/buyer/id-document', [BuyerKycController::class, 'store']);
 
         Route::get('/supplier/onboarding/status', [SupplierOnboardingController::class, 'status']);
         Route::get('/supplier/onboarding/applications/{application}', [SupplierOnboardingController::class, 'show']);
@@ -82,6 +98,14 @@ Route::prefix('mobile')->group(function (): void {
             Route::post('/{application}/approve', [AdminSupplierOnboardingController::class, 'approve']);
             Route::post('/{application}/reject', [AdminSupplierOnboardingController::class, 'reject']);
             Route::post('/{application}/more-info', [AdminSupplierOnboardingController::class, 'moreInfo']);
+        });
+
+        Route::middleware('mobile.admin')->prefix('admin/buyer-reviews')->group(function (): void {
+            Route::get('/', [AdminBuyerReviewController::class, 'index']);
+            Route::get('/{orderId}', [AdminBuyerReviewController::class, 'show']);
+            Route::post('/{orderId}/approve', [AdminBuyerReviewController::class, 'approve']);
+            Route::post('/{orderId}/reject', [AdminBuyerReviewController::class, 'reject']);
+            Route::post('/{orderId}/more-info', [AdminBuyerReviewController::class, 'moreInfo']);
         });
 
         Route::get('/saved-products', [SavedMaterialController::class, 'index']);
