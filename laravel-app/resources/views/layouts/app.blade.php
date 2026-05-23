@@ -133,8 +133,16 @@
 
         <div class="navbar-actions">
             @if ($isSupplier)
-                <a href="/analysis.php" class="top-icon" aria-label="Analysis" data-tour-id="primary-action">
-                    <span class="top-icon-mark">📊</span>
+                <a href="/analysis.php" class="top-icon top-icon--analysis" aria-label="Analysis" data-tour-id="primary-action">
+                    <span class="top-icon-mark top-icon-mark--analytics" aria-hidden="true">
+                        <svg class="analytics-icon" viewBox="0 0 24 24" fill="none" focusable="false">
+                            <path d="M4.5 19.5h15" />
+                            <rect x="6" y="11" width="2.8" height="6.5" rx="0.8" />
+                            <rect x="10.6" y="7" width="2.8" height="10.5" rx="0.8" />
+                            <rect x="15.2" y="4.5" width="2.8" height="13" rx="0.8" />
+                            <path d="M5.2 7.9l4.1-2.5 3.7 2 5.6-4.1" />
+                        </svg>
+                    </span>
                 </a>
             @else
                 <a href="/cart.php" class="top-icon top-cart" aria-label="Cart" data-tour-id="primary-action">
@@ -261,7 +269,7 @@
     </nav>
 </aside>
 
-<main>
+<main class="app-main-shell">
     @yield('content')
 </main>
 
