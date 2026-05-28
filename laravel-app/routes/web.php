@@ -18,6 +18,18 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index']);
 Route::get('/index.php', [HomeController::class, 'index'])->name('home');
 
+Route::view('/coming-soon', 'marketing.coming-soon')->name('marketing.home');
+Route::view('/about', 'marketing.about')->name('marketing.about');
+Route::view('/how-it-works', 'marketing.how-it-works')->name('marketing.how-it-works');
+Route::view('/buyers', 'marketing.buyers')->name('marketing.buyers');
+Route::view('/suppliers', 'marketing.suppliers')->name('marketing.suppliers');
+Route::view('/services', 'marketing.services')->name('marketing.services');
+Route::view('/app', 'marketing.app')->name('marketing.app');
+Route::view('/faq', 'marketing.faq')->name('marketing.faq');
+Route::view('/contact', 'marketing.contact')->name('marketing.contact');
+Route::view('/privacy', 'marketing.privacy')->name('marketing.privacy');
+Route::view('/terms', 'marketing.terms')->name('marketing.terms');
+
 Route::get('/login.php', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/auth/login.php', [AuthController::class, 'login'])->name('auth.login');
 Route::get('/signup.php', [AuthController::class, 'showSignup'])->name('signup');
