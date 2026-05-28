@@ -7,6 +7,8 @@ import axios, {
 const DEFAULT_API_BASE_URL =
   'http://127.0.0.1:8080/api/mobile';
 const STAGING_API_HOST = 'api-dev.naijabuilders.com';
+const PRELAUNCH_BYPASS_TOKEN =
+  process.env.EXPO_PUBLIC_PRELAUNCH_BYPASS_TOKEN?.trim() || '';
 const AUTH_TOKEN_STORAGE_KEY = 'naijabuilders.mobile.auth_token';
 const API_BASE_URL_STORAGE_KEY = 'naijabuilders.mobile.api_base_url';
 
@@ -84,6 +86,10 @@ apiClient.interceptors.request.use(async (config: InternalAxiosRequestConfig) =>
 
   if (authToken) {
     config.headers.Authorization = `Bearer ${authToken}`;
+  }
+
+  if (PRELAUNCH_BYPASS_TOKEN) {
+    config.headers['X-Preview-Token'] = PRELAUNCH_BYPASS_TOKEN;
   }
 
   return config;
