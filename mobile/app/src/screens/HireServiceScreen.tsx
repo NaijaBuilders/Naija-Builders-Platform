@@ -228,6 +228,7 @@ export function HireServiceScreen() {
           disabled={loading}
           loading={loading}
           onPress={handleSubmit}
+          size="lg"
           title="Send request"
         />
       </Card>

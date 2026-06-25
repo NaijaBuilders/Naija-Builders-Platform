@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -115,11 +116,21 @@ function BuyerBrowseScreen() {
           title="Browse materials"
           subtitle="Search verified products and compare suppliers."
         />
-        <Input
-          placeholder="Search by product, supplier, city..."
-          value={query}
-          onChangeText={setQuery}
-        />
+        <View style={styles.searchWrap}>
+          <Ionicons
+            color={theme.colors.textSubtle}
+            name="search"
+            size={18}
+            style={styles.searchIcon}
+          />
+          <Input
+            placeholder="Search by product, supplier, city..."
+            value={query}
+            onChangeText={setQuery}
+            containerStyle={styles.searchInput}
+            style={styles.searchField}
+          />
+        </View>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -271,11 +282,21 @@ function SupplierListingsScreen() {
           ))}
         </View>
 
-        <Input
-          placeholder="Search your listings..."
-          value={query}
-          onChangeText={setQuery}
-        />
+        <View style={styles.searchWrap}>
+          <Ionicons
+            color={theme.colors.textSubtle}
+            name="search"
+            size={18}
+            style={styles.searchIcon}
+          />
+          <Input
+            placeholder="Search your listings..."
+            value={query}
+            onChangeText={setQuery}
+            containerStyle={styles.searchInput}
+            style={styles.searchField}
+          />
+        </View>
 
         <ScrollView
           horizontal
@@ -424,6 +445,20 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     paddingBottom: theme.spacing.xxl,
     paddingTop: 86,
+  },
+  searchWrap: {
+    justifyContent: 'center',
+  },
+  searchIcon: {
+    left: theme.spacing.md,
+    position: 'absolute',
+    zIndex: 1,
+  },
+  searchInput: {
+    flex: 1,
+  },
+  searchField: {
+    paddingLeft: 42,
   },
   categoryRail: {
     gap: theme.spacing.sm,

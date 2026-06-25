@@ -18,8 +18,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { fadeIn, fadeOut, layoutTransition } from '../animations';
 import {
   Avatar,
-  Button,
-  Card,
   Header,
   Input,
   Loader,
@@ -327,40 +325,68 @@ function BuyerHome({
           right={<Avatar name={userName} />}
         />
 
-        <Input
-          placeholder="Search cement, steel, tiles..."
-          value={query}
-          onChangeText={setQuery}
-          containerStyle={styles.search}
-        />
-
-        <Card style={styles.buyerKycCard}>
-          <Text style={styles.buyerKycTitle}>Buyer verification</Text>
-          <Text style={styles.buyerKycText}>
-            You can browse without KYC. Larger orders may ask for ID, but you can
-            complete it once now so future eligible orders move faster.
-          </Text>
-          <Button
-            title="Open KYC"
-            onPress={() =>
-              tabNavigation?.navigate('Profile', { screen: 'BuyerVerification' })
-            }
-            variant="outline"
+        <View style={styles.searchWrap}>
+          <Ionicons
+            color={theme.colors.textSubtle}
+            name="search"
+            size={18}
+            style={styles.searchIcon}
           />
-        </Card>
-
-        <Card style={styles.buyerKycCard}>
-          <Text style={styles.buyerKycTitle}>Hire a construction professional</Text>
-          <Text style={styles.buyerKycText}>
-            Request an architect, site engineer, surveyor, or skilled trade for
-            your project.
-          </Text>
-          <Button
-            title="Hire a Service"
-            onPress={() => navigation.navigate('HireService')}
-            variant="outline"
+          <Input
+            placeholder="Search cement, steel, tiles..."
+            value={query}
+            onChangeText={setQuery}
+            containerStyle={styles.searchInput}
+            style={styles.searchField}
           />
-        </Card>
+        </View>
+
+        <Pressable
+          onPress={() =>
+            tabNavigation?.navigate('Profile', { screen: 'BuyerVerification' })
+          }
+          style={[styles.promoCard, styles.promoVerify]}
+        >
+          <View style={[styles.promoIcon, styles.promoIconVerify]}>
+            <Ionicons
+              color={theme.colors.secondary}
+              name="shield-checkmark"
+              size={22}
+            />
+          </View>
+          <View style={styles.promoCopy}>
+            <Text style={styles.promoTitle}>Verify your account</Text>
+            <Text style={styles.promoText}>
+              Browse freely now — complete KYC once so larger orders move faster.
+            </Text>
+          </View>
+          <Ionicons
+            color={theme.colors.textSubtle}
+            name="chevron-forward"
+            size={20}
+          />
+        </Pressable>
+
+        <Pressable
+          onPress={() => navigation.navigate('HireService')}
+          style={[styles.promoCard, styles.promoHire]}
+        >
+          <View style={[styles.promoIcon, styles.promoIconHire]}>
+            <Ionicons color={theme.colors.accent} name="construct" size={22} />
+          </View>
+          <View style={styles.promoCopy}>
+            <Text style={styles.promoTitle}>Hire a professional</Text>
+            <Text style={styles.promoText}>
+              Architects, engineers, surveyors and skilled trades for your
+              project.
+            </Text>
+          </View>
+          <Ionicons
+            color={theme.colors.textSubtle}
+            name="chevron-forward"
+            size={20}
+          />
+        </Pressable>
 
         <View style={styles.listHeader}>
           <Text style={styles.sectionTitle}>Featured products</Text>
@@ -548,21 +574,67 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     marginBottom: theme.spacing.md,
   },
-  search: {
+  searchWrap: {
+    justifyContent: 'center',
     marginBottom: theme.spacing.md,
   },
-  buyerKycCard: {
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.lg,
+  searchIcon: {
+    left: theme.spacing.md,
+    position: 'absolute',
+    zIndex: 1,
   },
-  buyerKycTitle: {
+  searchInput: {
+    flex: 1,
+  },
+  searchField: {
+    paddingLeft: 42,
+  },
+  promoCard: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+    padding: theme.spacing.md,
+    ...theme.shadows.soft,
+  },
+  promoVerify: {
+    borderLeftColor: theme.colors.secondary,
+    borderLeftWidth: 4,
+  },
+  promoHire: {
+    borderLeftColor: theme.colors.accent,
+    borderLeftWidth: 4,
+  },
+  promoIcon: {
+    alignItems: 'center',
+    borderRadius: theme.radius.md,
+    height: 46,
+    justifyContent: 'center',
+    width: 46,
+  },
+  promoIconVerify: {
+    backgroundColor: theme.colors.secondarySoft,
+  },
+  promoIconHire: {
+    backgroundColor: theme.colors.accentSoft,
+  },
+  promoCopy: {
+    flex: 1,
+  },
+  promoTitle: {
     color: theme.colors.text,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '900',
   },
-  buyerKycText: {
+  promoText: {
     color: theme.colors.textMuted,
-    lineHeight: 21,
+    fontSize: 12.5,
+    lineHeight: 17,
+    marginTop: 2,
   },
   empty: {
     color: theme.colors.textMuted,

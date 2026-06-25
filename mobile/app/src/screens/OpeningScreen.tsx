@@ -62,6 +62,7 @@ export function OpeningScreen() {
       <View style={styles.content}>
         <Animated.View style={[styles.logoWrap, logoStyle]}>
           <Image source={logo} resizeMode="contain" style={styles.logo} />
+          <Text style={styles.tagline}>Construction materials marketplace</Text>
         </Animated.View>
 
         <Animated.View style={[styles.loadingWrap, spinnerWrapStyle]}>
@@ -93,6 +94,14 @@ const styles = StyleSheet.create({
     height: 104,
     maxWidth: 340,
     width: '92%',
+  },
+  tagline: {
+    color: theme.colors.textMuted,
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+    marginTop: theme.spacing.md,
+    textAlign: 'center',
   },
   loadingWrap: {
     alignItems: 'center',

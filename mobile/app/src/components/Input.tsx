@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   StyleProp,
   StyleSheet,
@@ -16,13 +16,36 @@ type InputProps = TextInputProps & {
   containerStyle?: StyleProp<ViewStyle>;
 };
 
-export function Input({ label, error, containerStyle, style, ...props }: InputProps) {
+export function Input({
+  label,
+  error,
+  containerStyle,
+  style,
+  onFocus,
+  onBlur,
+  ...props
+}: InputProps) {
+  const [focused, setFocused] = useState(false);
+
   return (
     <View style={[styles.container, containerStyle]}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
       <TextInput
         placeholderTextColor={theme.colors.textSubtle}
-        style={[styles.input, style]}
+        style={[
+          styles.input,
+          focused ? styles.inputFocused : null,
+          error ? styles.inputError : null,
+          style,
+        ]}
+        onFocus={(event) => {
+          setFocused(true);
+          onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setFocused(false);
+          onBlur?.(event);
+        }}
         {...props}
       />
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -38,19 +61,30 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     fontSize: 13,
     fontWeight: '800',
+    letterSpacing: 0.2,
   },
   input: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.surfaceMuted,
     borderColor: theme.colors.border,
     borderRadius: theme.radius.md,
-    borderWidth: 1,
+    borderWidth: 1.5,
     color: theme.colors.text,
     fontSize: theme.typography.body,
-    minHeight: 48,
+    fontWeight: '600',
+    minHeight: 52,
     paddingHorizontal: theme.spacing.md,
+  },
+  inputFocused: {
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.primary,
+    ...theme.shadows.soft,
+  },
+  inputError: {
+    borderColor: theme.colors.danger,
   },
   error: {
     color: theme.colors.danger,
     fontSize: theme.typography.small,
+    fontWeight: '700',
   },
 });

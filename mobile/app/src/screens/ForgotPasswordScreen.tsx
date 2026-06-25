@@ -1,8 +1,9 @@
+import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
-import { Button, Card, Header, Input, Screen } from '../components';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Button, Card, Input, Screen } from '../components';
 import type { AuthStackParamList } from '../navigation/types';
 import { authService } from '../services';
 import { theme } from '../theme';
@@ -33,33 +34,56 @@ export function ForgotPasswordScreen() {
   };
 
   return (
-    <Screen scroll={false} contentContainerStyle={styles.screen}>
-      <Card style={styles.card}>
-        <Header
-          eyebrow="Password recovery"
-          title="Forgot password"
-          subtitle="Check the current password recovery status for your account."
+    <Screen contentContainerStyle={styles.screen}>
+      <View style={styles.iconCircle}>
+        <Ionicons
+          color={theme.colors.primary}
+          name="lock-closed-outline"
+          size={30}
         />
+      </View>
+      <Text style={styles.title}>Reset your password</Text>
+      <Text style={styles.subtitle}>
+        Enter the email linked to your account and we'll help you recover access.
+      </Text>
+
+      <Card style={styles.card}>
         <Input
           autoCapitalize="none"
+          autoCorrect={false}
           keyboardType="email-address"
           label="Email"
+          placeholder="you@example.com"
           onChangeText={setEmail}
           value={email}
         />
-        {notice ? <Text style={styles.notice}>{notice}</Text> : null}
+        {notice ? (
+          <View style={styles.noticeBanner}>
+            <Ionicons
+              color={theme.colors.primary}
+              name="information-circle"
+              size={18}
+            />
+            <Text style={styles.notice}>{notice}</Text>
+          </View>
+        ) : null}
         <Button
           title="Send reset link"
+          size="lg"
           onPress={handleReset}
           loading={loading}
           disabled={!email.trim()}
         />
-        <Button
-          title="Back to login"
-          onPress={() => navigation.navigate('Login')}
-          variant="ghost"
-        />
       </Card>
+
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => navigation.navigate('Login')}
+        style={styles.backRow}
+      >
+        <Ionicons color={theme.colors.primary} name="arrow-back" size={16} />
+        <Text style={styles.backText}>Back to login</Text>
+      </Pressable>
     </Screen>
   );
 }
@@ -68,13 +92,59 @@ const styles = StyleSheet.create({
   screen: {
     justifyContent: 'center',
   },
+  iconCircle: {
+    alignItems: 'center',
+    alignSelf: 'center',
+    backgroundColor: theme.colors.primarySoft,
+    borderRadius: theme.radius.pill,
+    height: 72,
+    justifyContent: 'center',
+    marginBottom: theme.spacing.lg,
+    width: 72,
+  },
+  title: {
+    color: theme.colors.text,
+    fontSize: theme.typography.title,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+    textAlign: 'center',
+  },
+  subtitle: {
+    color: theme.colors.textMuted,
+    fontSize: theme.typography.body,
+    lineHeight: 22,
+    marginBottom: theme.spacing.lg,
+    marginTop: theme.spacing.sm,
+    textAlign: 'center',
+  },
   card: {
     gap: theme.spacing.md,
   },
+  noticeBanner: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.primarySoft,
+    borderRadius: theme.radius.md,
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+    padding: theme.spacing.sm,
+  },
   notice: {
+    color: theme.colors.primaryDark,
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 18,
+  },
+  backRow: {
+    alignItems: 'center',
+    alignSelf: 'center',
+    flexDirection: 'row',
+    gap: theme.spacing.xs,
+    marginTop: theme.spacing.lg,
+  },
+  backText: {
     color: theme.colors.primary,
-    fontSize: theme.typography.small,
-    fontWeight: '800',
-    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: '900',
   },
 });

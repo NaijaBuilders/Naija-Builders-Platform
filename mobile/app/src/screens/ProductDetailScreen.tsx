@@ -1,6 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
+  Avatar,
   Badge,
   Button,
   Card,
@@ -114,16 +116,46 @@ export function ProductDetailScreen({ route }: ProductDetailScreenProps) {
 
       <Card style={styles.card}>
         <Text style={styles.sectionTitle}>Supplier</Text>
-        <Text style={styles.supplierName}>{product.supplier.company}</Text>
-        <Text style={styles.supplierMeta}>{product.supplier.name}</Text>
-        <Text style={styles.supplierMeta}>{product.supplier.location}</Text>
-        <Text style={styles.supplierMeta}>
-          {product.supplier.rating > 0
-            ? `${product.supplier.rating.toFixed(1)} rating`
-            : 'No rating'}{' '}
-          - {product.supplier.response_time}
-        </Text>
-        {product.supplier.verified ? <Badge label="Verified supplier" tone="success" /> : null}
+        <View style={styles.supplierRow}>
+          <Avatar name={product.supplier.company} size={52} />
+          <View style={styles.supplierCopy}>
+            <Text style={styles.supplierName}>{product.supplier.company}</Text>
+            <Text style={styles.supplierMeta}>{product.supplier.name}</Text>
+          </View>
+          {product.supplier.verified ? (
+            <Badge label="Verified" tone="success" />
+          ) : null}
+        </View>
+        <View style={styles.supplierStats}>
+          <View style={styles.supplierStat}>
+            <Ionicons color={theme.colors.warning} name="star" size={15} />
+            <Text style={styles.supplierStatText}>
+              {product.supplier.rating > 0
+                ? product.supplier.rating.toFixed(1)
+                : 'New'}
+            </Text>
+          </View>
+          <View style={styles.supplierStat}>
+            <Ionicons
+              color={theme.colors.textMuted}
+              name="location-outline"
+              size={15}
+            />
+            <Text style={styles.supplierStatText}>
+              {product.supplier.location}
+            </Text>
+          </View>
+          <View style={styles.supplierStat}>
+            <Ionicons
+              color={theme.colors.textMuted}
+              name="time-outline"
+              size={15}
+            />
+            <Text style={styles.supplierStatText}>
+              {product.supplier.response_time}
+            </Text>
+          </View>
+        </View>
       </Card>
     </Screen>
   );
@@ -197,6 +229,14 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.section,
     fontWeight: '900',
   },
+  supplierRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+  },
+  supplierCopy: {
+    flex: 1,
+  },
   supplierName: {
     color: theme.colors.text,
     fontSize: 17,
@@ -205,5 +245,23 @@ const styles = StyleSheet.create({
   supplierMeta: {
     color: theme.colors.textMuted,
     lineHeight: 21,
+  },
+  supplierStats: {
+    backgroundColor: theme.colors.surfaceMuted,
+    borderRadius: theme.radius.md,
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+    justifyContent: 'space-between',
+    padding: theme.spacing.md,
+  },
+  supplierStat: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 5,
+  },
+  supplierStatText: {
+    color: theme.colors.text,
+    fontSize: 13,
+    fontWeight: '800',
   },
 });

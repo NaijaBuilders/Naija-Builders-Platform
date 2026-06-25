@@ -370,6 +370,7 @@ export function CreateListingScreen() {
         disabled={submitting}
         loading={submitting}
         onPress={submit}
+        size="lg"
         title="Publish listing"
       />
     </Screen>

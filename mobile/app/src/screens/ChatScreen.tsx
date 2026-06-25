@@ -154,14 +154,21 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   messageBubble: {
+    borderBottomLeftRadius: theme.radius.sm,
     maxWidth: '82%',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
   },
   messageBubbleMine: {
     backgroundColor: theme.colors.primary,
+    borderBottomLeftRadius: theme.radius.lg,
+    borderBottomRightRadius: theme.radius.sm,
+    borderColor: theme.colors.primary,
   },
   messageText: {
     color: theme.colors.text,
-    lineHeight: 21,
+    fontSize: 14,
+    lineHeight: 20,
   },
   messageTextMine: {
     color: theme.colors.white,

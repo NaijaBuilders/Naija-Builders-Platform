@@ -37,14 +37,15 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     fontSize: 11,
     fontWeight: '900',
-    letterSpacing: 0,
-    marginBottom: 5,
+    letterSpacing: 1.2,
+    marginBottom: 6,
     textTransform: 'uppercase',
   },
   title: {
     color: theme.colors.text,
     fontSize: theme.typography.title,
     fontWeight: '900',
+    letterSpacing: -0.4,
     lineHeight: 32,
   },
   subtitle: {

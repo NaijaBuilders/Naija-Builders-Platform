@@ -16,11 +16,13 @@ import { animationSpring, layoutTransition } from '../animations';
 import { theme } from '../theme';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
+type ButtonSize = 'md' | 'lg';
 
 type ButtonProps = {
   title: string;
   onPress?: () => void;
   variant?: ButtonVariant;
+  size?: ButtonSize;
   disabled?: boolean;
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -58,6 +60,7 @@ export function Button({
   title,
   onPress,
   variant = 'primary',
+  size = 'md',
   disabled,
   loading,
   style,
@@ -67,6 +70,7 @@ export function Button({
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
+  const isSolid = variant === 'primary' || variant === 'secondary';
 
   return (
     <AnimatedPressable
@@ -82,10 +86,12 @@ export function Button({
       layout={layoutTransition}
       style={[
         styles.button,
+        size === 'lg' ? styles.buttonLg : null,
+        isSolid ? styles.solidShadow : null,
         {
           backgroundColor: palette.backgroundColor,
           borderColor: palette.borderColor,
-          opacity: disabled ? 0.55 : 1,
+          opacity: disabled ? 0.5 : 1,
         },
         animatedStyle,
         style,
@@ -94,7 +100,15 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={palette.color} />
       ) : (
-        <Text style={[styles.text, { color: palette.color }]}>{title}</Text>
+        <Text
+          style={[
+            styles.text,
+            size === 'lg' ? styles.textLg : null,
+            { color: palette.color },
+          ]}
+        >
+          {title}
+        </Text>
       )}
     </AnimatedPressable>
   );
@@ -104,13 +118,28 @@ const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
     borderRadius: theme.radius.md,
-    borderWidth: 1,
+    borderWidth: 1.5,
     justifyContent: 'center',
-    minHeight: 46,
-    paddingHorizontal: theme.spacing.md,
+    minHeight: 50,
+    paddingHorizontal: theme.spacing.lg,
+  },
+  buttonLg: {
+    minHeight: 58,
+    borderRadius: theme.radius.lg,
+  },
+  solidShadow: {
+    shadowColor: theme.colors.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.24,
+    shadowRadius: 16,
+    elevation: 6,
   },
   text: {
     fontSize: 14,
     fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  textLg: {
+    fontSize: 16,
   },
 });
