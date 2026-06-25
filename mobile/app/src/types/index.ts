@@ -28,6 +28,8 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
+  username?: string;
+  profileImage?: string;
   role: UserRole;
   company?: string;
   phone?: string;
@@ -219,14 +221,43 @@ export interface UserPreferences {
   compact_cards: boolean;
 }
 
-export interface LoginPayload {
+export interface EditableProfile {
+  firstName: string;
+  lastName: string;
+  username: string;
   email: string;
+  phone: string;
+  company: string;
+  businessCategory: string;
+  location: string;
+  businessAddress: string;
+  businessDescription: string;
+  profileImage?: string;
+}
+
+export interface EditProfilePayload {
+  firstName: string;
+  lastName: string;
+  username: string;
+  email: string;
+  phone: string;
+  location: string;
+  company?: string;
+  businessCategory?: string;
+  businessAddress?: string;
+  businessDescription?: string;
+  photoUri?: string;
+}
+
+export interface LoginPayload {
+  login: string;
   password: string;
 }
 
 export interface SignupPayload {
   name: string;
   email: string;
+  username?: string;
   phone: string;
   location: string;
   password: string;

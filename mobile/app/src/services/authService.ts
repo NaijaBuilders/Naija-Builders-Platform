@@ -25,7 +25,13 @@ function buildSession(response: LaravelAuthResponse): AuthSession {
 export const authService = {
   async login(payload: LoginPayload): Promise<AuthSession> {
     try {
-      const response = await apiClient.post<LaravelAuthResponse>('/login', payload);
+      const response = await apiClient.post<LaravelAuthResponse>('/login', {
+        login: payload.login,
+        // `email` is sent for backward compatibility with backends that have
+        // not yet deployed username login (they only read the email field).
+        email: payload.login,
+        password: payload.password,
+      });
       const session = buildSession(response.data);
 
       await setAuthToken(session.token);
@@ -40,6 +46,7 @@ export const authService = {
       const response = await apiClient.post<LaravelAuthResponse>('/register', {
         name: payload.name,
         email: payload.email,
+        username: payload.username,
         phone: payload.phone,
         location: payload.location,
         password: payload.password,

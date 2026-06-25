@@ -19,6 +19,8 @@ type LaravelUser = {
   name?: string;
   full_name?: string;
   email?: string;
+  username?: string | null;
+  profile_image_path?: string | null;
   role?: string;
   phone?: string;
   company?: string;
@@ -108,11 +110,19 @@ export function assetSource(path?: string) {
 export function mapLaravelUser(user: LaravelUser): UserProfile {
   const timestamp = new Date().toISOString();
   const name = String(user.name ?? user.full_name ?? 'User');
+  const rawImage = String(user.profile_image_path ?? '');
+  const profileImage = rawImage
+    ? /^https?:\/\//i.test(rawImage)
+      ? rawImage
+      : `${getApiOrigin()}/${rawImage.replace(/^\/+/, '')}`
+    : undefined;
 
   return {
     id: String(user.id ?? ''),
     name: capitalizeWords(name),
     email: String(user.email ?? ''),
+    username: user.username ? String(user.username) : undefined,
+    profileImage,
     role: normalizeRole(String(user.role ?? 'builder')),
     company: user.company ? String(user.company) : undefined,
     phone: user.phone ? String(user.phone) : undefined,
