@@ -1,8 +1,8 @@
 @php
     $pageTitle = 'Login';
     $message = match ($errorCode ?? '') {
-        'missing_credentials' => 'Please provide both email and password.',
-        'invalid_credentials' => 'Invalid email or password.',
+        'missing_credentials' => 'Please provide your email or username and password.',
+        'invalid_credentials' => 'Invalid login or password.',
         'db_unavailable' => 'Login is temporarily unavailable because the database is offline. Please start MySQL and try again.',
         default => '',
     };
@@ -22,8 +22,8 @@
         <form method="POST" action="/auth/login.php">
             @csrf
             <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" name="email" required placeholder="you@example.com">
+                <label for="login">Email or Username</label>
+                <input type="text" id="login" name="login" autocomplete="username" required placeholder="you@example.com or your_username">
             </div>
 
             <div class="form-group">

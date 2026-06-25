@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Support\CurrencyManager;
 use App\Support\NameFormatter;
 use App\Support\Security\SensitiveData;
+use App\Support\Username;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -41,6 +42,7 @@ class ProfileController extends Controller
             ->select([
                 'full_name',
                 'email',
+                Schema::hasColumn('users', 'username') ? 'username' : DB::raw('null as username'),
                 'phone',
                 'company',
                 'business_category',
@@ -108,6 +110,24 @@ class ProfileController extends Controller
             return redirect('/edit-profile.php?error=email_exists');
         }
 
+        $hasUsername = Schema::hasColumn('users', 'username');
+        $username = null;
+        if ($hasUsername && $request->has('username')) {
+            $username = Username::normalize((string) $request->input('username', ''));
+            if ($username === '' || ! Username::isValid($username)) {
+                return redirect('/edit-profile.php?error=invalid_username')->withInput();
+            }
+
+            $usernameOwner = DB::table('users')
+                ->where('username', $username)
+                ->where('id', '<>', $currentUserId)
+                ->exists();
+
+            if ($usernameOwner) {
+                return redirect('/edit-profile.php?error=username_exists')->withInput();
+            }
+        }
+
         $newProfileImagePath = null;
         if ($request->hasFile('profile_picture')) {
             $image = $request->file('profile_picture');
@@ -163,6 +183,10 @@ class ProfileController extends Controller
             'account_number' => SensitiveData::maskDigits($accountNumber),
             'updated_at' => now(),
         ];
+
+        if ($hasUsername && $username !== null) {
+            $updatePayload['username'] = $username;
+        }
 
         if ($newProfileImagePath !== null) {
             $updatePayload['profile_image_path'] = $newProfileImagePath;

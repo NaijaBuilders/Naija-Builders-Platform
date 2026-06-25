@@ -6,6 +6,8 @@
         'weak_password' => 'Password must be at least 8 characters.',
         'passwords_do_not_match' => 'Passwords do not match.',
         'email_exists' => 'This email is already registered. Please log in.',
+        'invalid_username' => 'Username must be 3-30 characters using letters, numbers, dots or underscores.',
+        'username_exists' => 'That username is already taken. Please choose another.',
         'terms_not_accepted' => 'You must read and accept the Terms & Agreement before creating an account.',
         default => '',
     };
@@ -50,6 +52,11 @@
             <input type="hidden" id="accountTypeHidden" name="account_type" value="{{ $accountType ?? 'builder' }}">
             <div class="form-group"><label for="name">Full Name</label><input type="text" id="name" name="name" required value="{{ old('name') }}" placeholder="John Doe"></div>
             <div class="form-group"><label for="email">Email Address</label><input type="email" id="email" name="email" required value="{{ old('email') }}" placeholder="you@example.com"></div>
+            <div class="form-group">
+                <label for="username">Username <span class="text-muted">(optional)</span></label>
+                <input type="text" id="username" name="username" value="{{ old('username') }}" autocomplete="username" placeholder="your_username" pattern="[A-Za-z0-9._]{3,30}">
+                <small class="text-muted">Sign in with this later. Leave blank and we'll create one from your email.</small>
+            </div>
             <div class="form-group"><label for="phone">Phone Number</label><input type="tel" id="phone" name="phone" required value="{{ old('phone') }}" placeholder="+234 (0) 123 456 7890"></div>
             <div class="form-group">
                 <label for="location">Location (State)</label>
@@ -146,6 +153,7 @@
         return {
             name: (document.getElementById('name') || {}).value || '',
             email: (document.getElementById('email') || {}).value || '',
+            username: (document.getElementById('username') || {}).value || '',
             phone: (document.getElementById('phone') || {}).value || '',
             location: (document.getElementById('location') || {}).value || '',
             accountType: accountTypeValue,
@@ -159,6 +167,7 @@
 
         const nameField = document.getElementById('name');
         const emailField = document.getElementById('email');
+        const usernameField = document.getElementById('username');
         const phoneField = document.getElementById('phone');
         const locationField = document.getElementById('location');
         const accountTypeHidden = document.getElementById('accountTypeHidden');
@@ -168,6 +177,9 @@
         }
         if (emailField && !emailField.value) {
             emailField.value = draft.email || '';
+        }
+        if (usernameField && !usernameField.value) {
+            usernameField.value = draft.username || '';
         }
         if (phoneField && !phoneField.value) {
             phoneField.value = draft.phone || '';

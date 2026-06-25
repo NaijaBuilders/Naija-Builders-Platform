@@ -8,6 +8,7 @@ use App\Services\BuyerOnboarding\BuyerOtpService;
 use App\Services\SupplierOnboarding\SupplierOnboardingService;
 use App\Support\NameFormatter;
 use App\Support\Security\SensitiveData;
+use App\Support\Username;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,10 +24,14 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $validated = $request->validate([
-            'email' => ['required', 'email'],
+        $request->validate([
+            'login' => ['required_without:email', 'string'],
+            'email' => ['required_without:login', 'string'],
             'password' => ['required', 'string'],
         ]);
+
+        $identifier = trim((string) ($request->input('login') ?: $request->input('email')));
+        $hasUsername = Schema::hasColumn('users', 'username');
 
         try {
             $user = DB::table('users')
@@ -34,6 +39,7 @@ class AuthController extends Controller
                     'id',
                     'full_name',
                     'email',
+                    $hasUsername ? 'username' : DB::raw('null as username'),
                     'phone',
                     'company',
                     'location',
@@ -48,7 +54,12 @@ class AuthController extends Controller
                     Schema::hasColumn('users', 'email_verified_at') ? 'email_verified_at' : DB::raw('null as email_verified_at'),
                     Schema::hasColumn('users', 'phone_verified_at') ? 'phone_verified_at' : DB::raw('null as phone_verified_at'),
                 ])
-                ->where('email', $validated['email'])
+                ->where(function ($query) use ($identifier, $hasUsername) {
+                    $query->where('email', $identifier);
+                    if ($hasUsername) {
+                        $query->orWhere('username', mb_strtolower($identifier));
+                    }
+                })
                 ->first();
         } catch (QueryException) {
             return response()->json(['message' => 'Database is unavailable.'], 503);
@@ -71,6 +82,7 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'min:2'],
             'email' => ['required', 'email'],
+            'username' => ['nullable', 'string', 'max:30'],
             'phone' => ['required', 'string'],
             'location' => ['nullable', 'string'],
             'password' => ['required', 'string', 'min:8'],
@@ -111,6 +123,24 @@ class AuthController extends Controller
             return response()->json(['message' => 'Email already exists.'], 422);
         }
 
+        $hasUsername = Schema::hasColumn('users', 'username');
+        $username = null;
+        if ($hasUsername) {
+            $usernameInput = Username::normalize($validated['username'] ?? '');
+            if ($usernameInput !== '') {
+                if (! Username::isValid($usernameInput)) {
+                    return response()->json(['message' => 'Username must be 3-30 characters using letters, numbers, dots or underscores.'], 422);
+                }
+                if (DB::table('users')->where('username', $usernameInput)->exists()) {
+                    return response()->json(['message' => 'Username is already taken.'], 422);
+                }
+                $username = $usernameInput;
+            } else {
+                $seed = explode('@', $validated['email'])[0] ?: $validated['name'];
+                $username = Username::generate($seed, static fn (string $candidate): bool => DB::table('users')->where('username', $candidate)->exists());
+            }
+        }
+
         $company = trim((string) ($validated['company'] ?? ''));
         if ($accountType === 'builder' && $company === '') {
             $company = 'Individual Buyer';
@@ -140,6 +170,10 @@ class AuthController extends Controller
             'created_at' => now(),
             'updated_at' => now(),
         ];
+
+        if ($hasUsername && $username !== null) {
+            $insertPayload['username'] = $username;
+        }
 
         if ($hasBusinessCategory) {
             $insertPayload['business_category'] = $offersServices ? 'Professional Services' : null;
@@ -205,6 +239,7 @@ class AuthController extends Controller
                 'id',
                 'full_name',
                 'email',
+                Schema::hasColumn('users', 'username') ? 'username' : DB::raw('null as username'),
                 'phone',
                 'company',
                 'location',
@@ -238,6 +273,7 @@ class AuthController extends Controller
                 'id',
                 'full_name',
                 'email',
+                Schema::hasColumn('users', 'username') ? 'username' : DB::raw('null as username'),
                 'phone',
                 'company',
                 'location',
@@ -285,6 +321,7 @@ class AuthController extends Controller
         return [
             'id' => (int) $user->id,
             'email' => (string) $user->email,
+            'username' => isset($user->username) && $user->username !== null ? (string) $user->username : null,
             'name' => NameFormatter::title((string) ($user->full_name ?? 'User')),
             'role' => (string) ($user->role ?? 'builder'),
             'phone' => (string) ($user->phone ?? ''),

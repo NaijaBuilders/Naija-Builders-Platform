@@ -7,6 +7,7 @@ use App\Services\BuyerOnboarding\BuyerOtpService;
 use App\Services\SupplierOnboarding\SupplierOnboardingService;
 use App\Support\NameFormatter;
 use App\Support\Security\SensitiveData;
+use App\Support\Username;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -54,12 +55,14 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $email = trim((string) $request->input('email', ''));
+        $identifier = trim((string) ($request->input('login', '') ?: $request->input('email', '')));
         $password = (string) $request->input('password', '');
 
-        if ($email === '' || $password === '') {
+        if ($identifier === '' || $password === '') {
             return redirect('/login.php?error=missing_credentials');
         }
+
+        $hasUsername = Schema::hasColumn('users', 'username');
 
         try {
             $user = DB::table('users')
@@ -75,7 +78,12 @@ class AuthController extends Controller
                     Schema::hasColumn('users', 'is_verified_badge') ? 'is_verified_badge' : DB::raw('0 as is_verified_badge'),
                     Schema::hasColumn('users', 'kyc_status') ? DB::raw("COALESCE(kyc_status, 'approved') as kyc_status") : DB::raw("'approved' as kyc_status"),
                 ])
-                ->where('email', $email)
+                ->where(function ($query) use ($identifier, $hasUsername) {
+                    $query->where('email', $identifier);
+                    if ($hasUsername) {
+                        $query->orWhere('username', mb_strtolower($identifier));
+                    }
+                })
                 ->first();
         } catch (QueryException) {
             return redirect('/login.php?error=db_unavailable');
@@ -157,6 +165,24 @@ class AuthController extends Controller
             return redirect($signupErrorPath($signupPath, 'email_exists'))->withInput();
         }
 
+        $hasUsername = Schema::hasColumn('users', 'username');
+        $username = null;
+        if ($hasUsername) {
+            $usernameInput = Username::normalize((string) $request->input('username', ''));
+            if ($usernameInput !== '') {
+                if (! Username::isValid($usernameInput)) {
+                    return redirect($signupErrorPath($signupPath, 'invalid_username'))->withInput();
+                }
+                if (DB::table('users')->where('username', $usernameInput)->exists()) {
+                    return redirect($signupErrorPath($signupPath, 'username_exists'))->withInput();
+                }
+                $username = $usernameInput;
+            } else {
+                $seed = explode('@', $email)[0] ?: $name;
+                $username = Username::generate($seed, static fn (string $candidate): bool => DB::table('users')->where('username', $candidate)->exists());
+            }
+        }
+
         if ($accountType === 'builder' && $company === '') {
             $company = 'Individual Buyer';
         }
@@ -190,6 +216,10 @@ class AuthController extends Controller
             'created_at' => now(),
             'updated_at' => now(),
         ];
+
+        if ($hasUsername && $username !== null) {
+            $insertPayload['username'] = $username;
+        }
 
         if ($hasBusinessCategory) {
             $insertPayload['business_category'] = $offersServices ? 'Professional Services' : null;

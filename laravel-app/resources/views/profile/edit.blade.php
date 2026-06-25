@@ -40,6 +40,12 @@
     @if (($errorCode ?? '') === 'invalid_profile')
         <div class="alert alert-danger">Please provide a valid name, email, phone number, and location.</div>
     @endif
+    @if (($errorCode ?? '') === 'invalid_username')
+        <div class="alert alert-danger">Username must be 3-30 characters using letters, numbers, dots or underscores.</div>
+    @endif
+    @if (($errorCode ?? '') === 'username_exists')
+        <div class="alert alert-danger">That username is already taken by another account.</div>
+    @endif
     @if (($errorCode ?? '') === 'image_invalid')
         <div class="alert alert-danger">Profile picture must be a JPG, PNG, or WEBP image.</div>
     @endif
@@ -80,6 +86,11 @@
                 <div class="form-group"><label>Last Name</label><input type="text" name="last_name" value="{{ $lastName }}" required></div>
             </div>
             <div class="form-group"><label>Email Address</label><input type="email" name="email" value="{{ $user->email ?? '' }}" required></div>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" name="username" value="{{ old('username', $user->username ?? '') }}" autocomplete="username" placeholder="your_username" pattern="[A-Za-z0-9._]{3,30}" required>
+                <small style="display: block; margin-top: 0.4rem; color: var(--neutral-600);">You can sign in with this or your email. 3-30 characters: letters, numbers, dots or underscores.</small>
+            </div>
             <div class="form-group"><label>Phone Number</label><input type="tel" name="phone" value="{{ $user->phone ?? '' }}" required></div>
 
             <hr style="border: none; border-top: 1px solid var(--neutral-200); margin: 2rem 0;">
