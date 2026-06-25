@@ -41,6 +41,7 @@ Route::post('/supplier-kyc.php', [AuthController::class, 'submitSupplierKyc'])->
 Route::get('/materials.php', [MaterialsController::class, 'index'])->name('materials.index');
 Route::get('/material-detail.php', [MaterialsController::class, 'show'])->name('materials.show');
 Route::get('/hire-service.php', [HireServiceController::class, 'show'])->name('services.hire.show');
+Route::get('/service-provider.php', [HireServiceController::class, 'provider'])->name('services.provider.show');
 Route::post('/hire-service.php', [HireServiceController::class, 'store'])->name('services.hire.store');
 Route::get('/cart.php', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/add.php', [CartController::class, 'add'])->middleware('legacy.auth')->name('cart.add');
