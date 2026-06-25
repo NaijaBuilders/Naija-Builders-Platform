@@ -35,6 +35,7 @@ export type MessagesStackParamList = {
 
 export type ProfileStackParamList = {
   ProfileMain: undefined;
+  EditProfile: undefined;
   Settings: undefined;
   SupplierOnboarding: undefined;
   BuyerVerification: undefined;

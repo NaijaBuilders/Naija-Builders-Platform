@@ -4,6 +4,7 @@ import { BrowseScreen } from '../screens/BrowseScreen';
 import { BuyerVerificationScreen } from '../screens/BuyerVerificationScreen';
 import { ChatScreen } from '../screens/ChatScreen';
 import { CreateListingScreen } from '../screens/CreateListingScreen';
+import { EditProfileScreen } from '../screens/EditProfileScreen';
 import { HireServiceScreen } from '../screens/HireServiceScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { MessagesScreen } from '../screens/MessagesScreen';
@@ -73,6 +74,7 @@ export function ProfileStack() {
   return (
     <ProfileStackNavigator.Navigator screenOptions={defaultStackScreenOptions}>
       <ProfileStackNavigator.Screen name="ProfileMain" component={ProfileScreen} />
+      <ProfileStackNavigator.Screen name="EditProfile" component={EditProfileScreen} />
       <ProfileStackNavigator.Screen name="Settings" component={SettingsScreen} />
       <ProfileStackNavigator.Screen
         name="SupplierOnboarding"

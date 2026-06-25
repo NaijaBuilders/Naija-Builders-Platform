@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Support\CurrencyManager;
 use App\Support\NameFormatter;
 use App\Support\Security\SensitiveData;
+use App\Support\Username;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -42,6 +43,7 @@ class ProfileController extends Controller
             ->select([
                 'full_name',
                 'email',
+                Schema::hasColumn('users', 'username') ? 'username' : DB::raw('null as username'),
                 'phone',
                 'company',
                 'business_category',
@@ -81,26 +83,69 @@ class ProfileController extends Controller
             ->where('id', $currentUserId)
             ->first();
 
-        $firstName = trim((string) $request->input('first_name', ''));
-        $lastName = trim((string) $request->input('last_name', ''));
-        $fullName = NameFormatter::title(trim($firstName.' '.$lastName));
-        $email = trim((string) $request->input('email', ''));
-        $phone = trim((string) $request->input('phone', ''));
-        $company = trim((string) $request->input('company', ''));
-        $businessCategory = trim((string) $request->input('business_category', ''));
-        $location = trim((string) $request->input('location', ''));
-        $businessAddress = trim((string) $request->input('business_address', ''));
-        $businessDescription = trim((string) $request->input('business_description', ''));
-        $bankName = trim((string) $request->input('bank_name', ''));
-        $accountNumber = trim((string) $request->input('account_number', ''));
+        // Patch-style update: only fields actually present in the request are
+        // changed, so editing a few fields never wipes the rest (bank details,
+        // etc.) of the profile.
+        $updatePayload = ['updated_at' => now()];
 
-        $emailOwner = DB::table('users')
-            ->where('email', $email)
-            ->where('id', '<>', $currentUserId)
-            ->exists();
+        if ($request->has('first_name') || $request->has('last_name')) {
+            $firstName = trim((string) $request->input('first_name', ''));
+            $lastName = trim((string) $request->input('last_name', ''));
+            $fullName = NameFormatter::title(trim($firstName.' '.$lastName));
+            $updatePayload['full_name'] = $fullName !== '' ? $fullName : 'User';
+        }
 
-        if ($emailOwner) {
-            return response()->json(['message' => 'Email already exists.'], 422);
+        if ($request->has('email')) {
+            $email = trim((string) $request->input('email', ''));
+
+            $emailOwner = DB::table('users')
+                ->where('email', $email)
+                ->where('id', '<>', $currentUserId)
+                ->exists();
+
+            if ($emailOwner) {
+                return response()->json(['message' => 'Email already exists.'], 422);
+            }
+
+            $updatePayload['email'] = $email;
+        }
+
+        if (Schema::hasColumn('users', 'username') && $request->has('username')) {
+            $username = Username::normalize((string) $request->input('username', ''));
+            if ($username === '' || ! Username::isValid($username)) {
+                return response()->json(['message' => 'Username must be 3-30 characters using letters, numbers, dots or underscores.'], 422);
+            }
+
+            $usernameOwner = DB::table('users')
+                ->where('username', $username)
+                ->where('id', '<>', $currentUserId)
+                ->exists();
+
+            if ($usernameOwner) {
+                return response()->json(['message' => 'Username is already taken.'], 422);
+            }
+
+            $updatePayload['username'] = $username;
+        }
+
+        foreach ([
+            'phone',
+            'company',
+            'business_category',
+            'location',
+            'business_address',
+            'business_description',
+            'bank_name',
+        ] as $field) {
+            if ($request->has($field)) {
+                $updatePayload[$field] = trim((string) $request->input($field, ''));
+            }
+        }
+
+        if ($request->has('account_number')) {
+            $updatePayload['account_number'] = SensitiveData::maskDigits(
+                trim((string) $request->input('account_number', ''))
+            );
         }
 
         $newProfileImagePath = null;
@@ -138,20 +183,6 @@ class ProfileController extends Controller
                 }
             }
         }
-
-        $updatePayload = [
-            'full_name' => $fullName !== '' ? $fullName : 'User',
-            'email' => $email,
-            'phone' => $phone,
-            'company' => $company,
-            'business_category' => $businessCategory,
-            'location' => $location,
-            'business_address' => $businessAddress,
-            'business_description' => $businessDescription,
-            'bank_name' => $bankName,
-            'account_number' => SensitiveData::maskDigits($accountNumber),
-            'updated_at' => now(),
-        ];
 
         if ($newProfileImagePath !== null) {
             $updatePayload['profile_image_path'] = $newProfileImagePath;
