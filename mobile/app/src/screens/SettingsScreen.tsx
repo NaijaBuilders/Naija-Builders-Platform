@@ -20,26 +20,6 @@ type SettingsNavigation = NativeStackNavigationProp<
   'Settings'
 >;
 
-const notificationToggles: Array<{
-  key: PreferenceKey;
-  label: string;
-  description: string;
-  icon: IconName;
-}> = [
-  {
-    key: 'push_notifications',
-    label: 'Push notifications',
-    description: 'Order updates, messages and delivery alerts.',
-    icon: 'notifications-outline',
-  },
-  {
-    key: 'email_updates',
-    label: 'Email updates',
-    description: 'Account and marketplace news by email.',
-    icon: 'mail-outline',
-  },
-];
-
 export function SettingsScreen() {
   const navigation = useNavigation<SettingsNavigation>();
   const { preferences, setPreferences, signOut } = useAppState();
@@ -86,17 +66,32 @@ export function SettingsScreen() {
 
       <Text style={styles.groupLabel}>Notifications</Text>
       <Card style={styles.group}>
-        {notificationToggles.map((item, index) => (
-          <ToggleRow
-            key={item.key}
-            icon={item.icon}
-            label={item.label}
-            description={item.description}
-            value={preferences[item.key]}
-            onToggle={() => togglePreference(item.key)}
-            border={index < notificationToggles.length - 1}
-          />
-        ))}
+        <NavRow
+          icon="notifications-outline"
+          label="Notification preferences"
+          description="Push, email, SMS and in-app per event"
+          onPress={() => navigation.navigate('NotificationSettings')}
+        />
+      </Card>
+
+      <Text style={styles.groupLabel}>Payments</Text>
+      <Card style={styles.group}>
+        <NavRow
+          icon="card-outline"
+          label="Payment methods"
+          description="Cards, bank transfer, payout account"
+          right={<SoonBadge />}
+        />
+      </Card>
+
+      <Text style={styles.groupLabel}>Logistics</Text>
+      <Card style={styles.group}>
+        <NavRow
+          icon="location-outline"
+          label="Delivery addresses"
+          description="Saved sites and delivery windows"
+          right={<SoonBadge />}
+        />
       </Card>
 
       <Text style={styles.groupLabel}>Display</Text>
@@ -119,6 +114,16 @@ export function SettingsScreen() {
               <SoonBadge />
             </View>
           }
+        />
+      </Card>
+
+      <Text style={styles.groupLabel}>Privacy</Text>
+      <Card style={styles.group}>
+        <NavRow
+          icon="shield-checkmark-outline"
+          label="Data & privacy"
+          description="Export data, consent, delete account"
+          right={<SoonBadge />}
         />
       </Card>
 

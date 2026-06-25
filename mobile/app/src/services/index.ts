@@ -4,6 +4,7 @@ export * from './dashboardService';
 export * from './kycService';
 export * from './listingService';
 export * from './messageService';
+export * from './notificationService';
 export * from './orderService';
 export * from './productService';
 export * from './serviceRequestService';

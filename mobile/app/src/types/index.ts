@@ -249,6 +249,27 @@ export interface EditProfilePayload {
   photoUri?: string;
 }
 
+export type NotificationChannel = 'push' | 'email' | 'sms' | 'in_app';
+
+export interface NotificationPreference {
+  event_key: string;
+  push: boolean;
+  email: boolean;
+  sms: boolean;
+  in_app: boolean;
+}
+
+export interface QuietHours {
+  enabled: boolean;
+  from: string;
+  to: string;
+}
+
+export interface NotificationPreferencesResponse {
+  preferences: NotificationPreference[];
+  quiet_hours: QuietHours;
+}
+
 export interface LoginPayload {
   login: string;
   password: string;

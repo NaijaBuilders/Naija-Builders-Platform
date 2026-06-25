@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Mobile\AdminBuyerReviewController;
 use App\Http\Controllers\Mobile\AdminSupplierOnboardingController;
+use App\Http\Controllers\Mobile\AddressController;
 use App\Http\Controllers\Mobile\AuthController;
 use App\Http\Controllers\Mobile\BuyerKycController;
 use App\Http\Controllers\Mobile\BuyerOtpController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\Mobile\EmailVerificationController;
 use App\Http\Controllers\Mobile\ListingController;
 use App\Http\Controllers\Mobile\MaterialsController;
 use App\Http\Controllers\Mobile\MessageController;
+use App\Http\Controllers\Mobile\NotificationPreferenceController;
 use App\Http\Controllers\Mobile\OrderController;
 use App\Http\Controllers\Mobile\PremblyWebhookController;
 use App\Http\Controllers\Mobile\ProfileController;
@@ -79,6 +81,14 @@ Route::prefix('mobile')->group(function (): void {
         Route::post('/profile', [ProfileController::class, 'update']);
         Route::get('/settings', [ProfileController::class, 'settings']);
         Route::post('/settings', [ProfileController::class, 'saveSettings']);
+
+        Route::get('/notification-preferences', [NotificationPreferenceController::class, 'index']);
+        Route::post('/notification-preferences', [NotificationPreferenceController::class, 'update']);
+
+        Route::get('/addresses', [AddressController::class, 'index']);
+        Route::post('/addresses', [AddressController::class, 'store']);
+        Route::put('/addresses/{addressId}', [AddressController::class, 'update']);
+        Route::delete('/addresses/{addressId}', [AddressController::class, 'destroy']);
 
         Route::post('/kyc/email-verification', EmailVerificationController::class);
         Route::post('/otp/send', [BuyerOtpController::class, 'send']);

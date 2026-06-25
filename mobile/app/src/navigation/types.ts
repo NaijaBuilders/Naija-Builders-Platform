@@ -37,6 +37,7 @@ export type ProfileStackParamList = {
   ProfileMain: undefined;
   EditProfile: undefined;
   Settings: undefined;
+  NotificationSettings: undefined;
   SupplierOnboarding: undefined;
   BuyerVerification: undefined;
 };

@@ -8,6 +8,7 @@ import { EditProfileScreen } from '../screens/EditProfileScreen';
 import { HireServiceScreen } from '../screens/HireServiceScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { MessagesScreen } from '../screens/MessagesScreen';
+import { NotificationSettingsScreen } from '../screens/NotificationSettingsScreen';
 import { OrderDetailScreen } from '../screens/OrderDetailScreen';
 import { OrdersScreen } from '../screens/OrdersScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
@@ -76,6 +77,10 @@ export function ProfileStack() {
       <ProfileStackNavigator.Screen name="ProfileMain" component={ProfileScreen} />
       <ProfileStackNavigator.Screen name="EditProfile" component={EditProfileScreen} />
       <ProfileStackNavigator.Screen name="Settings" component={SettingsScreen} />
+      <ProfileStackNavigator.Screen
+        name="NotificationSettings"
+        component={NotificationSettingsScreen}
+      />
       <ProfileStackNavigator.Screen
         name="SupplierOnboarding"
         component={SupplierOnboardingScreen}
