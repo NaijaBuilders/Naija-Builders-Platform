@@ -89,8 +89,18 @@ export function SettingsScreen() {
         <NavRow
           icon="location-outline"
           label="Delivery addresses"
-          description="Saved sites and delivery windows"
-          right={<SoonBadge />}
+          description="Saved sites reused at checkout"
+          onPress={() => navigation.navigate('Addresses')}
+        />
+      </Card>
+
+      <Text style={styles.groupLabel}>Shortlist</Text>
+      <Card style={styles.group}>
+        <NavRow
+          icon="heart-outline"
+          label="Saved materials"
+          description="Products you have bookmarked"
+          onPress={() => navigation.navigate('SavedItems')}
         />
       </Card>
 
@@ -123,7 +133,7 @@ export function SettingsScreen() {
           icon="shield-checkmark-outline"
           label="Data & privacy"
           description="Export data, consent, delete account"
-          right={<SoonBadge />}
+          onPress={() => navigation.navigate('DataPrivacy')}
         />
       </Card>
 
@@ -132,7 +142,7 @@ export function SettingsScreen() {
         <NavRow
           icon="document-text-outline"
           label="Terms & privacy"
-          right={<SoonBadge />}
+          onPress={() => navigation.navigate('Terms')}
           border
         />
         <View style={styles.infoRow}>

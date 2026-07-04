@@ -15,12 +15,17 @@ export type HomeStackParamList = {
   HomeMain: undefined;
   ProductDetail: { productId: string };
   HireService: undefined;
+  Cart: undefined;
+  Checkout: undefined;
+  Notifications: undefined;
 };
 
 export type BrowseStackParamList = {
   BrowseMain: undefined;
   ProductDetail: { productId: string };
   CreateListing: undefined;
+  Cart: undefined;
+  Checkout: undefined;
 };
 
 export type OrdersStackParamList = {
@@ -40,6 +45,10 @@ export type ProfileStackParamList = {
   NotificationSettings: undefined;
   SupplierOnboarding: undefined;
   BuyerVerification: undefined;
+  SavedItems: undefined;
+  Addresses: undefined;
+  DataPrivacy: undefined;
+  Terms: undefined;
 };
 
 export type MainTabParamList = {

@@ -1,6 +1,7 @@
 import {
   DefaultTheme,
   NavigationContainer,
+  type LinkingOptions,
   type Theme as NavigationTheme,
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -15,6 +16,35 @@ import { useAppState } from '../context/AppContext';
 import { theme } from '../theme';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
+const linking: LinkingOptions<RootStackParamList> = {
+  prefixes: ['naijabuilders://', 'https://naijabuilders.com'],
+  config: {
+    screens: {
+      Main: {
+        screens: {
+          Home: {
+            screens: {
+              ProductDetail: 'product/:productId',
+              Notifications: 'notifications',
+              Cart: 'cart',
+            },
+          },
+          Orders: {
+            screens: {
+              OrderDetail: 'orders/:orderId',
+            },
+          },
+          Messages: {
+            screens: {
+              Chat: 'chat/:conversationId',
+            },
+          },
+        },
+      },
+    },
+  },
+};
 
 const navigationTheme: NavigationTheme = {
   ...DefaultTheme,
@@ -47,7 +77,7 @@ export function RootNavigator() {
   }
 
   return (
-    <NavigationContainer theme={navigationTheme}>
+    <NavigationContainer linking={linking} theme={navigationTheme}>
       <Stack.Navigator screenOptions={defaultStackScreenOptions}>
         {isAuthenticated ? (
           <Stack.Screen name="Main" component={MainTabs} />

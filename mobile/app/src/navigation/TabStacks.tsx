@@ -1,20 +1,27 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
+import { AddressesScreen } from '../screens/AddressesScreen';
 import { BrowseScreen } from '../screens/BrowseScreen';
 import { BuyerVerificationScreen } from '../screens/BuyerVerificationScreen';
+import { CartScreen } from '../screens/CartScreen';
 import { ChatScreen } from '../screens/ChatScreen';
+import { CheckoutScreen } from '../screens/CheckoutScreen';
 import { CreateListingScreen } from '../screens/CreateListingScreen';
+import { DataPrivacyScreen } from '../screens/DataPrivacyScreen';
 import { EditProfileScreen } from '../screens/EditProfileScreen';
 import { HireServiceScreen } from '../screens/HireServiceScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { MessagesScreen } from '../screens/MessagesScreen';
 import { NotificationSettingsScreen } from '../screens/NotificationSettingsScreen';
+import { NotificationsScreen } from '../screens/NotificationsScreen';
 import { OrderDetailScreen } from '../screens/OrderDetailScreen';
 import { OrdersScreen } from '../screens/OrdersScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { ProductDetailScreen } from '../screens/ProductDetailScreen';
+import { SavedItemsScreen } from '../screens/SavedItemsScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { SupplierOnboardingScreen } from '../screens/SupplierOnboardingScreen';
+import { TermsScreen } from '../screens/TermsScreen';
 import { defaultStackScreenOptions } from './transitionOptions';
 import type {
   BrowseStackParamList,
@@ -36,6 +43,9 @@ export function HomeStack() {
       <HomeStackNavigator.Screen name="HomeMain" component={HomeScreen} />
       <HomeStackNavigator.Screen name="ProductDetail" component={ProductDetailScreen} />
       <HomeStackNavigator.Screen name="HireService" component={HireServiceScreen} />
+      <HomeStackNavigator.Screen name="Cart" component={CartScreen} />
+      <HomeStackNavigator.Screen name="Checkout" component={CheckoutScreen} />
+      <HomeStackNavigator.Screen name="Notifications" component={NotificationsScreen} />
     </HomeStackNavigator.Navigator>
   );
 }
@@ -49,6 +59,8 @@ export function BrowseStack() {
         name="CreateListing"
         component={CreateListingScreen}
       />
+      <BrowseStackNavigator.Screen name="Cart" component={CartScreen} />
+      <BrowseStackNavigator.Screen name="Checkout" component={CheckoutScreen} />
     </BrowseStackNavigator.Navigator>
   );
 }
@@ -89,6 +101,10 @@ export function ProfileStack() {
         name="BuyerVerification"
         component={BuyerVerificationScreen}
       />
+      <ProfileStackNavigator.Screen name="SavedItems" component={SavedItemsScreen} />
+      <ProfileStackNavigator.Screen name="Addresses" component={AddressesScreen} />
+      <ProfileStackNavigator.Screen name="DataPrivacy" component={DataPrivacyScreen} />
+      <ProfileStackNavigator.Screen name="Terms" component={TermsScreen} />
     </ProfileStackNavigator.Navigator>
   );
 }
