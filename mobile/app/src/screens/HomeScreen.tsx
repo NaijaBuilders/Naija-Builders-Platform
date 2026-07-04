@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
@@ -34,6 +34,8 @@ import {
 } from '../hooks/useMarketplaceData';
 import { useScreenAnimation } from '../hooks/useScreenAnimation';
 import { useAppState } from '../context/AppContext';
+import { useCart } from '../context/CartContext';
+import { notificationService } from '../services';
 import type { HomeStackParamList, MainTabParamList } from '../navigation/types';
 import { theme } from '../theme';
 import type { DashboardStat, Order, Product, QuickAction } from '../types';
@@ -45,6 +47,61 @@ const listPerformanceProps = {
   updateCellsBatchingPeriod: 50,
   windowSize: 7,
 };
+
+type HeaderActionsNavigation = NativeStackNavigationProp<HomeStackParamList>;
+
+function HeaderActions({ userName }: { userName: string }) {
+  const navigation = useNavigation<HeaderActionsNavigation>();
+  const { itemCount } = useCart();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useFocusEffect(
+    useCallback(() => {
+      notificationService
+        .getInbox()
+        .then((inbox) => setUnreadCount(inbox.unreadCount))
+        .catch(() => undefined);
+    }, [])
+  );
+
+  return (
+    <View style={styles.headerActions}>
+      <Pressable
+        accessibilityLabel="Notifications"
+        accessibilityRole="button"
+        hitSlop={6}
+        onPress={() => navigation.navigate('Notifications')}
+        style={styles.headerIconButton}
+      >
+        <Ionicons
+          color={theme.colors.text}
+          name="notifications-outline"
+          size={19}
+        />
+        {unreadCount > 0 ? (
+          <Text style={styles.headerIconBadge}>
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </Text>
+        ) : null}
+      </Pressable>
+      <Pressable
+        accessibilityLabel="Cart"
+        accessibilityRole="button"
+        hitSlop={6}
+        onPress={() => navigation.navigate('Cart')}
+        style={styles.headerIconButton}
+      >
+        <Ionicons color={theme.colors.text} name="cart-outline" size={19} />
+        {itemCount > 0 ? (
+          <Text style={styles.headerIconBadge}>
+            {itemCount > 99 ? '99+' : itemCount}
+          </Text>
+        ) : null}
+      </Pressable>
+      <Avatar name={userName} />
+    </View>
+  );
+}
 
 export function HomeScreen() {
   const { currentRole, user } = useAppState();
@@ -183,7 +240,7 @@ function SupplierHome({
         eyebrow="Supplier workspace"
         title={`Hi, ${firstName}`}
         subtitle="Inventory, orders, and buyer enquiries at a glance."
-        right={<Avatar name={userName} />}
+        right={<HeaderActions userName={userName} />}
       />
 
       <View style={styles.supplierHero}>
@@ -322,7 +379,7 @@ function BuyerHome({
           eyebrow="Buyer marketplace"
           title={`Welcome, ${firstName}`}
           subtitle="Browse verified materials and suppliers for your next project."
-          right={<Avatar name={userName} />}
+          right={<HeaderActions userName={userName} />}
         />
 
         <View style={styles.searchWrap}>
@@ -437,6 +494,36 @@ const styles = StyleSheet.create({
   center: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  headerActions: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+  },
+  headerIconButton: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.pill,
+    borderWidth: 1,
+    height: 38,
+    justifyContent: 'center',
+    width: 38,
+  },
+  headerIconBadge: {
+    backgroundColor: theme.colors.secondary,
+    borderRadius: theme.radius.pill,
+    color: theme.colors.white,
+    fontSize: 9.5,
+    fontWeight: '900',
+    minWidth: 16,
+    overflow: 'hidden',
+    paddingHorizontal: 3,
+    paddingVertical: 1.5,
+    position: 'absolute',
+    right: -3,
+    textAlign: 'center',
+    top: -3,
   },
   roleContainer: {
     flex: 1,

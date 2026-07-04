@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import {
@@ -9,11 +10,150 @@ import {
   Input,
   Loader,
   Screen,
+  StarRating,
 } from '../components';
+import { useAppState } from '../context/AppContext';
 import { useOrder } from '../hooks/useMarketplaceData';
 import { orderService } from '../services';
 import { theme } from '../theme';
+import type { Order } from '../types';
 import { formatCurrency } from '../utils/format';
+
+const TIMELINE_STEPS = [
+  { key: 'placed', label: 'Placed', icon: 'receipt-outline' },
+  { key: 'processing', label: 'Confirmed', icon: 'checkmark-circle-outline' },
+  { key: 'dispatched', label: 'Dispatched', icon: 'car-outline' },
+  { key: 'delivered', label: 'Delivered', icon: 'home-outline' },
+] as const;
+
+function timelineProgress(order: Order): number {
+  if (order.status === 'Delivered') {
+    return 4;
+  }
+
+  const deliveryStatus = order.delivery?.status ?? 'pending';
+  if (['otp_sent', 'dispatched', 'in_transit'].includes(deliveryStatus)) {
+    return 3;
+  }
+
+  if (order.status === 'Processing') {
+    return 2;
+  }
+
+  return 1;
+}
+
+function OrderTimeline({ order }: { order: Order }) {
+  if (order.status === 'Cancelled') {
+    return (
+      <View style={timelineStyles.cancelled}>
+        <Ionicons color={theme.colors.danger} name="close-circle" size={18} />
+        <Text style={timelineStyles.cancelledText}>
+          This order was cancelled.
+        </Text>
+      </View>
+    );
+  }
+
+  const progress = timelineProgress(order);
+
+  return (
+    <View style={timelineStyles.row}>
+      {TIMELINE_STEPS.map((step, index) => {
+        const done = index < progress;
+        const isLast = index === TIMELINE_STEPS.length - 1;
+
+        return (
+          <React.Fragment key={step.key}>
+            <View style={timelineStyles.step}>
+              <View
+                style={[
+                  timelineStyles.dot,
+                  done ? timelineStyles.dotDone : null,
+                ]}
+              >
+                <Ionicons
+                  color={done ? theme.colors.white : theme.colors.textSubtle}
+                  name={done && index < progress - 1 ? 'checkmark' : step.icon}
+                  size={15}
+                />
+              </View>
+              <Text
+                style={[
+                  timelineStyles.label,
+                  done ? timelineStyles.labelDone : null,
+                ]}
+              >
+                {step.label}
+              </Text>
+            </View>
+            {!isLast ? (
+              <View
+                style={[
+                  timelineStyles.connector,
+                  index < progress - 1 ? timelineStyles.connectorDone : null,
+                ]}
+              />
+            ) : null}
+          </React.Fragment>
+        );
+      })}
+    </View>
+  );
+}
+
+const timelineStyles = StyleSheet.create({
+  row: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+  },
+  step: {
+    alignItems: 'center',
+    gap: 6,
+    width: 66,
+  },
+  dot: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.surfaceMuted,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.pill,
+    borderWidth: 1,
+    height: 34,
+    justifyContent: 'center',
+    width: 34,
+  },
+  dotDone: {
+    backgroundColor: theme.colors.secondary,
+    borderColor: theme.colors.secondary,
+  },
+  label: {
+    color: theme.colors.textSubtle,
+    fontSize: 11,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  labelDone: {
+    color: theme.colors.text,
+  },
+  connector: {
+    backgroundColor: theme.colors.border,
+    flex: 1,
+    height: 2,
+    marginTop: 16,
+  },
+  connectorDone: {
+    backgroundColor: theme.colors.secondary,
+  },
+  cancelled: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+  },
+  cancelledText: {
+    color: theme.colors.danger,
+    fontWeight: '800',
+  },
+});
 
 type OrderDetailScreenProps = {
   route: {
@@ -25,11 +165,43 @@ type OrderDetailScreenProps = {
 
 export function OrderDetailScreen({ route }: OrderDetailScreenProps) {
   const { data: order, error, loading, refresh } = useOrder(route.params.orderId);
+  const { user } = useAppState();
   const [handoverCode, setHandoverCode] = useState('');
   const [disputeReason, setDisputeReason] = useState('');
   const [actionLoading, setActionLoading] = useState('');
   const [actionMessage, setActionMessage] = useState('');
   const [actionError, setActionError] = useState('');
+  const [supplierRating, setSupplierRating] = useState(0);
+  const [supplierReviewText, setSupplierReviewText] = useState('');
+  const [ratingNotice, setRatingNotice] = useState('');
+
+  const isBuyer = Boolean(
+    order?.buyerId && user?.id && order.buyerId === user.id
+  );
+
+  const submitSupplierRating = async () => {
+    if (!order?.supplierId || supplierRating < 1) {
+      return;
+    }
+
+    setActionLoading('rating');
+    setRatingNotice('');
+    try {
+      await orderService.rateSupplier(
+        order.supplierId,
+        supplierRating,
+        supplierReviewText.trim()
+      );
+      setRatingNotice('Thanks — your supplier rating has been saved.');
+      setSupplierReviewText('');
+    } catch (reason) {
+      setRatingNotice(
+        reason instanceof Error ? reason.message : 'Could not save rating.'
+      );
+    } finally {
+      setActionLoading('');
+    }
+  };
 
   const confirmHandover = async () => {
     setActionLoading('otp');
@@ -121,6 +293,7 @@ export function OrderDetailScreen({ route }: OrderDetailScreenProps) {
 
       <Card style={styles.card}>
         <Text style={styles.sectionTitle}>Order progress</Text>
+        <OrderTimeline order={order} />
         <Text style={styles.meta}>{reviewMessage(order.verificationStatus)}</Text>
         {order.paymentProvider ? (
           <Text style={styles.meta}>
@@ -203,6 +376,33 @@ export function OrderDetailScreen({ route }: OrderDetailScreenProps) {
             onPress={raiseDispute}
             loading={actionLoading === 'dispute'}
             disabled={disputeReason.trim().length < 10}
+            variant="outline"
+          />
+        </Card>
+      ) : null}
+
+      {order.status === 'Delivered' && isBuyer && order.supplierId ? (
+        <Card style={styles.card}>
+          <Text style={styles.sectionTitle}>Rate {order.supplierName}</Text>
+          <Text style={styles.meta}>
+            How was the quality and delivery? Your rating helps other builders
+            choose reliable suppliers.
+          </Text>
+          <StarRating onRate={setSupplierRating} rating={supplierRating} size={28} />
+          <Input
+            label="Comment (optional)"
+            multiline
+            onChangeText={setSupplierReviewText}
+            value={supplierReviewText}
+          />
+          {ratingNotice ? (
+            <Text style={styles.successText}>{ratingNotice}</Text>
+          ) : null}
+          <Button
+            disabled={supplierRating < 1 || actionLoading === 'rating'}
+            loading={actionLoading === 'rating'}
+            onPress={submitSupplierRating}
+            title="Submit rating"
             variant="outline"
           />
         </Card>
