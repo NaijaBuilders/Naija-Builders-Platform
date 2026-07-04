@@ -28,7 +28,65 @@ type LaravelEditProfile = {
   last_name?: string;
 };
 
+export type ProfileStats = {
+  role: 'buyer' | 'supplier';
+  ordersCount: number;
+  savedCount: number;
+  reviewsGiven: number;
+  listingsCount: number;
+  ratingAvg: number | null;
+  ratingCount: number;
+};
+
+export type SupportContent = {
+  prompts: string[];
+  rules: Array<{ keys: string[]; reply: string }>;
+};
+
 export const userService = {
+  async getProfileStats(): Promise<ProfileStats> {
+    try {
+      const response = await apiClient.get<{
+        role?: string;
+        orders_count?: number;
+        saved_count?: number;
+        reviews_given?: number;
+        listings_count?: number;
+        rating_avg?: number | null;
+        rating_count?: number;
+      }>('/profile/stats');
+
+      return {
+        role: response.data.role === 'supplier' ? 'supplier' : 'buyer',
+        ordersCount: Number(response.data.orders_count ?? 0),
+        savedCount: Number(response.data.saved_count ?? 0),
+        reviewsGiven: Number(response.data.reviews_given ?? 0),
+        listingsCount: Number(response.data.listings_count ?? 0),
+        ratingAvg:
+          response.data.rating_avg === null ||
+          response.data.rating_avg === undefined
+            ? null
+            : Number(response.data.rating_avg),
+        ratingCount: Number(response.data.rating_count ?? 0),
+      };
+    } catch (error) {
+      handleServiceError(error);
+    }
+  },
+
+  async getSupportContent(): Promise<SupportContent> {
+    try {
+      const response = await apiClient.get<Partial<SupportContent>>('/support');
+
+      return {
+        prompts: response.data.prompts ?? [],
+        rules: response.data.rules ?? [],
+      };
+    } catch (error) {
+      handleServiceError(error);
+    }
+  },
+
   async getCurrentUser(): Promise<UserProfile> {
     try {
       const response = await apiClient.get<{ user: unknown }>('/user');

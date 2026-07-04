@@ -103,6 +103,25 @@ export const authService = {
     }
   },
 
+  async changePassword(
+    currentPassword: string,
+    newPassword: string
+  ): Promise<string> {
+    try {
+      const response = await apiClient.post<LaravelMessageResponse>(
+        '/account/password',
+        {
+          current_password: currentPassword,
+          new_password: newPassword,
+        }
+      );
+
+      return response.data.message ?? 'Your password has been changed.';
+    } catch (error) {
+      handleServiceError(error);
+    }
+  },
+
   async deleteAccount(password: string): Promise<void> {
     try {
       await apiClient.delete('/account', { data: { password } });

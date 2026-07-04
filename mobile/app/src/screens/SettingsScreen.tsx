@@ -2,8 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
-import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
-import { Card, FloatingBackButton, Header, Screen } from '../components';
+import { Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Avatar, Card, FloatingBackButton, Header, Screen } from '../components';
 import { useAppState } from '../context/AppContext';
 import type { ProfileStackParamList } from '../navigation/types';
 import { userService } from '../services';
@@ -22,7 +22,14 @@ type SettingsNavigation = NativeStackNavigationProp<
 
 export function SettingsScreen() {
   const navigation = useNavigation<SettingsNavigation>();
-  const { preferences, setPreferences, signOut } = useAppState();
+  const { preferences, setPreferences, signOut, user } = useAppState();
+
+  const confirmSignOut = () => {
+    Alert.alert('Sign out of NaijaBuilders?', undefined, [
+      { style: 'cancel', text: 'Stay signed in' },
+      { style: 'destructive', text: 'Sign out', onPress: () => signOut() },
+    ]);
+  };
 
   const togglePreference = async (key: PreferenceKey) => {
     const next = { ...preferences, [key]: !preferences[key] };
@@ -47,6 +54,30 @@ export function SettingsScreen() {
         subtitle="Manage your account, notifications and app preferences."
       />
 
+      {user ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => navigation.navigate('EditProfile')}
+          style={styles.identityCard}
+        >
+          <Avatar imageUri={user.profileImage} name={user.name} size={52} />
+          <View style={styles.identityCopy}>
+            <Text numberOfLines={1} style={styles.identityName}>
+              {user.name}
+            </Text>
+            <Text numberOfLines={1} style={styles.identityMeta}>
+              {user.username ? `@${user.username} · ` : ''}
+              {user.email}
+            </Text>
+          </View>
+          <Ionicons
+            color={theme.colors.textSubtle}
+            name="chevron-forward"
+            size={20}
+          />
+        </Pressable>
+      ) : null}
+
       <Text style={styles.groupLabel}>Account</Text>
       <Card style={styles.group}>
         <NavRow
@@ -58,16 +89,24 @@ export function SettingsScreen() {
         />
         <NavRow
           icon="lock-closed-outline"
-          label="Password & security"
-          description="Manage how you sign in"
-          right={<SoonBadge />}
+          label="Change password"
+          description="Update the password you sign in with"
+          onPress={() => navigation.navigate('ChangePassword')}
         />
       </Card>
 
       <Text style={styles.groupLabel}>Notifications</Text>
       <Card style={styles.group}>
-        <NavRow
+        <ToggleRow
           icon="notifications-outline"
+          label="Push notifications"
+          description="Order updates, messages and quotes on this device."
+          value={preferences.push_notifications}
+          onToggle={() => togglePreference('push_notifications')}
+          border
+        />
+        <NavRow
+          icon="options-outline"
           label="Notification preferences"
           description="Push, email, SMS and in-app per event"
           onPress={() => navigation.navigate('NotificationSettings')}
@@ -128,6 +167,16 @@ export function SettingsScreen() {
         />
       </Card>
 
+      <Text style={styles.groupLabel}>Support</Text>
+      <Card style={styles.group}>
+        <NavRow
+          icon="help-circle-outline"
+          label="Help & support"
+          description="Answers to common questions and how to reach us"
+          onPress={() => navigation.navigate('HelpSupport')}
+        />
+      </Card>
+
       <Text style={styles.groupLabel}>Privacy</Text>
       <Card style={styles.group}>
         <NavRow
@@ -161,7 +210,7 @@ export function SettingsScreen() {
 
       <Pressable
         accessibilityRole="button"
-        onPress={signOut}
+        onPress={confirmSignOut}
         style={styles.signOut}
       >
         <Ionicons color={theme.colors.danger} name="log-out-outline" size={18} />
@@ -261,6 +310,32 @@ function SoonBadge() {
 const styles = StyleSheet.create({
   contentWithFloatingBack: {
     paddingTop: 70,
+  },
+  identityCard: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+    marginTop: theme.spacing.md,
+    padding: theme.spacing.md,
+    ...theme.shadows.soft,
+  },
+  identityCopy: {
+    flex: 1,
+  },
+  identityName: {
+    color: theme.colors.text,
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  identityMeta: {
+    color: theme.colors.textMuted,
+    fontSize: 12.5,
+    fontWeight: '700',
+    marginTop: 2,
   },
   groupLabel: {
     color: theme.colors.textSubtle,

@@ -49,6 +49,8 @@ export type ProfileStackParamList = {
   Addresses: undefined;
   DataPrivacy: undefined;
   Terms: undefined;
+  ChangePassword: undefined;
+  HelpSupport: undefined;
 };
 
 export type MainTabParamList = {

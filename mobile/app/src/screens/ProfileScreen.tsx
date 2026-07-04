@@ -1,15 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useNavigation } from '@react-navigation/native';
-import React, { useCallback } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Avatar, Button, Card, Loader, Screen } from '../components';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import React, { useCallback, useState } from 'react';
+import { Alert, Pressable, Share, StyleSheet, Text, View } from 'react-native';
+import { Avatar, Button, Card, Screen, Skeleton } from '../components';
 import { useAppState } from '../context/AppContext';
 import { useCompany } from '../hooks/useMarketplaceData';
 import type { MainTabParamList, ProfileStackParamList } from '../navigation/types';
+import { userService, type ProfileStats } from '../services/userService';
 import { theme } from '../theme';
 import { capitalizeWords } from '../utils/format';
+import { haptics } from '../utils/haptics';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 type AccountType = 'buyer' | 'supplier' | 'service';
@@ -48,16 +50,54 @@ export function ProfileScreen() {
   const navigation = useNavigation<ProfileNavigation>();
   const { currentRole, signOut, user } = useAppState();
   const { data: company } = useCompany();
-  const goHome = useCallback(() => {
-    navigation
-      .getParent<BottomTabNavigationProp<MainTabParamList>>()
-      ?.navigate('Home', { screen: 'HomeMain' });
-  }, [navigation]);
+  const [stats, setStats] = useState<ProfileStats | null>(null);
+  const tabNavigation = navigation.getParent<
+    BottomTabNavigationProp<MainTabParamList>
+  >();
+
+  useFocusEffect(
+    useCallback(() => {
+      userService
+        .getProfileStats()
+        .then(setStats)
+        .catch(() => undefined);
+    }, [])
+  );
+
+  const confirmSignOut = useCallback(() => {
+    Alert.alert('Sign out of NaijaBuilders?', undefined, [
+      { style: 'cancel', text: 'Stay signed in' },
+      { style: 'destructive', text: 'Sign out', onPress: () => signOut() },
+    ]);
+  }, [signOut]);
+
+  const shareProfile = useCallback(() => {
+    if (!user) {
+      return;
+    }
+
+    haptics.tap();
+    const identity = user.username ? `@${user.username}` : user.name;
+    Share.share({
+      message: `Find ${user.company || user.name} (${identity}) on NaijaBuilders — Nigeria's construction materials marketplace. https://naijabuilders.com`,
+    }).catch(() => undefined);
+  }, [user]);
 
   if (!user) {
     return (
-      <Screen scroll={false} contentContainerStyle={styles.center}>
-        <Loader label="Loading profile" />
+      <Screen contentContainerStyle={styles.screen}>
+        <View style={styles.heroSkeleton}>
+          <Skeleton height={92} style={styles.skeletonAvatar} width={92} />
+          <Skeleton height={20} width="55%" />
+          <Skeleton height={13} width="40%" />
+        </View>
+        {[0, 1, 2].map((index) => (
+          <Card key={`profile-skeleton-${index}`} style={styles.skeletonCard}>
+            <Skeleton height={15} width="45%" />
+            <Skeleton height={13} width="75%" />
+            <Skeleton height={13} width="60%" />
+          </Card>
+        ))}
       </Screen>
     );
   }
@@ -152,6 +192,15 @@ export function ProfileScreen() {
     <Screen contentContainerStyle={styles.screen}>
       <View style={styles.hero}>
         <Pressable
+          accessibilityLabel="Share profile"
+          accessibilityRole="button"
+          hitSlop={10}
+          onPress={shareProfile}
+          style={[styles.gear, styles.shareButton]}
+        >
+          <Ionicons color={theme.colors.white} name="share-social-outline" size={20} />
+        </Pressable>
+        <Pressable
           accessibilityLabel="Settings"
           accessibilityRole="button"
           hitSlop={10}
@@ -161,12 +210,20 @@ export function ProfileScreen() {
           <Ionicons color={theme.colors.white} name="settings-outline" size={22} />
         </Pressable>
 
-        <View style={styles.avatarRing}>
+        <Pressable
+          accessibilityLabel="Change profile photo"
+          accessibilityRole="button"
+          onPress={() => navigation.navigate('EditProfile')}
+          style={styles.avatarRing}
+        >
           <Avatar name={user.name} imageUri={user.profileImage} size={92} />
           <View style={[styles.typeBadge, { backgroundColor: config.accent }]}>
             <Ionicons color={theme.colors.white} name={config.icon} size={14} />
           </View>
-        </View>
+          <View style={styles.cameraBadge}>
+            <Ionicons color={theme.colors.primaryDark} name="camera" size={13} />
+          </View>
+        </Pressable>
 
         <Text style={styles.name}>{user.name}</Text>
         {user.username ? (
@@ -180,6 +237,14 @@ export function ProfileScreen() {
           <View style={[styles.pill, { backgroundColor: config.accent }]}>
             <Text style={styles.pillText}>{config.label}</Text>
           </View>
+          {stats?.role === 'supplier' && stats.ratingAvg !== null ? (
+            <View style={[styles.pill, styles.pillOutline]}>
+              <Ionicons color={theme.colors.accent} name="star" size={13} />
+              <Text style={styles.pillText}>
+                {stats.ratingAvg.toFixed(1)} ({stats.ratingCount})
+              </Text>
+            </View>
+          ) : null}
           <View
             style={[
               styles.pill,
@@ -211,17 +276,64 @@ export function ProfileScreen() {
         style={styles.editButton}
       />
 
+      {stats ? (
+        <View style={styles.metricRow}>
+          {accountType === 'buyer' ? (
+            <>
+              <MetricTile
+                label="Orders"
+                onPress={() =>
+                  tabNavigation?.navigate('Orders', { screen: 'OrdersMain' })
+                }
+                value={String(stats.ordersCount)}
+              />
+              <MetricTile
+                label="Saved"
+                onPress={() => navigation.navigate('SavedItems')}
+                value={String(stats.savedCount)}
+              />
+              <MetricTile label="Reviews" value={String(stats.reviewsGiven)} />
+            </>
+          ) : (
+            <>
+              <MetricTile
+                label="Listings"
+                onPress={() =>
+                  tabNavigation?.navigate('Browse', { screen: 'BrowseMain' })
+                }
+                value={String(stats.listingsCount)}
+              />
+              <MetricTile
+                label="Orders"
+                onPress={() =>
+                  tabNavigation?.navigate('Orders', { screen: 'OrdersMain' })
+                }
+                value={String(stats.ordersCount)}
+              />
+              <MetricTile
+                label="Rating"
+                value={
+                  stats.ratingAvg !== null ? stats.ratingAvg.toFixed(1) : '—'
+                }
+              />
+            </>
+          )}
+        </View>
+      ) : null}
+
       {accountType === 'buyer' ? (
         <View style={styles.statRow}>
           <StatChip
             icon="mail-outline"
             label="Email"
             ok={Boolean(user.email_confirmed)}
+            onPress={goToVerification}
           />
           <StatChip
             icon="call-outline"
             label="Phone"
             ok={Boolean(user.phone_confirmed)}
+            onPress={goToVerification}
           />
         </View>
       ) : (
@@ -232,11 +344,13 @@ export function ProfileScreen() {
             ok={user.kyc_status === 'approved'}
             okText={capitalizeWords((user.kyc_status || 'pending').replace(/[_-]+/g, ' '))}
             pendingText={capitalizeWords((user.kyc_status || 'pending').replace(/[_-]+/g, ' '))}
+            onPress={goToVerification}
           />
           <StatChip
             icon="mail-outline"
             label="Email"
             ok={Boolean(user.email_confirmed)}
+            onPress={goToVerification}
           />
         </View>
       )}
@@ -292,57 +406,98 @@ export function ProfileScreen() {
       ) : null}
 
       <Card style={styles.menuCard}>
-        <Pressable
-          accessibilityRole="button"
+        <MenuRow
+          border
+          icon="heart-outline"
+          label="Saved materials"
+          onPress={() => navigation.navigate('SavedItems')}
+        />
+        <MenuRow
+          border
+          icon="location-outline"
+          label="Delivery addresses"
+          onPress={() => navigation.navigate('Addresses')}
+        />
+        <MenuRow
+          border
+          icon="help-circle-outline"
+          label="Help & support"
+          onPress={() => navigation.navigate('HelpSupport')}
+        />
+        <MenuRow
+          border
+          icon="settings-outline"
+          label="Settings"
           onPress={() => navigation.navigate('Settings')}
-          style={[styles.menuRow, styles.rowBorder]}
-        >
-          <View style={styles.menuIcon}>
-            <Ionicons
-              color={theme.colors.primary}
-              name="settings-outline"
-              size={18}
-            />
-          </View>
-          <Text style={styles.menuLabel}>Settings</Text>
-          <Ionicons
-            color={theme.colors.textSubtle}
-            name="chevron-forward"
-            size={20}
-          />
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          onPress={goHome}
-          style={[styles.menuRow, styles.rowBorder]}
-        >
-          <View style={styles.menuIcon}>
-            <Ionicons color={theme.colors.primary} name="home-outline" size={18} />
-          </View>
-          <Text style={styles.menuLabel}>Go to home</Text>
-          <Ionicons
-            color={theme.colors.textSubtle}
-            name="chevron-forward"
-            size={20}
-          />
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          onPress={signOut}
-          style={styles.menuRow}
-        >
-          <View style={[styles.menuIcon, styles.menuIconDanger]}>
-            <Ionicons color={theme.colors.danger} name="log-out-outline" size={18} />
-          </View>
-          <Text style={[styles.menuLabel, styles.menuLabelDanger]}>Sign out</Text>
-          <Ionicons
-            color={theme.colors.textSubtle}
-            name="chevron-forward"
-            size={20}
-          />
-        </Pressable>
+        />
+        <MenuRow
+          danger
+          icon="log-out-outline"
+          label="Sign out"
+          onPress={confirmSignOut}
+        />
       </Card>
     </Screen>
+  );
+}
+
+function MetricTile({
+  value,
+  label,
+  onPress,
+}: {
+  value: string;
+  label: string;
+  onPress?: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole={onPress ? 'button' : undefined}
+      disabled={!onPress}
+      onPress={onPress}
+      style={styles.metricTile}
+    >
+      <Text style={styles.metricValue}>{value}</Text>
+      <Text style={styles.metricLabel}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function MenuRow({
+  icon,
+  label,
+  onPress,
+  border,
+  danger,
+}: {
+  icon: IconName;
+  label: string;
+  onPress: () => void;
+  border?: boolean;
+  danger?: boolean;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[styles.menuRow, border ? styles.rowBorder : null]}
+    >
+      <View style={[styles.menuIcon, danger ? styles.menuIconDanger : null]}>
+        <Ionicons
+          color={danger ? theme.colors.danger : theme.colors.primary}
+          name={icon}
+          size={18}
+        />
+      </View>
+      <Text style={[styles.menuLabel, danger ? styles.menuLabelDanger : null]}>
+        {label}
+      </Text>
+      <Ionicons
+        color={theme.colors.textSubtle}
+        name="chevron-forward"
+        size={20}
+      />
+    </Pressable>
   );
 }
 
@@ -352,15 +507,22 @@ function StatChip({
   ok,
   okText = 'Verified',
   pendingText = 'Pending',
+  onPress,
 }: {
   icon: IconName;
   label: string;
   ok: boolean;
   okText?: string;
   pendingText?: string;
+  onPress?: () => void;
 }) {
   return (
-    <View style={styles.statChip}>
+    <Pressable
+      accessibilityRole={onPress ? 'button' : undefined}
+      disabled={!onPress || ok}
+      onPress={onPress}
+      style={styles.statChip}
+    >
       <View
         style={[
           styles.statIcon,
@@ -385,7 +547,14 @@ function StatChip({
           {ok ? okText : pendingText}
         </Text>
       </View>
-    </View>
+      {!ok && onPress ? (
+        <Ionicons
+          color={theme.colors.textSubtle}
+          name="chevron-forward"
+          size={15}
+        />
+      ) : null}
+    </Pressable>
   );
 }
 
@@ -426,6 +595,67 @@ const styles = StyleSheet.create({
     right: theme.spacing.md,
     top: theme.spacing.md,
     width: 40,
+  },
+  shareButton: {
+    left: theme.spacing.md,
+    right: undefined,
+  },
+  cameraBadge: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.white,
+    borderColor: theme.colors.primaryDark,
+    borderRadius: theme.radius.pill,
+    borderWidth: 2,
+    bottom: 0,
+    height: 26,
+    justifyContent: 'center',
+    left: 0,
+    position: 'absolute',
+    width: 26,
+  },
+  heroSkeleton: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.xl,
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.lg,
+    paddingVertical: theme.spacing.xl,
+    ...theme.shadows.soft,
+  },
+  skeletonAvatar: {
+    borderRadius: theme.radius.pill,
+  },
+  skeletonCard: {
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+  },
+  metricRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+    marginTop: theme.spacing.lg,
+  },
+  metricTile: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    flex: 1,
+    paddingVertical: theme.spacing.md,
+    ...theme.shadows.soft,
+  },
+  metricValue: {
+    color: theme.colors.primaryDark,
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  metricLabel: {
+    color: theme.colors.textMuted,
+    fontSize: 11.5,
+    fontWeight: '800',
+    letterSpacing: 0.4,
+    marginTop: 2,
+    textTransform: 'uppercase',
   },
   avatarRing: {
     alignItems: 'center',

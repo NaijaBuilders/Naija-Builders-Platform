@@ -4,11 +4,13 @@ import { AddressesScreen } from '../screens/AddressesScreen';
 import { BrowseScreen } from '../screens/BrowseScreen';
 import { BuyerVerificationScreen } from '../screens/BuyerVerificationScreen';
 import { CartScreen } from '../screens/CartScreen';
+import { ChangePasswordScreen } from '../screens/ChangePasswordScreen';
 import { ChatScreen } from '../screens/ChatScreen';
 import { CheckoutScreen } from '../screens/CheckoutScreen';
 import { CreateListingScreen } from '../screens/CreateListingScreen';
 import { DataPrivacyScreen } from '../screens/DataPrivacyScreen';
 import { EditProfileScreen } from '../screens/EditProfileScreen';
+import { HelpSupportScreen } from '../screens/HelpSupportScreen';
 import { HireServiceScreen } from '../screens/HireServiceScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { MessagesScreen } from '../screens/MessagesScreen';
@@ -105,6 +107,8 @@ export function ProfileStack() {
       <ProfileStackNavigator.Screen name="Addresses" component={AddressesScreen} />
       <ProfileStackNavigator.Screen name="DataPrivacy" component={DataPrivacyScreen} />
       <ProfileStackNavigator.Screen name="Terms" component={TermsScreen} />
+      <ProfileStackNavigator.Screen name="ChangePassword" component={ChangePasswordScreen} />
+      <ProfileStackNavigator.Screen name="HelpSupport" component={HelpSupportScreen} />
     </ProfileStackNavigator.Navigator>
   );
 }
