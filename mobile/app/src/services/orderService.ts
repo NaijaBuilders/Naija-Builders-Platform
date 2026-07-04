@@ -1,4 +1,10 @@
-import type { Order, OrderStatus, UserRole } from '../types';
+import type {
+  Order,
+  OrderStatus,
+  PlaceOrderPayload,
+  PlaceOrderResult,
+  UserRole,
+} from '../types';
 import { apiClient, handleServiceError } from './apiClient';
 
 type LaravelOrderItem = {
@@ -10,6 +16,8 @@ type LaravelOrderItem = {
 
 type LaravelOrder = {
   id?: number | string;
+  buyer_id?: number | string;
+  supplier_id?: number | string;
   reference?: string;
   title?: string;
   total_amount?: number | string;
@@ -83,6 +91,8 @@ function mapLaravelOrder(order: LaravelOrder, role: UserRole | 'both'): Order {
     reference: String(order.reference ?? `NB-${id}`),
     supplierName: String(order.supplier_name ?? 'Supplier'),
     buyerName: String(order.buyer_name ?? 'Buyer'),
+    supplierId: order.supplier_id ? String(order.supplier_id) : undefined,
+    buyerId: order.buyer_id ? String(order.buyer_id) : undefined,
     total: Number(order.total_amount ?? 0),
     itemCount: Number(order.item_count ?? items.length),
     placedAt: String(order.created_at ?? ''),
@@ -157,6 +167,67 @@ export const orderService = {
       const response = await apiClient.get<{ order: unknown }>(`/orders/${orderId}`);
 
       return mapLaravelOrder(response.data.order as LaravelOrder, 'both');
+    } catch (error) {
+      handleServiceError(error);
+    }
+  },
+
+  async placeOrder(payload: PlaceOrderPayload): Promise<PlaceOrderResult> {
+    try {
+      const response = await apiClient.post<{
+        order_id?: number | string;
+        reference?: string;
+        message?: string;
+        verification_status?: string;
+        next_action?: string | null;
+      }>('/orders', {
+        items: payload.items.map((item) => ({
+          material_id: Number(item.materialId),
+          quantity: item.quantity,
+        })),
+        delivery_address: payload.deliveryAddress,
+        recipient_name: payload.recipientName,
+        recipient_phone: payload.recipientPhone,
+        payment_method_type: payload.paymentMethodType,
+      });
+
+      return {
+        orderId: String(response.data.order_id ?? ''),
+        reference: String(response.data.reference ?? ''),
+        message: String(response.data.message ?? 'Order placed.'),
+        verificationStatus: String(response.data.verification_status ?? 'approved'),
+        nextAction: response.data.next_action ?? null,
+      };
+    } catch (error) {
+      handleServiceError(error);
+    }
+  },
+
+  async rateProduct(
+    materialId: string,
+    rating: number,
+    reviewText?: string
+  ): Promise<void> {
+    try {
+      await apiClient.post(`/materials/${materialId}/review`, {
+        rating,
+        review_text: reviewText || undefined,
+      });
+    } catch (error) {
+      handleServiceError(error);
+    }
+  },
+
+  async rateSupplier(
+    supplierId: string,
+    rating: number,
+    reviewText?: string
+  ): Promise<void> {
+    try {
+      await apiClient.post(`/suppliers/${supplierId}/review`, {
+        rating,
+        review_text: reviewText || undefined,
+      });
     } catch (error) {
       handleServiceError(error);
     }

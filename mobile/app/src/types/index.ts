@@ -88,6 +88,8 @@ export interface Product {
   stock_count: number;
   supplierName: string;
   supplier: SupplierSummary;
+  /** Present only when loaded via the product detail endpoint. */
+  detail?: ProductDetailExtras;
   created_at: string;
   updated_at: string;
 }
@@ -100,6 +102,8 @@ export interface Order {
   reference: string;
   supplierName: string;
   buyerName: string;
+  supplierId?: string;
+  buyerId?: string;
   total: number;
   itemCount: number;
   placedAt: string;
@@ -362,6 +366,101 @@ export interface BuyerIdSubmissionPayload {
   verifiedIdName?: string;
   idDocumentUri?: string;
   selfieUri?: string;
+}
+
+export interface CartItem {
+  id: string;
+  name: string;
+  category: string;
+  company: string;
+  price: number;
+  stockQty: number;
+  quantity: number;
+  imagePath: string;
+  lineTotal: number;
+}
+
+export interface Cart {
+  items: CartItem[];
+  total: number;
+}
+
+export interface DeliveryAddress {
+  id: string;
+  label: string;
+  contactName: string;
+  contactPhone: string;
+  state: string;
+  lga: string;
+  address: string;
+  instructions: string;
+  isDefault: boolean;
+}
+
+export interface DeliveryAddressPayload {
+  label?: string;
+  contactName?: string;
+  contactPhone?: string;
+  state?: string;
+  lga?: string;
+  address: string;
+  instructions?: string;
+  isDefault?: boolean;
+}
+
+export type PaymentMethodChoice = 'pay_on_delivery' | 'bank_transfer' | 'card';
+
+export interface PlaceOrderPayload {
+  items: Array<{ materialId: string; quantity: number }>;
+  deliveryAddress: string;
+  recipientName: string;
+  recipientPhone: string;
+  paymentMethodType: PaymentMethodChoice;
+}
+
+export interface PlaceOrderResult {
+  orderId: string;
+  reference: string;
+  message: string;
+  verificationStatus: string;
+  nextAction: string | null;
+}
+
+export interface ProductReview {
+  rating: number;
+  reviewText: string;
+  reviewerName: string;
+  createdAt: string;
+}
+
+export interface ProductDetailExtras {
+  isSaved: boolean;
+  productRatingAvg: number | null;
+  productRatingCount: number;
+  supplierRatingAvg: number | null;
+  supplierRatingCount: number;
+  currentUserProductRating: number | null;
+  reviews: ProductReview[];
+}
+
+export interface SavedProduct {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  priceUnit: string;
+  company: string;
+  savedAt: string;
+}
+
+export interface AppNotificationItem {
+  id: string;
+  eventKey: string;
+  title: string;
+  body: string;
+  data: Record<string, string>;
+  read: boolean;
+  createdAt: string;
 }
 
 export interface SupplierOnboardingApplication {

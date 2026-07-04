@@ -67,20 +67,46 @@ export const authService = {
   async requestPasswordReset(email: string): Promise<{
     email: string;
     message: string;
-    sent: boolean;
+    debugCode?: string;
   }> {
     try {
-      const response = await apiClient.get<LaravelMessageResponse>('/forgot-password', {
-        params: { email },
-      });
+      const response = await apiClient.post<
+        LaravelMessageResponse & { debug_code?: string | null }
+      >('/forgot-password', { email });
 
       return {
         email,
         message:
           response.data.message ??
-          'Password recovery returned no server message.',
-        sent: false,
+          'If an account exists for this email, a reset code has been sent.',
+        debugCode: response.data.debug_code ?? undefined,
       };
+    } catch (error) {
+      handleServiceError(error);
+    }
+  },
+
+  async resetPassword(
+    email: string,
+    code: string,
+    password: string
+  ): Promise<string> {
+    try {
+      const response = await apiClient.post<LaravelMessageResponse>(
+        '/reset-password',
+        { email, code, password }
+      );
+
+      return response.data.message ?? 'Your password has been reset.';
+    } catch (error) {
+      handleServiceError(error);
+    }
+  },
+
+  async deleteAccount(password: string): Promise<void> {
+    try {
+      await apiClient.delete('/account', { data: { password } });
+      await setAuthToken(null);
     } catch (error) {
       handleServiceError(error);
     }

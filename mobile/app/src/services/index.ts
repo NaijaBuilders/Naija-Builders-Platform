@@ -1,5 +1,7 @@
+export * from './addressService';
 export * from './apiClient';
 export * from './authService';
+export * from './cartService';
 export * from './dashboardService';
 export * from './kycService';
 export * from './listingService';
@@ -7,6 +9,7 @@ export * from './messageService';
 export * from './notificationService';
 export * from './orderService';
 export * from './productService';
+export * from './savedService';
 export * from './serviceRequestService';
 export * from './supplierOnboardingService';
 export * from './userService';

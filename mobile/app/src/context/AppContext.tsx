@@ -9,6 +9,7 @@ import React, {
 import {
   authService,
   getStoredAuthToken,
+  notificationService,
   setAuthToken,
   userService,
 } from '../services';
@@ -79,6 +80,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           setCurrentRoleValue(currentUser.role);
           setPreferences(currentPreferences);
           setIsAuthenticated(true);
+          notificationService.registerDeviceForPush();
         }
       } catch {
         await setAuthToken(null);
@@ -107,6 +109,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       setUser(session.user);
       setCurrentRoleValue(session.user.role);
       setIsAuthenticated(true);
+      notificationService.registerDeviceForPush();
       await syncPreferences();
     },
     [syncPreferences]

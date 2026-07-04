@@ -15,7 +15,7 @@ import Animated, {
 import { animationSpring, layoutTransition } from '../animations';
 import { theme } from '../theme';
 
-type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
+type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 type ButtonSize = 'md' | 'lg';
 
 type ButtonProps = {
@@ -52,6 +52,11 @@ const variantStyles: Record<
     borderColor: theme.colors.border,
     color: theme.colors.text,
   },
+  danger: {
+    backgroundColor: theme.colors.danger,
+    borderColor: theme.colors.danger,
+    color: theme.colors.white,
+  },
 };
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -70,7 +75,8 @@ export function Button({
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
-  const isSolid = variant === 'primary' || variant === 'secondary';
+  const isSolid =
+    variant === 'primary' || variant === 'secondary' || variant === 'danger';
 
   return (
     <AnimatedPressable
