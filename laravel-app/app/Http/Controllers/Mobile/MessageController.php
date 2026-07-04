@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Mobile;
 
 use App\Http\Controllers\Controller;
+use App\Models\AppNotification;
+use App\Support\NameFormatter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -180,6 +182,18 @@ class MessageController extends Controller
         }
 
         DB::table('messages')->insert($payload);
+
+        $sender = DB::table('users')->where('id', $currentUserId)->first(['full_name', 'company']);
+        $senderName = trim((string) ($sender->company ?? '')) ?:
+            NameFormatter::title((string) ($sender->full_name ?? 'A NaijaBuilders user'));
+
+        AppNotification::push(
+            $receiverId,
+            'new_message',
+            'New message from '.$senderName,
+            mb_substr($content, 0, 120),
+            ['contact_id' => (string) $currentUserId]
+        );
 
         return response()->json([
             'message' => 'Message sent.',

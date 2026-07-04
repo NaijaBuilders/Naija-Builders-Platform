@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Mobile\AccountController;
 use App\Http\Controllers\Mobile\AdminBuyerReviewController;
 use App\Http\Controllers\Mobile\AdminSupplierOnboardingController;
 use App\Http\Controllers\Mobile\AddressController;
@@ -13,8 +14,10 @@ use App\Http\Controllers\Mobile\EmailVerificationController;
 use App\Http\Controllers\Mobile\ListingController;
 use App\Http\Controllers\Mobile\MaterialsController;
 use App\Http\Controllers\Mobile\MessageController;
+use App\Http\Controllers\Mobile\NotificationController;
 use App\Http\Controllers\Mobile\NotificationPreferenceController;
 use App\Http\Controllers\Mobile\OrderController;
+use App\Http\Controllers\Mobile\PasswordResetController;
 use App\Http\Controllers\Mobile\PremblyWebhookController;
 use App\Http\Controllers\Mobile\ProfileController;
 use App\Http\Controllers\Mobile\SavedMaterialController;
@@ -36,6 +39,10 @@ Route::prefix('mobile')->group(function (): void {
 
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendCode'])
+        ->middleware('throttle:5,1');
+    Route::post('/reset-password', [PasswordResetController::class, 'reset'])
+        ->middleware('throttle:10,1');
 
     Route::get('/materials', [MaterialsController::class, 'index']);
     Route::get('/materials/{materialId}', [MaterialsController::class, 'show']);
@@ -84,6 +91,12 @@ Route::prefix('mobile')->group(function (): void {
 
         Route::get('/notification-preferences', [NotificationPreferenceController::class, 'index']);
         Route::post('/notification-preferences', [NotificationPreferenceController::class, 'update']);
+
+        Route::get('/notifications', [NotificationController::class, 'index']);
+        Route::post('/notifications/read', [NotificationController::class, 'markRead']);
+        Route::post('/device-tokens', [NotificationController::class, 'registerDevice']);
+
+        Route::delete('/account', [AccountController::class, 'destroy']);
 
         Route::get('/addresses', [AddressController::class, 'index']);
         Route::post('/addresses', [AddressController::class, 'store']);

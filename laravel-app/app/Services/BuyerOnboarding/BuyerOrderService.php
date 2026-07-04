@@ -2,6 +2,7 @@
 
 namespace App\Services\BuyerOnboarding;
 
+use App\Models\AppNotification;
 use App\Models\BuyerReviewAudit;
 use App\Models\User;
 use App\Services\Kyc\Contracts\ProgressiveKycProvider;
@@ -190,6 +191,24 @@ class BuyerOrderService
         });
 
         $this->fraud->record($buyer, $orderId, $tier, $assessment);
+
+        AppNotification::push(
+            (int) $buyer->id,
+            'order_placed',
+            'Order NB-'.$orderId.' placed',
+            'We have sent your order to the supplier. Track its progress in Orders.',
+            ['order_id' => (string) $orderId]
+        );
+
+        if ($supplierId > 0) {
+            AppNotification::push(
+                $supplierId,
+                'order_placed',
+                'New order NB-'.$orderId,
+                'A buyer just placed an order worth NGN '.number_format($amountNgn).'.',
+                ['order_id' => (string) $orderId]
+            );
+        }
 
         return [
             'order_id' => $orderId,
