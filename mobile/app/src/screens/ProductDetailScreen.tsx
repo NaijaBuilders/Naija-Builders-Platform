@@ -1,8 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  Dimensions,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import {
   Avatar,
   Badge,
@@ -13,6 +21,7 @@ import {
   Header,
   Input,
   Loader,
+  MaterialImage,
   Screen,
   StarRating,
 } from '../components';
@@ -22,6 +31,9 @@ import type { HomeStackParamList } from '../navigation/types';
 import { orderService, savedService } from '../services';
 import { theme } from '../theme';
 import { formatCurrency } from '../utils/format';
+import { haptics } from '../utils/haptics';
+
+const GALLERY_WIDTH = Dimensions.get('window').width - theme.spacing.lg * 2;
 
 type ProductDetailScreenProps = {
   route: {
@@ -44,6 +56,8 @@ export function ProductDetailScreen({ route }: ProductDetailScreenProps) {
   const { addToCart } = useCart();
 
   const [saved, setSaved] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
+  const galleryRef = useRef<ScrollView>(null);
   const [cartFeedback, setCartFeedback] = useState('');
   const [cartBusy, setCartBusy] = useState('');
   const [myRating, setMyRating] = useState(0);
@@ -65,6 +79,7 @@ export function ProductDetailScreen({ route }: ProductDetailScreenProps) {
 
     const next = !saved;
     setSaved(next);
+    haptics.tap();
     try {
       if (next) {
         await savedService.save(product.id);
@@ -76,6 +91,15 @@ export function ProductDetailScreen({ route }: ProductDetailScreenProps) {
     }
   };
 
+  const handleGalleryScroll = (
+    event: NativeSyntheticEvent<NativeScrollEvent>
+  ) => {
+    const index = Math.round(
+      event.nativeEvent.contentOffset.x / GALLERY_WIDTH
+    );
+    setGalleryIndex(index);
+  };
+
   const handleAddToCart = async (goToCart: boolean) => {
     if (!product) {
       return;
@@ -85,6 +109,7 @@ export function ProductDetailScreen({ route }: ProductDetailScreenProps) {
     setCartFeedback('');
     try {
       await addToCart(product.id, 1);
+      haptics.success();
       if (goToCart) {
         navigation.navigate('Cart');
       } else {
@@ -169,29 +194,37 @@ export function ProductDetailScreen({ route }: ProductDetailScreenProps) {
         subtitle={`${product.location} - ${product.supplierName}`}
       />
 
-      <Image
-        fadeDuration={120}
-        progressiveRenderingEnabled
-        resizeMethod="resize"
-        resizeMode="cover"
-        source={product.images[0]}
-        style={styles.heroImage}
-      />
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.imageRail}
-      >
-        {product.images.map((image, index) => (
-          <Image
-            fadeDuration={80}
-            key={`${product.id}-${index}`}
-            resizeMethod="resize"
-            source={image}
-            style={styles.image}
-          />
-        ))}
-      </ScrollView>
+      <View style={styles.galleryWrap}>
+        <ScrollView
+          horizontal
+          onMomentumScrollEnd={handleGalleryScroll}
+          pagingEnabled
+          ref={galleryRef}
+          showsHorizontalScrollIndicator={false}
+        >
+          {product.images.map((image, index) => (
+            <MaterialImage
+              key={`${product.id}-${index}`}
+              placeholderIconSize={44}
+              source={image}
+              style={styles.galleryImage}
+            />
+          ))}
+        </ScrollView>
+        {product.images.length > 1 ? (
+          <View style={styles.galleryDots}>
+            {product.images.map((_, index) => (
+              <View
+                key={`dot-${index}`}
+                style={[
+                  styles.galleryDot,
+                  index === galleryIndex ? styles.galleryDotActive : null,
+                ]}
+              />
+            ))}
+          </View>
+        ) : null}
+      </View>
 
       <Card style={styles.card}>
         <View style={styles.priceRow}>
@@ -351,24 +384,31 @@ const styles = StyleSheet.create({
   contentWithFloatingBack: {
     paddingTop: 70,
   },
-  imageRail: {
-    gap: theme.spacing.sm,
+  galleryWrap: {
     marginBottom: theme.spacing.md,
   },
-  heroImage: {
+  galleryImage: {
     backgroundColor: theme.colors.surfaceMuted,
     borderRadius: theme.radius.md,
-    height: 250,
-    marginBottom: theme.spacing.sm,
-    width: '100%',
+    height: 260,
+    overflow: 'hidden',
+    width: GALLERY_WIDTH,
   },
-  image: {
-    backgroundColor: theme.colors.surfaceMuted,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.sm,
-    borderWidth: 1,
-    height: 68,
-    width: 88,
+  galleryDots: {
+    flexDirection: 'row',
+    gap: 6,
+    justifyContent: 'center',
+    marginTop: theme.spacing.sm,
+  },
+  galleryDot: {
+    backgroundColor: theme.colors.border,
+    borderRadius: theme.radius.pill,
+    height: 7,
+    width: 7,
+  },
+  galleryDotActive: {
+    backgroundColor: theme.colors.primary,
+    width: 18,
   },
   card: {
     gap: theme.spacing.md,

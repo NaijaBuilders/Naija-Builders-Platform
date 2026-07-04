@@ -5,6 +5,7 @@ import React, { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
   Card,
+  EmptyState,
   FloatingBackButton,
   Header,
   Loader,
@@ -115,6 +116,7 @@ export function NotificationsScreen() {
     <Screen
       contentContainerStyle={styles.contentWithFloatingBack}
       floating={<FloatingBackButton />}
+      onRefresh={load}
     >
       <Header
         eyebrow="Updates"
@@ -144,19 +146,12 @@ export function NotificationsScreen() {
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       {notifications.length === 0 && !error ? (
-        <Card style={styles.emptyCard}>
-          <View style={styles.emptyIcon}>
-            <Ionicons
-              color={theme.colors.primary}
-              name="notifications-outline"
-              size={30}
-            />
-          </View>
-          <Text style={styles.emptyTitle}>No notifications yet</Text>
-          <Text style={styles.emptyText}>
-            Order updates, new messages and quotes will show up here.
-          </Text>
-        </Card>
+        <EmptyState
+          accessoryIcons={['receipt-outline', 'chatbubble-ellipses-outline']}
+          icon="notifications-outline"
+          message="Order updates, new messages and quotes will show up here."
+          title="No notifications yet"
+        />
       ) : (
         notifications.map((notification) => (
           <Card key={notification.id} style={styles.itemCard}>

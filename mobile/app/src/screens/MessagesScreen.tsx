@@ -10,6 +10,7 @@ import {
   ListRenderItemInfo,
   Platform,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,16 +19,19 @@ import {
 import Animated from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
+  Card,
   ConversationRow,
+  EmptyState,
   FloatingBackButton,
   Input,
-  Loader,
+  Skeleton,
 } from '../components';
 import { useConversations } from '../hooks/useMarketplaceData';
 import { useScreenAnimation } from '../hooks/useScreenAnimation';
 import type { MainTabParamList, MessagesStackParamList } from '../navigation/types';
 import { theme } from '../theme';
 import type { Conversation } from '../types';
+import { haptics } from '../utils/haptics';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 type Category = 'rfq' | 'order' | 'delivery' | 'service' | 'general';
@@ -95,8 +99,20 @@ function deriveCategory(conversation: Conversation): Category {
 export function MessagesScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<MessagesStackParamList, 'MessagesMain'>>();
-  const { data: conversations, error, loading } = useConversations();
+  const { data: conversations, error, loading, refresh } = useConversations();
   const animatedStyle = useScreenAnimation();
+
+  const [refreshing, setRefreshing] = useState(false);
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    refresh();
+  }, [refresh]);
+
+  useEffect(() => {
+    if (!loading) {
+      setRefreshing(false);
+    }
+  }, [loading]);
 
   const [activeTab, setActiveTab] = useState<TabKey>('all');
   const [query, setQuery] = useState('');
@@ -215,6 +231,7 @@ export function MessagesScreen() {
 
   const openActions = useCallback(
     (conversation: Conversation) => {
+      haptics.tap();
       const isPinned = pinned.includes(conversation.id);
       const isArchived = archived.includes(conversation.id);
       Alert.alert(conversation.participantName, undefined, [
@@ -350,21 +367,38 @@ export function MessagesScreen() {
           ListHeaderComponent={header}
           ListEmptyComponent={
             loading ? (
-              <Loader label="Loading messages" />
-            ) : (
-              <View style={styles.empty}>
-                <Ionicons
-                  color={theme.colors.textSubtle}
-                  name="chatbubbles-outline"
-                  size={34}
-                />
-                <Text style={styles.emptyText}>
-                  {error?.message || EMPTY_COPY[activeTab]}
-                </Text>
+              <View style={styles.skeletonStack}>
+                {[0, 1, 2, 3].map((index) => (
+                  <Card key={`chat-skeleton-${index}`} style={styles.skeletonCard}>
+                    <View style={styles.skeletonRow}>
+                      <Skeleton height={46} style={styles.skeletonAvatar} width={46} />
+                      <View style={styles.skeletonCopy}>
+                        <Skeleton height={14} width="55%" />
+                        <Skeleton height={11} width="35%" />
+                        <Skeleton height={11} width="80%" />
+                      </View>
+                    </View>
+                  </Card>
+                ))}
               </View>
+            ) : (
+              <EmptyState
+                accessoryIcons={['pricetag-outline', 'car-outline']}
+                icon={TABS.find((tab) => tab.key === activeTab)?.icon ?? 'chatbubbles-outline'}
+                message={error?.message || EMPTY_COPY[activeTab]}
+                title={activeTab === 'archived' ? 'Nothing archived' : 'No chats here yet'}
+              />
             )
           }
           renderItem={renderConversation}
+          refreshControl={
+            <RefreshControl
+              colors={[theme.colors.primary]}
+              onRefresh={handleRefresh}
+              refreshing={refreshing}
+              tintColor={theme.colors.primary}
+            />
+          }
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.contentWithFloatingBack}
         />
@@ -381,6 +415,24 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+  },
+  skeletonStack: {
+    gap: theme.spacing.md,
+  },
+  skeletonCard: {
+    marginBottom: 0,
+  },
+  skeletonRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+  },
+  skeletonAvatar: {
+    borderRadius: theme.radius.pill,
+  },
+  skeletonCopy: {
+    flex: 1,
+    gap: theme.spacing.sm,
   },
   contentWithFloatingBack: {
     padding: theme.spacing.lg,

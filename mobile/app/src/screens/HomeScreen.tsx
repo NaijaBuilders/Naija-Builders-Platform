@@ -9,6 +9,7 @@ import {
   ListRenderItemInfo,
   Platform,
   Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
   View,
@@ -18,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { fadeIn, fadeOut, layoutTransition } from '../animations';
 import {
   Avatar,
+  EmptyState,
   Header,
   Input,
   Loader,
@@ -25,6 +27,7 @@ import {
   ProductCard,
   QuickActionCard,
   Screen,
+  Skeleton,
   StatCard,
 } from '../components';
 import {
@@ -159,6 +162,7 @@ export function HomeScreen() {
           setQuery={setQuery}
           error={productResource.error?.message}
           userName={user.name}
+          onRefresh={productResource.refresh}
         />
       )}
     </Animated.View>
@@ -343,6 +347,7 @@ type BuyerHomeProps = {
   setQuery: (query: string) => void;
   error?: string;
   userName: string;
+  onRefresh: () => void;
 };
 
 function BuyerHome({
@@ -353,12 +358,24 @@ function BuyerHome({
   query,
   setQuery,
   userName,
+  onRefresh,
 }: BuyerHomeProps) {
   const navigation =
     useNavigation<NativeStackNavigationProp<HomeStackParamList, 'HomeMain'>>();
   const tabNavigation =
     navigation.getParent<BottomTabNavigationProp<MainTabParamList>>();
   const animatedStyle = useScreenAnimation();
+  const [refreshing, setRefreshing] = useState(false);
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    onRefresh();
+  }, [onRefresh]);
+
+  React.useEffect(() => {
+    if (!loading) {
+      setRefreshing(false);
+    }
+  }, [loading]);
   const renderProduct = useCallback(
     ({ item, index }: ListRenderItemInfo<Product>) => (
       <ProductCard
@@ -474,14 +491,39 @@ function BuyerHome({
           keyExtractor={keyExtractor}
           keyboardShouldPersistTaps="handled"
           ListEmptyComponent={
-            !loading ? (
-              <Text style={styles.empty}>
-                {error || 'No products match your search.'}
-              </Text>
-            ) : null
+            loading ? (
+              <View style={styles.skeletonStack}>
+                {[0, 1, 2].map((index) => (
+                  <View key={`product-skeleton-${index}`} style={styles.skeletonCard}>
+                    <Skeleton height={150} width={118} />
+                    <View style={styles.skeletonCopy}>
+                      <Skeleton height={13} width="45%" />
+                      <Skeleton height={16} width="80%" />
+                      <Skeleton height={12} width="60%" />
+                      <Skeleton height={16} width="35%" />
+                    </View>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <EmptyState
+                accessoryIcons={['search-outline', 'cube-outline']}
+                icon="storefront-outline"
+                message={error || 'No products match your search. Try a different keyword or category.'}
+                title="Nothing found"
+              />
+            )
           }
           ListHeaderComponent={header}
           renderItem={renderProduct}
+          refreshControl={
+            <RefreshControl
+              colors={[theme.colors.primary]}
+              onRefresh={handleRefresh}
+              refreshing={refreshing}
+              tintColor={theme.colors.primary}
+            />
+          }
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.flatListContent}
         />
@@ -499,6 +541,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: theme.spacing.sm,
+  },
+  skeletonStack: {
+    gap: theme.spacing.md,
+  },
+  skeletonCard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.lg,
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+    overflow: 'hidden',
+    ...theme.shadows.soft,
+  },
+  skeletonCopy: {
+    flex: 1,
+    gap: theme.spacing.sm,
+    padding: theme.spacing.md,
   },
   headerIconButton: {
     alignItems: 'center',

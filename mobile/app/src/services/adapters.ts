@@ -14,6 +14,12 @@ import { getApiOrigin } from './apiClient';
 
 const fallbackImage = require('../../assets/images/dashboard-materials.jpg');
 
+/**
+ * Exported so image components can detect "no real photo" and render the
+ * branded placeholder instead of the generic stock photo.
+ */
+export const fallbackProductImage = fallbackImage;
+
 type LaravelUser = {
   id?: number | string;
   name?: string;

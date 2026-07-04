@@ -18,6 +18,7 @@ import { orderService } from '../services';
 import { theme } from '../theme';
 import type { Order } from '../types';
 import { formatCurrency } from '../utils/format';
+import { haptics } from '../utils/haptics';
 
 const TIMELINE_STEPS = [
   { key: 'placed', label: 'Placed', icon: 'receipt-outline' },
@@ -192,6 +193,7 @@ export function OrderDetailScreen({ route }: OrderDetailScreenProps) {
         supplierRating,
         supplierReviewText.trim()
       );
+      haptics.success();
       setRatingNotice('Thanks — your supplier rating has been saved.');
       setSupplierReviewText('');
     } catch (reason) {
@@ -209,6 +211,7 @@ export function OrderDetailScreen({ route }: OrderDetailScreenProps) {
     setActionError('');
     try {
       await orderService.confirmDeliveryOtp(order?.id ?? route.params.orderId, handoverCode);
+      haptics.success();
       setActionMessage('Delivery confirmed.');
       setHandoverCode('');
       refresh();

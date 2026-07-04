@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import {
+  RefreshControl,
   ScrollView,
   StyleProp,
   StyleSheet,
@@ -16,6 +17,8 @@ type ScreenProps = {
   scroll?: boolean;
   contentContainerStyle?: StyleProp<ViewStyle>;
   floating?: React.ReactNode;
+  /** When provided, the screen supports pull-to-refresh. */
+  onRefresh?: () => Promise<unknown> | void;
 };
 
 export function Screen({
@@ -23,8 +26,23 @@ export function Screen({
   floating,
   scroll = true,
   contentContainerStyle,
+  onRefresh,
 }: ScreenProps) {
   const animatedStyle = useScreenAnimation();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    if (!onRefresh) {
+      return;
+    }
+
+    setRefreshing(true);
+    try {
+      await onRefresh();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [onRefresh]);
 
   if (!scroll) {
     return (
@@ -53,6 +71,16 @@ export function Screen({
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.content, contentContainerStyle]}
+          refreshControl={
+            onRefresh ? (
+              <RefreshControl
+                onRefresh={handleRefresh}
+                refreshing={refreshing}
+                tintColor={theme.colors.primary}
+                colors={[theme.colors.primary]}
+              />
+            ) : undefined
+          }
         >
           <Animated.View style={animatedStyle}>{children}</Animated.View>
         </ScrollView>

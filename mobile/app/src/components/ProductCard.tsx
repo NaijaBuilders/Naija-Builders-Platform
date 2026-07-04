@@ -1,11 +1,12 @@
 import React, { useCallback } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { theme } from '../theme';
 import type { Product } from '../types';
 import { formatCurrency } from '../utils/format';
 import { Badge } from './Badge';
 import { Button } from './Button';
 import { Card } from './Card';
+import { MaterialImage } from './MaterialImage';
 
 type ProductCardProps = {
   product: Product;
@@ -50,11 +51,9 @@ export const ProductCard = React.memo(function ProductCard({
               : styles.imageWrap
           }
         >
-          <Image
-            fadeDuration={120}
-            progressiveRenderingEnabled
-            resizeMethod="resize"
-            resizeMode="cover"
+          <MaterialImage
+            placeholderIconSize={variant === 'marketplace' ? 34 : 26}
+            showWordmark={variant === 'marketplace'}
             source={product.image}
             style={
               variant === 'marketplace' ? styles.marketplaceImage : styles.image
@@ -121,6 +120,7 @@ const styles = StyleSheet.create({
   },
   image: {
     backgroundColor: theme.colors.surfaceMuted,
+    flex: 1,
     minHeight: 154,
     width: 118,
   },

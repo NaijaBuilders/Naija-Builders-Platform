@@ -6,13 +6,21 @@ import {
   FlatList,
   ListRenderItemInfo,
   Platform,
+  RefreshControl,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FloatingBackButton, Header, Loader, OrderCard } from '../components';
+import {
+  Card,
+  EmptyState,
+  FloatingBackButton,
+  Header,
+  OrderCard,
+  Skeleton,
+} from '../components';
 import { useOrders } from '../hooks/useMarketplaceData';
 import { useScreenAnimation } from '../hooks/useScreenAnimation';
 import { useAppState } from '../context/AppContext';
@@ -32,8 +40,19 @@ export function OrdersScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<OrdersStackParamList, 'OrdersMain'>>();
   const { currentRole } = useAppState();
-  const { data: orderList, error, loading } = useOrders(currentRole);
+  const { data: orderList, error, loading, refresh } = useOrders(currentRole);
   const animatedStyle = useScreenAnimation();
+  const [refreshing, setRefreshing] = React.useState(false);
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    refresh();
+  }, [refresh]);
+
+  React.useEffect(() => {
+    if (!loading) {
+      setRefreshing(false);
+    }
+  }, [loading]);
   const orderSummary = useMemo(
     () => [
       { label: 'Total', value: orderList.length },
@@ -102,15 +121,42 @@ export function OrdersScreen() {
           keyExtractor={keyExtractor}
           ListEmptyComponent={
             loading ? (
-              <Loader label="Loading orders" />
+              <View style={styles.skeletonStack}>
+                {[0, 1, 2].map((index) => (
+                  <Card key={`order-skeleton-${index}`} style={styles.skeletonCard}>
+                    <View style={styles.skeletonRow}>
+                      <Skeleton height={44} width={44} />
+                      <View style={styles.skeletonCopy}>
+                        <Skeleton height={15} width="62%" />
+                        <Skeleton height={12} width="40%" />
+                      </View>
+                      <Skeleton height={22} width={70} />
+                    </View>
+                    <Skeleton height={12} width="85%" />
+                  </Card>
+                ))}
+              </View>
+            ) : error ? (
+              <Text style={styles.empty}>{error.message}</Text>
             ) : (
-              <Text style={styles.empty}>
-                {error?.message || 'No orders found for this account.'}
-              </Text>
+              <EmptyState
+                accessoryIcons={['cube-outline', 'car-outline']}
+                icon="receipt-outline"
+                message="Orders you place or receive will show up here with live delivery tracking."
+                title="No orders yet"
+              />
             )
           }
           ListHeaderComponent={header}
           renderItem={renderOrder}
+          refreshControl={
+            <RefreshControl
+              colors={[theme.colors.primary]}
+              onRefresh={handleRefresh}
+              refreshing={refreshing}
+              tintColor={theme.colors.primary}
+            />
+          }
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.contentWithFloatingBack}
         />
@@ -180,5 +226,20 @@ const styles = StyleSheet.create({
     color: theme.colors.textMuted,
     lineHeight: 22,
     textAlign: 'center',
+  },
+  skeletonStack: {
+    gap: theme.spacing.md,
+  },
+  skeletonCard: {
+    gap: theme.spacing.md,
+  },
+  skeletonRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+  },
+  skeletonCopy: {
+    flex: 1,
+    gap: theme.spacing.sm,
   },
 });

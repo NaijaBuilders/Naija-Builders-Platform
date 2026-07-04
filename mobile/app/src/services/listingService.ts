@@ -106,7 +106,8 @@ export const listingService = {
   },
 
   async createSupplierListing(
-    payload: SupplierListingCreatePayload
+    payload: SupplierListingCreatePayload,
+    onProgress?: (percent: number) => void
   ): Promise<void> {
     try {
       const formData = new FormData();
@@ -130,6 +131,11 @@ export const listingService = {
       await apiClient.post('/listings', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (event) => {
+          if (onProgress && event.total) {
+            onProgress(Math.round((event.loaded / event.total) * 100));
+          }
         },
       });
     } catch (error) {

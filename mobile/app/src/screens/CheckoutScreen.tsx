@@ -3,7 +3,8 @@ import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 import {
   Button,
   Card,
@@ -17,8 +18,9 @@ import { useCart } from '../context/CartContext';
 import type { HomeStackParamList, MainTabParamList } from '../navigation/types';
 import { addressService, cartService, orderService } from '../services';
 import { theme } from '../theme';
-import type { DeliveryAddress, PaymentMethodChoice } from '../types';
+import type { DeliveryAddress, PaymentMethodChoice, PlaceOrderResult } from '../types';
 import { formatCurrency } from '../utils/format';
+import { haptics } from '../utils/haptics';
 
 type CheckoutNavigation = NativeStackNavigationProp<
   HomeStackParamList,
@@ -68,6 +70,7 @@ export function CheckoutScreen() {
     useState<PaymentMethodChoice>('pay_on_delivery');
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState('');
+  const [successOrder, setSuccessOrder] = useState<PlaceOrderResult | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -164,12 +167,8 @@ export function CheckoutScreen() {
       }
       await refreshCart();
 
-      navigation
-        .getParent<BottomTabNavigationProp<MainTabParamList>>()
-        ?.navigate('Orders', {
-          screen: 'OrderDetail',
-          params: { orderId: result.orderId },
-        });
+      haptics.success();
+      setSuccessOrder(result);
     } catch (reason) {
       setError(
         reason instanceof Error ? reason.message : 'Could not place the order.'
@@ -179,11 +178,46 @@ export function CheckoutScreen() {
     }
   };
 
+  const viewOrder = () => {
+    const orderId = successOrder?.orderId ?? '';
+    setSuccessOrder(null);
+    navigation.popToTop();
+    navigation
+      .getParent<BottomTabNavigationProp<MainTabParamList>>()
+      ?.navigate('Orders', {
+        screen: 'OrderDetail',
+        params: { orderId },
+      });
+  };
+
   return (
     <Screen
       contentContainerStyle={styles.contentWithFloatingBack}
       floating={<FloatingBackButton />}
     >
+      <Modal animationType="fade" transparent visible={successOrder !== null}>
+        <View style={styles.successBackdrop}>
+          <Animated.View entering={FadeIn.duration(150)} style={styles.successCard}>
+            <Animated.View
+              entering={ZoomIn.springify().damping(11).delay(120)}
+              style={styles.successRing}
+            >
+              <View style={styles.successCircle}>
+                <Ionicons color={theme.colors.white} name="checkmark" size={44} />
+              </View>
+            </Animated.View>
+            <Text style={styles.successTitle}>Order placed!</Text>
+            <Text style={styles.successReference}>
+              {successOrder?.reference ?? ''}
+            </Text>
+            <Text style={styles.successMessage}>
+              {successOrder?.message ??
+                'The supplier has been notified and will confirm shortly.'}
+            </Text>
+            <Button onPress={viewOrder} size="lg" title="Track my order" />
+          </Animated.View>
+        </View>
+      </Modal>
       <Header
         eyebrow="Checkout"
         title="Delivery & payment"
@@ -381,6 +415,56 @@ export function CheckoutScreen() {
 const styles = StyleSheet.create({
   contentWithFloatingBack: {
     paddingTop: 70,
+  },
+  successBackdrop: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.overlay,
+    flex: 1,
+    justifyContent: 'center',
+    padding: theme.spacing.lg,
+  },
+  successCard: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.xl,
+    gap: theme.spacing.sm,
+    padding: theme.spacing.xl,
+    width: '100%',
+    ...theme.shadows.elevated,
+  },
+  successRing: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.secondarySoft,
+    borderRadius: theme.radius.pill,
+    height: 108,
+    justifyContent: 'center',
+    marginBottom: theme.spacing.sm,
+    width: 108,
+  },
+  successCircle: {
+    alignItems: 'center',
+    backgroundColor: theme.colors.secondary,
+    borderRadius: theme.radius.pill,
+    height: 84,
+    justifyContent: 'center',
+    width: 84,
+  },
+  successTitle: {
+    color: theme.colors.text,
+    fontSize: 22,
+    fontWeight: '900',
+  },
+  successReference: {
+    color: theme.colors.primaryDark,
+    fontSize: 14,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  successMessage: {
+    color: theme.colors.textMuted,
+    lineHeight: 21,
+    marginBottom: theme.spacing.sm,
+    textAlign: 'center',
   },
   card: {
     gap: theme.spacing.md,

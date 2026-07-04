@@ -5,11 +5,13 @@ import React, { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
   Card,
+  EmptyState,
   FloatingBackButton,
   Header,
   Loader,
   Screen,
 } from '../components';
+import { haptics } from '../utils/haptics';
 import type { MainTabParamList } from '../navigation/types';
 import { savedService } from '../services';
 import { theme } from '../theme';
@@ -44,6 +46,7 @@ export function SavedItemsScreen() {
   );
 
   const removeItem = async (materialId: string) => {
+    haptics.warning();
     setItems((current) => current.filter((item) => item.id !== materialId));
     try {
       await savedService.unsave(materialId);
@@ -75,6 +78,7 @@ export function SavedItemsScreen() {
     <Screen
       contentContainerStyle={styles.contentWithFloatingBack}
       floating={<FloatingBackButton />}
+      onRefresh={load}
     >
       <Header
         eyebrow="Shortlist"
@@ -85,15 +89,13 @@ export function SavedItemsScreen() {
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       {items.length === 0 && !error ? (
-        <Card style={styles.emptyCard}>
-          <View style={styles.emptyIcon}>
-            <Ionicons color={theme.colors.danger} name="heart-outline" size={30} />
-          </View>
-          <Text style={styles.emptyTitle}>Nothing saved yet</Text>
-          <Text style={styles.emptyText}>
-            Tap the heart on any material to keep it here for easy comparison.
-          </Text>
-        </Card>
+        <EmptyState
+          accessoryIcons={['cube-outline', 'pricetag-outline']}
+          icon="heart-outline"
+          message="Tap the heart on any material to keep it here for easy comparison."
+          title="Nothing saved yet"
+          tone="danger"
+        />
       ) : (
         items.map((item) => (
           <Card key={item.id} style={styles.itemCard}>
@@ -159,7 +161,7 @@ const styles = StyleSheet.create({
   },
   emptyIcon: {
     alignItems: 'center',
-    backgroundColor: '#FFE9E5',
+    backgroundColor: theme.colors.dangerSoft,
     borderRadius: theme.radius.pill,
     height: 64,
     justifyContent: 'center',
@@ -221,7 +223,7 @@ const styles = StyleSheet.create({
   },
   removeButton: {
     alignItems: 'center',
-    backgroundColor: '#FFE9E5',
+    backgroundColor: theme.colors.dangerSoft,
     borderRadius: theme.radius.md,
     height: 34,
     justifyContent: 'center',

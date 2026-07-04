@@ -23,6 +23,7 @@ import {
 import type { BrowseStackParamList } from '../navigation/types';
 import { listingService } from '../services';
 import { theme } from '../theme';
+import { haptics } from '../utils/haptics';
 import type {
   ListingStatus,
   SupplierListingCreatePayload,
@@ -64,6 +65,7 @@ export function CreateListingScreen() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [uploadPercent, setUploadPercent] = useState(0);
 
   function updateField<K extends keyof SupplierListingCreatePayload>(
     key: K,
@@ -153,9 +155,11 @@ export function CreateListingScreen() {
 
     setSubmitting(true);
     setSubmitError('');
+    setUploadPercent(0);
 
     try {
-      await listingService.createSupplierListing(form);
+      await listingService.createSupplierListing(form, setUploadPercent);
+      haptics.success();
       setForm(initialForm);
       navigation.navigate('BrowseMain');
     } catch (error) {
@@ -164,6 +168,7 @@ export function CreateListingScreen() {
       );
     } finally {
       setSubmitting(false);
+      setUploadPercent(0);
     }
   };
 
@@ -366,6 +371,21 @@ export function CreateListingScreen() {
 
       {submitError ? <Text style={styles.submitError}>{submitError}</Text> : null}
 
+      {submitting ? (
+        <View style={styles.progressWrap}>
+          <View style={styles.progressTrack}>
+            <View
+              style={[styles.progressFill, { width: `${uploadPercent}%` }]}
+            />
+          </View>
+          <Text style={styles.progressLabel}>
+            {uploadPercent < 100
+              ? `Uploading photos… ${uploadPercent}%`
+              : 'Processing listing…'}
+          </Text>
+        </View>
+      ) : null}
+
       <Button
         disabled={submitting}
         loading={submitting}
@@ -525,6 +545,29 @@ const styles = StyleSheet.create({
   errorText: {
     color: theme.colors.danger,
     fontSize: theme.typography.small,
+  },
+  progressWrap: {
+    gap: theme.spacing.xs,
+    marginBottom: theme.spacing.md,
+  },
+  progressTrack: {
+    backgroundColor: theme.colors.surfaceMuted,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.pill,
+    borderWidth: 1,
+    height: 10,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    backgroundColor: theme.colors.secondary,
+    borderRadius: theme.radius.pill,
+    height: '100%',
+  },
+  progressLabel: {
+    color: theme.colors.textMuted,
+    fontSize: 12.5,
+    fontWeight: '800',
+    textAlign: 'center',
   },
   submitError: {
     color: theme.colors.danger,

@@ -6,11 +6,13 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import {
   Button,
   Card,
+  EmptyState,
   FloatingBackButton,
   Header,
   Loader,
   Screen,
 } from '../components';
+import { haptics } from '../utils/haptics';
 import { useCart } from '../context/CartContext';
 import type { HomeStackParamList } from '../navigation/types';
 import { assetSource } from '../services/adapters';
@@ -22,7 +24,7 @@ type CartNavigation = NativeStackNavigationProp<HomeStackParamList, 'Cart'>;
 
 export function CartScreen() {
   const navigation = useNavigation<CartNavigation>();
-  const { cart, loading, updateQuantity, removeFromCart } = useCart();
+  const { cart, loading, updateQuantity, removeFromCart, refreshCart } = useCart();
   const [busyItemId, setBusyItemId] = useState('');
 
   const changeQuantity = useCallback(
@@ -30,8 +32,10 @@ export function CartScreen() {
       setBusyItemId(item.id);
       try {
         if (nextQuantity < 1) {
+          haptics.warning();
           await removeFromCart(item.id);
         } else {
+          haptics.tap();
           await updateQuantity(item.id, nextQuantity);
         }
       } catch {
@@ -59,6 +63,7 @@ export function CartScreen() {
     <Screen
       contentContainerStyle={styles.contentWithFloatingBack}
       floating={<FloatingBackButton />}
+      onRefresh={refreshCart}
     >
       <Header
         eyebrow="Checkout"
@@ -71,15 +76,12 @@ export function CartScreen() {
       />
 
       {cart.items.length === 0 ? (
-        <Card style={styles.emptyCard}>
-          <View style={styles.emptyIcon}>
-            <Ionicons color={theme.colors.primary} name="cart-outline" size={30} />
-          </View>
-          <Text style={styles.emptyTitle}>Your cart is empty</Text>
-          <Text style={styles.emptyText}>
-            Browse materials and tap “Add to cart” to start an order.
-          </Text>
-        </Card>
+        <EmptyState
+          accessoryIcons={['cube-outline', 'card-outline']}
+          icon="cart-outline"
+          message="Browse materials and tap “Add to cart” to start an order."
+          title="Your cart is empty"
+        />
       ) : (
         <>
           {cart.items.map((item) => (
@@ -233,7 +235,7 @@ const styles = StyleSheet.create({
   },
   removeButton: {
     alignItems: 'center',
-    backgroundColor: '#FFE9E5',
+    backgroundColor: theme.colors.dangerSoft,
     borderRadius: theme.radius.md,
     height: 34,
     justifyContent: 'center',
