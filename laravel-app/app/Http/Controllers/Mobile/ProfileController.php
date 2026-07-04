@@ -14,6 +14,54 @@ use Illuminate\Support\Facades\Schema;
 
 class ProfileController extends Controller
 {
+    public function stats(Request $request)
+    {
+        $userId = (int) $request->user()->id;
+        $role = (string) DB::table('users')->where('id', $userId)->value('role');
+
+        if ($role === 'supplier') {
+            $ratingSummary = Schema::hasTable('supplier_reviews')
+                ? DB::table('supplier_reviews')
+                    ->selectRaw('ROUND(AVG(rating), 1) as avg_rating, COUNT(*) as total_reviews')
+                    ->where('supplier_id', $userId)
+                    ->first()
+                : null;
+
+            return response()->json([
+                'role' => 'supplier',
+                'listings_count' => Schema::hasTable('materials')
+                    ? DB::table('materials')->where('supplier_id', $userId)->where('status', 'active')->count()
+                    : 0,
+                'orders_count' => Schema::hasTable('orders')
+                    ? DB::table('orders')->where('supplier_id', $userId)->count()
+                    : 0,
+                'rating_avg' => $ratingSummary && $ratingSummary->avg_rating !== null
+                    ? (float) $ratingSummary->avg_rating
+                    : null,
+                'rating_count' => (int) ($ratingSummary->total_reviews ?? 0),
+            ]);
+        }
+
+        $reviewsGiven = 0;
+        if (Schema::hasTable('product_reviews')) {
+            $reviewsGiven += DB::table('product_reviews')->where('user_id', $userId)->count();
+        }
+        if (Schema::hasTable('supplier_reviews')) {
+            $reviewsGiven += DB::table('supplier_reviews')->where('user_id', $userId)->count();
+        }
+
+        return response()->json([
+            'role' => 'buyer',
+            'orders_count' => Schema::hasTable('orders')
+                ? DB::table('orders')->where('buyer_id', $userId)->count()
+                : 0,
+            'saved_count' => Schema::hasTable('saved_materials')
+                ? DB::table('saved_materials')->where('user_id', $userId)->count()
+                : 0,
+            'reviews_given' => $reviewsGiven,
+        ]);
+    }
+
     private const DEFAULT_APP_SETTINGS = [
         'notifications_email' => true,
         'notifications_sms' => false,

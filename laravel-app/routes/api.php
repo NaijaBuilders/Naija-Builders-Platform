@@ -86,6 +86,7 @@ Route::prefix('mobile')->group(function (): void {
 
         Route::get('/profile', [ProfileController::class, 'show']);
         Route::post('/profile', [ProfileController::class, 'update']);
+        Route::get('/profile/stats', [ProfileController::class, 'stats']);
         Route::get('/settings', [ProfileController::class, 'settings']);
         Route::post('/settings', [ProfileController::class, 'saveSettings']);
 
@@ -97,6 +98,7 @@ Route::prefix('mobile')->group(function (): void {
         Route::post('/device-tokens', [NotificationController::class, 'registerDevice']);
 
         Route::delete('/account', [AccountController::class, 'destroy']);
+        Route::post('/account/password', [AccountController::class, 'changePassword']);
 
         Route::get('/addresses', [AddressController::class, 'index']);
         Route::post('/addresses', [AddressController::class, 'store']);
