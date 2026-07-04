@@ -2,10 +2,14 @@
 
 namespace App\Services\BuyerOnboarding;
 
+use App\Mail\BuyerOtpMail;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class BuyerOtpService
 {
@@ -25,6 +29,10 @@ class BuyerOtpService
             $channel.'_otp_expires_at' => $expiresAt,
             'updated_at' => now(),
         ]);
+
+        if ($channel === 'email') {
+            $this->deliverEmail($user, $code);
+        }
 
         return [
             'channel' => $channel,
@@ -81,6 +89,37 @@ class BuyerOtpService
         }
 
         return $channel;
+    }
+
+    private function deliverEmail(User $user, string $code): void
+    {
+        $email = trim((string) $user->email);
+        if ($email === '') {
+            throw ValidationException::withMessages([
+                'channel' => 'Your account has no email address on file.',
+            ]);
+        }
+
+        try {
+            $firstName = trim(explode(' ', trim((string) $user->full_name))[0] ?? '');
+
+            Mail::to($email)->send(new BuyerOtpMail(
+                code: $code,
+                ttlMinutes: $this->settings->otpTtlMinutes(),
+                recipientName: $firstName !== '' ? $firstName : null,
+            ));
+        } catch (Throwable $exception) {
+            Log::error('Buyer OTP email failed to send.', [
+                'user_id' => $user->id,
+                'error' => $exception->getMessage(),
+            ]);
+
+            if (! $this->shouldExposeCode()) {
+                throw ValidationException::withMessages([
+                    'channel' => 'We could not send the email right now. Please try again shortly.',
+                ]);
+            }
+        }
     }
 
     private function shouldExposeCode(): bool
