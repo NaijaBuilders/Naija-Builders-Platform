@@ -634,7 +634,7 @@ const styles = StyleSheet.create({
     width: 38,
   },
   menuIconDanger: {
-    backgroundColor: '#FFE9E5',
+    backgroundColor: theme.colors.dangerSoft,
   },
   menuLabel: {
     color: theme.colors.text,

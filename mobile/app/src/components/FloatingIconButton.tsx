@@ -3,7 +3,7 @@ import { BlurView } from 'expo-blur';
 import React from 'react';
 import { Platform, Pressable, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { theme } from '../theme';
+import { isDarkTheme, theme } from '../theme';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -47,7 +47,7 @@ export function FloatingIconButton({
         experimentalBlurMethod={Platform.OS === 'android' ? 'none' : undefined}
         intensity={68}
         style={styles.blur}
-        tint="systemChromeMaterialLight"
+        tint={isDarkTheme ? 'systemChromeMaterialDark' : 'systemChromeMaterialLight'}
       />
       <Ionicons color={iconColor} name={icon} size={21} />
       {badgeCount > 0 ? (
@@ -60,8 +60,12 @@ export function FloatingIconButton({
 const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.72)',
-    borderColor: 'rgba(17, 24, 39, 0.08)',
+    backgroundColor: isDarkTheme
+      ? 'rgba(17, 24, 39, 0.58)'
+      : 'rgba(255, 255, 255, 0.72)',
+    borderColor: isDarkTheme
+      ? 'rgba(255, 255, 255, 0.18)'
+      : 'rgba(17, 24, 39, 0.08)',
     borderRadius: theme.radius.pill,
     borderWidth: 1,
     elevation: 18,

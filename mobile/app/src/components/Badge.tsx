@@ -12,7 +12,7 @@ const toneStyles: Record<
   StatusTone,
   { background: string; color: string; border: string }
 > = {
-  danger: { background: '#FFE9E5', color: theme.colors.danger, border: '#FBD2C9' },
+  danger: { background: theme.colors.dangerSoft, color: theme.colors.danger, border: '#FBD2C9' },
   neutral: { background: theme.colors.surfaceMuted, color: theme.colors.textMuted, border: theme.colors.border },
   primary: { background: theme.colors.primarySoft, color: theme.colors.primaryDark, border: '#CBDDF7' },
   success: { background: theme.colors.secondarySoft, color: theme.colors.success, border: '#C4ECD5' },

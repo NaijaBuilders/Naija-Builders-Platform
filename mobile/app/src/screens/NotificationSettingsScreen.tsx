@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
   },
   banner: {
     alignItems: 'center',
-    backgroundColor: '#FFE9E5',
+    backgroundColor: theme.colors.dangerSoft,
     borderRadius: theme.radius.md,
     flexDirection: 'row',
     gap: theme.spacing.sm,

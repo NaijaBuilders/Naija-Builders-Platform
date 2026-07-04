@@ -15,7 +15,7 @@ const statusColors: Record<OrderStatus, { background: string; color: string }> =
   Pending: { background: theme.colors.accentSoft, color: theme.colors.warning },
   Processing: { background: theme.colors.primarySoft, color: theme.colors.primary },
   Delivered: { background: theme.colors.secondarySoft, color: theme.colors.success },
-  Cancelled: { background: '#FFE9E5', color: theme.colors.danger },
+  Cancelled: { background: theme.colors.dangerSoft, color: theme.colors.danger },
 };
 
 export const OrderCard = React.memo(function OrderCard({

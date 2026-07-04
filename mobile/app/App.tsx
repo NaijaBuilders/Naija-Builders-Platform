@@ -5,7 +5,7 @@ import { AppStateProvider } from './src/context/AppContext';
 import { CartProvider } from './src/context/CartContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { OpeningScreen } from './src/screens/OpeningScreen';
-import { theme } from './src/theme';
+import { isDarkTheme, theme } from './src/theme';
 
 export default function App() {
   const [isOpening, setIsOpening] = useState(true);
@@ -23,7 +23,7 @@ export default function App() {
       <AppStateProvider>
         <CartProvider>
           <StatusBar
-            barStyle="dark-content"
+            barStyle={isDarkTheme ? 'light-content' : 'dark-content'}
             backgroundColor={theme.colors.background}
           />
           {isOpening ? <OpeningScreen /> : <RootNavigator />}

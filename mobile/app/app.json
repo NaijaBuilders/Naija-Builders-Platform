@@ -1,11 +1,12 @@
 {
   "expo": {
-    "name": "NaijaBuilders Mobile",
+    "name": "NaijaBuilders",
     "slug": "naijabuilders-mobile",
     "version": "0.1.0",
     "orientation": "portrait",
     "scheme": "naijabuilders",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/images/icon.png",
     "splash": {
       "image": "./assets/images/logo.png",
       "resizeMode": "contain",
@@ -16,6 +17,12 @@
     ],
     "ios": {
       "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#1F4FA3"
+      }
     },
     "plugins": [
       "expo-font",

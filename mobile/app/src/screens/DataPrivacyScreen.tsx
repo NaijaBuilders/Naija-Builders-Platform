@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   },
   dangerIcon: {
     alignItems: 'center',
-    backgroundColor: '#FFE9E5',
+    backgroundColor: theme.colors.dangerSoft,
     borderRadius: theme.radius.md,
     height: 40,
     justifyContent: 'center',

@@ -13,7 +13,7 @@ const toneColors: Record<StatusTone, { background: string; color: string }> = {
   primary: { background: theme.colors.primarySoft, color: theme.colors.primaryDark },
   success: { background: theme.colors.secondarySoft, color: theme.colors.success },
   warning: { background: theme.colors.accentSoft, color: theme.colors.warning },
-  danger: { background: '#FFE9E5', color: theme.colors.danger },
+  danger: { background: theme.colors.dangerSoft, color: theme.colors.danger },
   neutral: { background: theme.colors.surfaceMuted, color: theme.colors.textMuted },
 };
 

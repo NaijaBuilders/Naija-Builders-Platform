@@ -7,7 +7,7 @@ import { Card, FloatingBackButton, Header, Screen } from '../components';
 import { useAppState } from '../context/AppContext';
 import type { ProfileStackParamList } from '../navigation/types';
 import { userService } from '../services';
-import { theme } from '../theme';
+import { isDarkTheme, theme } from '../theme';
 import type { UserPreferences } from '../types';
 
 const APP_VERSION = '0.1.0';
@@ -115,13 +115,14 @@ export function SettingsScreen() {
           border
         />
         <NavRow
-          icon="moon-outline"
+          icon={isDarkTheme ? 'moon' : 'sunny-outline'}
           label="Theme"
-          description="Light, dark or system"
+          description="Follows your device light/dark setting. Restart the app after changing it."
           right={
             <View style={styles.themeValueRow}>
-              <Text style={styles.themeValue}>Light</Text>
-              <SoonBadge />
+              <Text style={styles.themeValue}>
+                {isDarkTheme ? 'Dark' : 'Light'}
+              </Text>
             </View>
           }
         />
@@ -339,7 +340,7 @@ const styles = StyleSheet.create({
   },
   signOut: {
     alignItems: 'center',
-    backgroundColor: '#FFE9E5',
+    backgroundColor: theme.colors.dangerSoft,
     borderRadius: theme.radius.lg,
     flexDirection: 'row',
     gap: theme.spacing.sm,

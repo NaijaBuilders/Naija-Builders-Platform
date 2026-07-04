@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   actionChipDanger: {
-    backgroundColor: '#FFE9E5',
+    backgroundColor: theme.colors.dangerSoft,
   },
   actionChipDangerText: {
     color: theme.colors.danger,
