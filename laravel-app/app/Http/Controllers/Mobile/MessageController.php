@@ -79,6 +79,9 @@ class MessageController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
+        // Build the conversation list from people the user has actually
+        // exchanged messages with. The full `recipients` directory is only
+        // used to start a NEW chat, not to populate the inbox.
         $contactMeta = [];
         foreach ($recentMessages as $message) {
             $otherUserId = (int) ($message->sender_id === $currentUserId ? $message->receiver_id : $message->sender_id);
@@ -94,17 +97,41 @@ class MessageController extends Controller
             }
         }
 
-        $contacts = $recipients->map(function ($recipient) use ($unreadBySender, $contactMeta) {
-            $recipientId = (int) $recipient->id;
-            $meta = $contactMeta[$recipientId] ?? null;
-            $recipient->unread_count = (int) ($unreadBySender[$recipientId] ?? 0);
-            $recipient->last_message = (string) ($meta['last_message'] ?? 'No conversation yet.');
-            $recipient->last_message_at = $meta['last_message_at'] ?? null;
+        // If the user EXPLICITLY opened a specific contact (from a product/RFQ)
+        // that they have not messaged yet, keep that one contact visible so the
+        // thread can start. A bare inbox load ($explicitContact === false) shows
+        // only real conversations, never an auto-selected phantom.
+        $explicitContact = $selectedContactId > 0 || $preselectedReceiverId > 0;
+        $conversationIds = array_keys($contactMeta);
+        if (
+            $explicitContact
+            && $candidateContactId > 0
+            && !in_array($candidateContactId, $conversationIds, true)
+        ) {
+            $conversationIds[] = $candidateContactId;
+        }
 
-            return $recipient;
-        })->sortByDesc(function ($recipient) {
-            return (string) ($recipient->last_message_at ?? '1970-01-01 00:00:00');
-        })->values();
+        $recipientsById = $recipients->keyBy('id');
+
+        $contacts = collect($conversationIds)
+            ->map(function ($contactId) use ($recipientsById, $unreadBySender, $contactMeta) {
+                $recipient = $recipientsById->get($contactId);
+                if (!$recipient) {
+                    return null;
+                }
+
+                $meta = $contactMeta[$contactId] ?? null;
+                $recipient->unread_count = (int) ($unreadBySender[$contactId] ?? 0);
+                $recipient->last_message = (string) ($meta['last_message'] ?? 'Start the conversation.');
+                $recipient->last_message_at = $meta['last_message_at'] ?? null;
+
+                return $recipient;
+            })
+            ->filter()
+            ->sortByDesc(function ($recipient) {
+                return (string) ($recipient->last_message_at ?? '1970-01-01 00:00:00');
+            })
+            ->values();
 
         $threadMessages = collect();
         if ($candidateContactId > 0) {
