@@ -1,9 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import {
+  createBottomTabNavigator,
+  type BottomTabBarProps,
+} from '@react-navigation/bottom-tabs';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppState } from '../context/AppContext';
 import { theme } from '../theme';
+import { haptics } from '../utils/haptics';
 import {
   BrowseStack,
   HomeStack,
@@ -21,12 +26,77 @@ const tabIcons: Record<
   keyof MainTabParamList,
   { active: IconName; inactive: IconName }
 > = {
-  Home: { active: 'home', inactive: 'home-outline' },
-  Browse: { active: 'storefront', inactive: 'storefront-outline' },
-  Orders: { active: 'receipt', inactive: 'receipt-outline' },
-  Messages: { active: 'chatbubble-ellipses', inactive: 'chatbubble-ellipses-outline' },
-  Profile: { active: 'person', inactive: 'person-outline' },
+  Home: { active: 'grid', inactive: 'grid-outline' },
+  Browse: { active: 'cube', inactive: 'cube-outline' },
+  Orders: { active: 'reader', inactive: 'reader-outline' },
+  Messages: { active: 'chatbubble', inactive: 'chatbubble-outline' },
+  Profile: { active: 'person-circle', inactive: 'person-circle-outline' },
 };
+
+function CustomTabBar({
+  state,
+  descriptors,
+  navigation,
+}: BottomTabBarProps) {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View
+      style={[
+        styles.barWrap,
+        { paddingBottom: Math.max(insets.bottom, theme.spacing.sm) },
+      ]}
+    >
+      <View style={styles.bar}>
+        {state.routes.map((route, index) => {
+          const { options } = descriptors[route.key];
+          const label =
+            typeof options.title === 'string' ? options.title : route.name;
+          const focused = state.index === index;
+          const icon = tabIcons[route.name as keyof MainTabParamList];
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!focused && !event.defaultPrevented) {
+              haptics.tap();
+              navigation.navigate(route.name);
+            }
+          };
+
+          return (
+            <Pressable
+              accessibilityLabel={label}
+              accessibilityRole="button"
+              accessibilityState={{ selected: focused }}
+              key={route.key}
+              onPress={onPress}
+              style={styles.tab}
+            >
+              <View style={[styles.iconPill, focused ? styles.iconPillActive : null]}>
+                <Ionicons
+                  color={focused ? theme.colors.white : theme.colors.textSubtle}
+                  name={focused ? icon.active : icon.inactive}
+                  size={22}
+                />
+              </View>
+              <Text
+                numberOfLines={1}
+                style={[styles.label, focused ? styles.labelActive : null]}
+              >
+                {label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
 
 export function MainTabs() {
   const { currentRole } = useAppState();
@@ -34,62 +104,69 @@ export function MainTabs() {
 
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.textSubtle,
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '800',
-        },
-        tabBarStyle: {
-          backgroundColor: theme.colors.surface,
-          borderTopColor: theme.colors.border,
-          height: 76,
-          paddingBottom: 12,
-          paddingTop: 9,
-        },
-        tabBarIcon: ({ color, focused, size }) => {
-          const icon = tabIcons[route.name];
-          return (
-            <View style={focused ? styles.activeIcon : styles.icon}>
-              <Ionicons
-                color={color}
-                name={focused ? icon.active : icon.inactive}
-                size={size}
-              />
-            </View>
-          );
-        },
-      })}
+      screenOptions={{ headerShown: false }}
+      tabBar={(props) => <CustomTabBar {...props} />}
     >
-      <Tab.Screen name="Home" component={HomeStack} />
+      <Tab.Screen name="Home" component={HomeStack} options={{ title: 'Home' }} />
       <Tab.Screen
         name="Browse"
         component={BrowseStack}
         options={{ title: browseLabel }}
       />
-      <Tab.Screen name="Orders" component={OrdersStack} />
-      <Tab.Screen name="Messages" component={MessagesStack} />
-      <Tab.Screen name="Profile" component={ProfileStack} />
+      <Tab.Screen name="Orders" component={OrdersStack} options={{ title: 'Orders' }} />
+      <Tab.Screen
+        name="Messages"
+        component={MessagesStack}
+        options={{ title: 'Chats' }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileStack}
+        options={{ title: 'Profile' }}
+      />
     </Tab.Navigator>
   );
 }
 
 const styles = StyleSheet.create({
-  icon: {
-    alignItems: 'center',
-    borderRadius: theme.radius.pill,
-    height: 30,
-    justifyContent: 'center',
-    width: 42,
+  barWrap: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
   },
-  activeIcon: {
+  bar: {
     alignItems: 'center',
-    backgroundColor: theme.colors.primarySoft,
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.xl,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: theme.spacing.xs,
+    paddingVertical: theme.spacing.sm,
+    ...theme.shadows.elevated,
+  },
+  tab: {
+    alignItems: 'center',
+    flex: 1,
+    gap: 3,
+  },
+  iconPill: {
+    alignItems: 'center',
     borderRadius: theme.radius.pill,
-    height: 30,
+    height: 38,
     justifyContent: 'center',
-    width: 42,
+    width: 52,
+  },
+  iconPillActive: {
+    backgroundColor: theme.colors.primary,
+  },
+  label: {
+    color: theme.colors.textSubtle,
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  labelActive: {
+    color: theme.colors.primary,
   },
 });

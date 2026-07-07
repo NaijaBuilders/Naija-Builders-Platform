@@ -71,6 +71,7 @@ type LaravelContact = {
   id?: number | string;
   full_name?: string;
   company?: string;
+  profile_image_path?: string | null;
   last_message?: string;
   last_message_at?: string | null;
   unread_count?: number | string;
@@ -221,11 +222,18 @@ export function mapLaravelContact(
 ): Conversation {
   const contactData = contact ?? {};
   const id = String(contactData.id ?? '');
+  const rawImage = String(contactData.profile_image_path ?? '');
+  const profileImage = rawImage
+    ? /^https?:\/\//i.test(rawImage)
+      ? rawImage
+      : `${getApiOrigin()}/${rawImage.replace(/^\/+/, '')}`
+    : undefined;
 
   return {
     id,
     participantName: capitalizeWords(String(contactData.full_name ?? 'Contact')),
     company: String(contactData.company ?? 'Company not listed'),
+    profileImage,
     lastMessage: String(contactData.last_message ?? 'No conversation.'),
     lastMessageAt: contactData.last_message_at ? String(contactData.last_message_at) : 'Now',
     unreadCount: Number(contactData.unread_count ?? 0),

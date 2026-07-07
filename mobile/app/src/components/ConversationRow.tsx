@@ -46,7 +46,11 @@ export const ConversationRow = React.memo(function ConversationRow({
         delayLongPress={250}
         style={styles.pressable}
       >
-        <Avatar name={conversation.participantName} size={46} />
+        <Avatar
+          imageUri={conversation.profileImage}
+          name={conversation.participantName}
+          size={46}
+        />
         <View style={styles.copy}>
           <View style={styles.top}>
             <Text numberOfLines={1} style={styles.name}>

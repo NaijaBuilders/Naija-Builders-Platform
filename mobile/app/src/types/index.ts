@@ -162,6 +162,7 @@ export interface Conversation {
   id: string;
   participantName: string;
   company: string;
+  profileImage?: string;
   lastMessage: string;
   lastMessageAt: string;
   unreadCount: number;
