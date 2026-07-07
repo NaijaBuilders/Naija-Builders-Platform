@@ -6,7 +6,7 @@ const laravelBrandPlaceholder = {
   accent: '#F59E0B',
 };
 
-const lightColors = {
+export const lightColors = {
   primary: laravelBrandPlaceholder.primary,
   primaryDark: '#123B7A',
   primarySoft: '#E7F0FF',
@@ -36,7 +36,7 @@ const lightColors = {
   glassBorder: 'rgba(255, 255, 255, 0.22)',
 };
 
-const darkColors: typeof lightColors = {
+export const darkColors: typeof lightColors = {
   primary: '#4F7ECC',
   primaryDark: '#A9C6F2',
   primarySoft: '#1B2A44',
@@ -66,16 +66,47 @@ const darkColors: typeof lightColors = {
   glassBorder: 'rgba(255, 255, 255, 0.14)',
 };
 
-// The palette is chosen from the device setting when the app launches.
-// Styles are created at module load, so a mid-session device theme change
-// applies on the next app start.
-export const isDarkTheme = Appearance.getColorScheme() === 'dark';
+export type ThemeScheme = 'light' | 'dark';
 
-const activeColors = isDarkTheme ? darkColors : lightColors;
-const shadowColor = isDarkTheme ? '#000000' : '#0B2A5B';
+const initialScheme: ThemeScheme =
+  Appearance.getColorScheme() === 'dark' ? 'dark' : 'light';
+
+// `isDarkTheme` and `theme.colors` are read by every screen at StyleSheet
+// creation time. To switch theme live we keep the SAME object identities and
+// overwrite their contents, then remount the tree so every StyleSheet.create
+// re-runs and reads the new values. See applyThemeScheme + the ThemeProvider
+// key in App.tsx.
+export let isDarkTheme = initialScheme === 'dark';
+
+const colors = { ...(isDarkTheme ? darkColors : lightColors) };
+const shadowColor = { value: isDarkTheme ? '#000000' : '#0B2A5B' };
+
+const shadows = {
+  card: {
+    shadowColor: shadowColor.value,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: isDarkTheme ? 0.3 : 0.08,
+    shadowRadius: 18,
+    elevation: 4,
+  },
+  soft: {
+    shadowColor: shadowColor.value,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: isDarkTheme ? 0.24 : 0.06,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  elevated: {
+    shadowColor: shadowColor.value,
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: isDarkTheme ? 0.4 : 0.14,
+    shadowRadius: 28,
+    elevation: 10,
+  },
+};
 
 export const theme = {
-  colors: activeColors,
+  colors,
   spacing: {
     xs: 6,
     sm: 10,
@@ -99,33 +130,29 @@ export const theme = {
     small: 12,
     tiny: 11,
   },
-  shadows: {
-    card: {
-      shadowColor,
-      shadowOffset: { width: 0, height: 10 },
-      shadowOpacity: isDarkTheme ? 0.3 : 0.08,
-      shadowRadius: 18,
-      elevation: 4,
-    },
-    soft: {
-      shadowColor,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: isDarkTheme ? 0.24 : 0.06,
-      shadowRadius: 10,
-      elevation: 2,
-    },
-    elevated: {
-      shadowColor,
-      shadowOffset: { width: 0, height: 16 },
-      shadowOpacity: isDarkTheme ? 0.4 : 0.14,
-      shadowRadius: 28,
-      elevation: 10,
-    },
-  },
+  shadows,
 };
 
-export const colors = theme.colors;
-export const spacing = theme.spacing;
-export const radius = theme.radius;
-export const typography = theme.typography;
-export const shadows = theme.shadows;
+/**
+ * Overwrite the live palette in place so a following tree remount picks up the
+ * new colors. Returns true if the scheme actually changed.
+ */
+export function applyThemeScheme(scheme: ThemeScheme): boolean {
+  const nextIsDark = scheme === 'dark';
+  if (nextIsDark === isDarkTheme) {
+    return false;
+  }
+
+  isDarkTheme = nextIsDark;
+  Object.assign(colors, nextIsDark ? darkColors : lightColors);
+
+  const nextShadow = nextIsDark ? '#000000' : '#0B2A5B';
+  theme.shadows.card.shadowColor = nextShadow;
+  theme.shadows.card.shadowOpacity = nextIsDark ? 0.3 : 0.08;
+  theme.shadows.soft.shadowColor = nextShadow;
+  theme.shadows.soft.shadowOpacity = nextIsDark ? 0.24 : 0.06;
+  theme.shadows.elevated.shadowColor = nextShadow;
+  theme.shadows.elevated.shadowOpacity = nextIsDark ? 0.4 : 0.14;
+
+  return true;
+}

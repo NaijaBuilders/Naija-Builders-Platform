@@ -46,20 +46,21 @@ const linking: LinkingOptions<RootStackParamList> = {
   },
 };
 
-const navigationTheme: NavigationTheme = {
-  ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
-    background: theme.colors.background,
-    border: theme.colors.border,
-    card: theme.colors.surface,
-    primary: theme.colors.primary,
-    text: theme.colors.text,
-  },
-};
-
 export function RootNavigator() {
   const { isAuthenticated, isAuthLoading } = useAppState();
+
+  // Built per render so it tracks the live palette when the theme flips.
+  const navigationTheme: NavigationTheme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      background: theme.colors.background,
+      border: theme.colors.border,
+      card: theme.colors.surface,
+      primary: theme.colors.primary,
+      text: theme.colors.text,
+    },
+  };
 
   if (isAuthLoading) {
     return (

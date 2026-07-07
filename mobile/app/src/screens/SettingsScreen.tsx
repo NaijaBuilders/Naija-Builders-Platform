@@ -5,15 +5,23 @@ import React from 'react';
 import { Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { Avatar, Card, FloatingBackButton, Header, Screen } from '../components';
 import { useAppState } from '../context/AppContext';
+import { useThemeMode, type ThemeMode } from '../context/ThemeContext';
 import type { ProfileStackParamList } from '../navigation/types';
 import { userService } from '../services';
-import { isDarkTheme, theme } from '../theme';
+import { theme } from '../theme';
 import type { UserPreferences } from '../types';
+import { haptics } from '../utils/haptics';
 
 const APP_VERSION = '0.1.0';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 type PreferenceKey = keyof UserPreferences;
+
+const THEME_OPTIONS: Array<{ value: ThemeMode; label: string; icon: IconName }> = [
+  { value: 'light', label: 'Light', icon: 'sunny-outline' },
+  { value: 'dark', label: 'Dark', icon: 'moon-outline' },
+  { value: 'system', label: 'Auto', icon: 'phone-portrait-outline' },
+];
 
 type SettingsNavigation = NativeStackNavigationProp<
   ProfileStackParamList,
@@ -23,6 +31,7 @@ type SettingsNavigation = NativeStackNavigationProp<
 export function SettingsScreen() {
   const navigation = useNavigation<SettingsNavigation>();
   const { preferences, setPreferences, signOut, user } = useAppState();
+  const { mode: themeMode, setMode: setThemeMode } = useThemeMode();
 
   const confirmSignOut = () => {
     Alert.alert('Sign out of NaijaBuilders?', undefined, [
@@ -153,18 +162,53 @@ export function SettingsScreen() {
           onToggle={() => togglePreference('compact_cards')}
           border
         />
-        <NavRow
-          icon={isDarkTheme ? 'moon' : 'sunny-outline'}
-          label="Theme"
-          description="Follows your device light/dark setting. Restart the app after changing it."
-          right={
-            <View style={styles.themeValueRow}>
-              <Text style={styles.themeValue}>
-                {isDarkTheme ? 'Dark' : 'Light'}
-              </Text>
-            </View>
-          }
-        />
+        <View style={styles.row}>
+          <View style={styles.iconCircle}>
+            <Ionicons
+              color={theme.colors.primary}
+              name="contrast-outline"
+              size={18}
+            />
+          </View>
+          <View style={styles.rowCopy}>
+            <Text style={styles.rowLabel}>Theme</Text>
+            <Text style={styles.rowDescription}>Light, dark or match your device.</Text>
+          </View>
+        </View>
+        <View style={styles.themeSwitcher}>
+          {THEME_OPTIONS.map((option) => {
+            const active = themeMode === option.value;
+            return (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                key={option.value}
+                onPress={() => {
+                  haptics.tap();
+                  setThemeMode(option.value);
+                }}
+                style={[
+                  styles.themeOption,
+                  active ? styles.themeOptionActive : null,
+                ]}
+              >
+                <Ionicons
+                  color={active ? theme.colors.white : theme.colors.textMuted}
+                  name={option.icon}
+                  size={16}
+                />
+                <Text
+                  style={[
+                    styles.themeOptionText,
+                    active ? styles.themeOptionTextActive : null,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
       </Card>
 
       <Text style={styles.groupLabel}>Support</Text>
@@ -392,15 +436,33 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
   },
-  themeValueRow: {
-    alignItems: 'center',
+  themeSwitcher: {
+    backgroundColor: theme.colors.surfaceMuted,
+    borderRadius: theme.radius.md,
     flexDirection: 'row',
-    gap: theme.spacing.sm,
+    gap: 4,
+    marginBottom: theme.spacing.md,
+    padding: 4,
   },
-  themeValue: {
+  themeOption: {
+    alignItems: 'center',
+    borderRadius: theme.radius.sm,
+    flex: 1,
+    flexDirection: 'row',
+    gap: 6,
+    justifyContent: 'center',
+    paddingVertical: theme.spacing.sm,
+  },
+  themeOptionActive: {
+    backgroundColor: theme.colors.primary,
+  },
+  themeOptionText: {
     color: theme.colors.textMuted,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
+  },
+  themeOptionTextActive: {
+    color: theme.colors.white,
   },
   soonBadge: {
     backgroundColor: theme.colors.accentSoft,
