@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
   },
   hero: {
     alignItems: 'center',
-    backgroundColor: theme.colors.primaryDark,
+    backgroundColor: theme.colors.heroSurface,
     borderRadius: theme.radius.xl,
     paddingBottom: theme.spacing.lg,
     paddingHorizontal: theme.spacing.lg,

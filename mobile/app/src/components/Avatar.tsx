@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
   },
   fallback: {
     alignItems: 'center',
-    backgroundColor: theme.colors.primaryDark,
+    backgroundColor: theme.colors.primary,
     justifyContent: 'center',
   },
   initials: {

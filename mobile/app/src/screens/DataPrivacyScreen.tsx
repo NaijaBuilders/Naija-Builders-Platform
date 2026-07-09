@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   dangerCard: {
-    borderColor: '#F6C8C0',
+    borderColor: theme.colors.dangerSoft,
     borderWidth: 1,
     gap: theme.spacing.md,
   },

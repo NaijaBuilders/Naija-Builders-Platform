@@ -10,6 +10,9 @@ export const lightColors = {
   primary: laravelBrandPlaceholder.primary,
   primaryDark: '#123B7A',
   primarySoft: '#E7F0FF',
+  // Deep brand banner background that ALWAYS carries white text, in both
+  // themes. Unlike primaryDark (which lightens in dark mode), this stays dark.
+  heroSurface: '#123B7A',
   secondary: laravelBrandPlaceholder.secondary,
   secondarySoft: '#E4F7EC',
   accent: laravelBrandPlaceholder.accent,
@@ -40,6 +43,7 @@ export const darkColors: typeof lightColors = {
   primary: '#4F7ECC',
   primaryDark: '#A9C6F2',
   primarySoft: '#1B2A44',
+  heroSurface: '#0B1D3A',
   secondary: '#22B573',
   secondarySoft: '#11291D',
   accent: '#F5A623',

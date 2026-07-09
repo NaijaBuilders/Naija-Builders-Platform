@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.xxl,
   },
   supplierHero: {
-    backgroundColor: theme.colors.primaryDark,
+    backgroundColor: theme.colors.heroSurface,
     borderRadius: theme.radius.md,
     marginBottom: theme.spacing.lg,
     overflow: 'hidden',
