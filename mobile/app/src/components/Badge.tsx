@@ -8,19 +8,24 @@ type BadgeProps = {
   tone?: StatusTone;
 };
 
-const toneStyles: Record<
+// Built per-render (not at module scope) so the colors track the live theme
+// after a light/dark switch. Borders derive from the tone color so they adapt
+// to dark mode instead of using fixed light-only hexes.
+function getToneStyles(): Record<
   StatusTone,
   { background: string; color: string; border: string }
-> = {
-  danger: { background: theme.colors.dangerSoft, color: theme.colors.danger, border: '#FBD2C9' },
-  neutral: { background: theme.colors.surfaceMuted, color: theme.colors.textMuted, border: theme.colors.border },
-  primary: { background: theme.colors.primarySoft, color: theme.colors.primaryDark, border: '#CBDDF7' },
-  success: { background: theme.colors.secondarySoft, color: theme.colors.success, border: '#C4ECD5' },
-  warning: { background: theme.colors.accentSoft, color: theme.colors.warning, border: '#F4E1AE' },
-};
+> {
+  return {
+    danger: { background: theme.colors.dangerSoft, color: theme.colors.danger, border: theme.colors.dangerSoft },
+    neutral: { background: theme.colors.surfaceMuted, color: theme.colors.textMuted, border: theme.colors.border },
+    primary: { background: theme.colors.primarySoft, color: theme.colors.primaryDark, border: theme.colors.primarySoft },
+    success: { background: theme.colors.secondarySoft, color: theme.colors.success, border: theme.colors.secondarySoft },
+    warning: { background: theme.colors.accentSoft, color: theme.colors.warning, border: theme.colors.accentSoft },
+  };
+}
 
 export function Badge({ label, tone = 'neutral' }: BadgeProps) {
-  const palette = toneStyles[tone];
+  const palette = getToneStyles()[tone];
 
   return (
     <View

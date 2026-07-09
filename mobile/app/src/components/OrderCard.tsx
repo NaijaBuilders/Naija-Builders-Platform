@@ -11,19 +11,23 @@ type OrderCardProps = {
   onPress?: (order: Order) => void;
 };
 
-const statusColors: Record<OrderStatus, { background: string; color: string }> = {
-  Pending: { background: theme.colors.accentSoft, color: theme.colors.warning },
-  Processing: { background: theme.colors.primarySoft, color: theme.colors.primary },
-  Delivered: { background: theme.colors.secondarySoft, color: theme.colors.success },
-  Cancelled: { background: theme.colors.dangerSoft, color: theme.colors.danger },
-};
+// Built per-render (not at module scope) so colors track the live theme
+// after a light/dark switch.
+function getStatusColors(): Record<OrderStatus, { background: string; color: string }> {
+  return {
+    Pending: { background: theme.colors.accentSoft, color: theme.colors.warning },
+    Processing: { background: theme.colors.primarySoft, color: theme.colors.primary },
+    Delivered: { background: theme.colors.secondarySoft, color: theme.colors.success },
+    Cancelled: { background: theme.colors.dangerSoft, color: theme.colors.danger },
+  };
+}
 
 export const OrderCard = React.memo(function OrderCard({
   animationIndex,
   onPress,
   order,
 }: OrderCardProps) {
-  const status = statusColors[order.status];
+  const status = getStatusColors()[order.status];
   const handlePress = useCallback(() => {
     onPress?.(order);
   }, [onPress, order]);

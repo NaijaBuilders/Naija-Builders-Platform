@@ -22,29 +22,33 @@ type ProfileNavigation = NativeStackNavigationProp<
   'ProfileMain'
 >;
 
-const accountConfig: Record<
+// Built per-render (not at module scope) so accent colors track the live
+// theme after a light/dark switch.
+function getAccountConfig(): Record<
   AccountType,
   { label: string; icon: IconName; accent: string; cta: string }
-> = {
-  buyer: {
-    label: 'Buyer',
-    icon: 'cart',
-    accent: theme.colors.primary,
-    cta: 'Verify your account',
-  },
-  supplier: {
-    label: 'Supplier',
-    icon: 'storefront',
-    accent: theme.colors.secondary,
-    cta: 'Complete supplier KYC',
-  },
-  service: {
-    label: 'Service Pro',
-    icon: 'construct',
-    accent: theme.colors.accent,
-    cta: 'Complete provider KYC',
-  },
-};
+> {
+  return {
+    buyer: {
+      label: 'Buyer',
+      icon: 'cart',
+      accent: theme.colors.primary,
+      cta: 'Verify your account',
+    },
+    supplier: {
+      label: 'Supplier',
+      icon: 'storefront',
+      accent: theme.colors.secondary,
+      cta: 'Complete supplier KYC',
+    },
+    service: {
+      label: 'Service Pro',
+      icon: 'construct',
+      accent: theme.colors.accent,
+      cta: 'Complete provider KYC',
+    },
+  };
+}
 
 export function ProfileScreen() {
   const navigation = useNavigation<ProfileNavigation>();
@@ -104,7 +108,7 @@ export function ProfileScreen() {
 
   const accountType: AccountType =
     currentRole !== 'supplier' ? 'buyer' : user.offers_services ? 'service' : 'supplier';
-  const config = accountConfig[accountType];
+  const config = getAccountConfig()[accountType];
   const serviceLabel = user.service_category
     ? capitalizeWords(user.service_category.replace(/[_-]+/g, ' '))
     : '';

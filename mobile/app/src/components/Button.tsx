@@ -28,36 +28,40 @@ type ButtonProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-const variantStyles: Record<
+// Built per-render (not at module scope) so colors track the live theme
+// after a light/dark switch.
+function getVariantStyles(): Record<
   ButtonVariant,
   { backgroundColor: string; borderColor: string; color: string }
-> = {
-  primary: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-    color: theme.colors.white,
-  },
-  secondary: {
-    backgroundColor: theme.colors.secondary,
-    borderColor: theme.colors.secondary,
-    color: theme.colors.white,
-  },
-  outline: {
-    backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.borderStrong,
-    color: theme.colors.primaryDark,
-  },
-  ghost: {
-    backgroundColor: theme.colors.surfaceMuted,
-    borderColor: theme.colors.border,
-    color: theme.colors.text,
-  },
-  danger: {
-    backgroundColor: theme.colors.danger,
-    borderColor: theme.colors.danger,
-    color: theme.colors.white,
-  },
-};
+> {
+  return {
+    primary: {
+      backgroundColor: theme.colors.primary,
+      borderColor: theme.colors.primary,
+      color: theme.colors.white,
+    },
+    secondary: {
+      backgroundColor: theme.colors.secondary,
+      borderColor: theme.colors.secondary,
+      color: theme.colors.white,
+    },
+    outline: {
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.borderStrong,
+      color: theme.colors.primaryDark,
+    },
+    ghost: {
+      backgroundColor: theme.colors.surfaceMuted,
+      borderColor: theme.colors.border,
+      color: theme.colors.text,
+    },
+    danger: {
+      backgroundColor: theme.colors.danger,
+      borderColor: theme.colors.danger,
+      color: theme.colors.white,
+    },
+  };
+}
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -70,7 +74,7 @@ export function Button({
   loading,
   style,
 }: ButtonProps) {
-  const palette = variantStyles[variant];
+  const palette = getVariantStyles()[variant];
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],

@@ -633,7 +633,7 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.lg,
   },
   heroSubtitle: {
-    color: '#DCEAFF',
+    color: theme.colors.onPrimaryMuted,
     fontSize: 15,
     fontWeight: '800',
     marginTop: 5,
@@ -658,7 +658,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   heroStatLabel: {
-    color: '#BFD5F6',
+    color: theme.colors.onPrimarySubtle,
     fontSize: 11,
     fontWeight: '800',
     marginTop: 4,

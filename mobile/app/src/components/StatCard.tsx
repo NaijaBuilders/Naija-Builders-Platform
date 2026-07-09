@@ -9,16 +9,20 @@ type StatCardProps = {
   animationIndex?: number;
 };
 
-const toneColors: Record<StatusTone, { background: string; color: string }> = {
-  primary: { background: theme.colors.primarySoft, color: theme.colors.primaryDark },
-  success: { background: theme.colors.secondarySoft, color: theme.colors.success },
-  warning: { background: theme.colors.accentSoft, color: theme.colors.warning },
-  danger: { background: theme.colors.dangerSoft, color: theme.colors.danger },
-  neutral: { background: theme.colors.surfaceMuted, color: theme.colors.textMuted },
-};
+// Built per-render (not at module scope) so the colors track the live theme
+// after a light/dark switch.
+function getToneColors(): Record<StatusTone, { background: string; color: string }> {
+  return {
+    primary: { background: theme.colors.primarySoft, color: theme.colors.primaryDark },
+    success: { background: theme.colors.secondarySoft, color: theme.colors.success },
+    warning: { background: theme.colors.accentSoft, color: theme.colors.warning },
+    danger: { background: theme.colors.dangerSoft, color: theme.colors.danger },
+    neutral: { background: theme.colors.surfaceMuted, color: theme.colors.textMuted },
+  };
+}
 
 export function StatCard({ animationIndex, stat }: StatCardProps) {
-  const tone = toneColors[stat.tone];
+  const tone = getToneColors()[stat.tone];
 
   return (
     <Card
