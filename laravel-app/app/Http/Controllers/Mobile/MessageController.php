@@ -214,7 +214,7 @@ class MessageController extends Controller
         $senderName = trim((string) ($sender->company ?? '')) ?:
             NameFormatter::title((string) ($sender->full_name ?? 'A NaijaBuilders user'));
 
-        AppNotification::push(
+        AppNotification::record(
             $receiverId,
             'new_message',
             'New message from '.$senderName,

@@ -192,7 +192,7 @@ class BuyerOrderService
 
         $this->fraud->record($buyer, $orderId, $tier, $assessment);
 
-        AppNotification::push(
+        AppNotification::record(
             (int) $buyer->id,
             'order_placed',
             'Order NB-'.$orderId.' placed',
@@ -201,7 +201,7 @@ class BuyerOrderService
         );
 
         if ($supplierId > 0) {
-            AppNotification::push(
+            AppNotification::record(
                 $supplierId,
                 'order_placed',
                 'New order NB-'.$orderId,

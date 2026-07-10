@@ -26,8 +26,11 @@ class AppNotification extends Model
     /**
      * Record an in-app notification for a user. Failures never interrupt the
      * action that triggered the notification.
+     *
+     * Named `record` (not `push`) because Eloquent's base Model already defines
+     * a non-static push(); redeclaring it static is a fatal error.
      */
-    public static function push(
+    public static function record(
         int $userId,
         string $eventKey,
         string $title,
