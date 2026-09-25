@@ -19,6 +19,7 @@
         $themeFromCookie = '';
     }
     $cssVersion = @filemtime(public_path('assets/css/professional.css')) ?: 1;
+    $refreshCssVersion = @filemtime(public_path('assets/css/ui-refresh.css')) ?: 1;
     $jsVersion = @filemtime(public_path('assets/js/app.js')) ?: 1;
     $cartItems = (array) session('cart', []);
     $cartCount = 0;
@@ -84,7 +85,11 @@
             }
         })();
     </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap">
     <link rel="stylesheet" href="{{ asset('assets/css/professional.css') }}?v={{ $cssVersion }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/ui-refresh.css') }}?v={{ $refreshCssVersion }}">
     <title>{{ isset($pageTitle) ? $pageTitle . ' | NaijaBuilders' : 'NaijaBuilders – Nigerian Construction Materials Marketplace' }}</title>
     @stack('head')
 </head>
@@ -328,6 +333,14 @@
 </footer>
 
 <script src="{{ asset('assets/js/app.js') }}?v={{ $jsVersion }}"></script>
+<script>
+    // Panels such as the materials filters start closed on small screens so results show first
+    if (window.matchMedia('(max-width: 1024px)').matches) {
+        document.querySelectorAll('details[data-collapse-on-mobile]').forEach(function (panel) {
+            panel.removeAttribute('open');
+        });
+    }
+</script>
 @stack('scripts')
 </body>
 </html>

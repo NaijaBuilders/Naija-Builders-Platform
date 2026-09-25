@@ -305,7 +305,9 @@
 
     <div class="materials-page-layout">
         <aside class="materials-filter-column card">
-            <div class="card-body">
+            <details class="card-body materials-filter-panel" open data-collapse-on-mobile>
+                <summary>Filters</summary>
+                <div class="materials-filter-panel__body">
                 <h2>Filters</h2>
                 <form method="GET" action="/materials.php">
                     <input type="hidden" name="sort_by" value="{{ $sortBy }}">
@@ -389,7 +391,8 @@
                         <a href="/materials.php" class="btn btn-outline" style="text-decoration: none;">Reset</a>
                     </div>
                 </form>
-            </div>
+                </div>
+            </details>
         </aside>
 
         <section class="materials-results-column">
