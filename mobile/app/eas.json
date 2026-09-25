@@ -1,0 +1,28 @@
+{
+  "cli": {
+    "version": ">= 20.5.1",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://REPLACE-WITH-YOUR-CPANEL-DOMAIN/api/mobile"
+      }
+    },
+    "production": {
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://REPLACE-WITH-YOUR-CPANEL-DOMAIN/api/mobile"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

@@ -56,3 +56,12 @@ mobile/app/npm-debug.log
 mobile/app/yarn-error.log
 mobile/app/.turbo/
 mobile/app/.skip-adb-for-tunnel/
+
+# AI assistant files
+CLAUDE.md
+.claude/
+AGENTS.md
+.cursor/
+.cursorrules
+.aider*
+.github/copilot-instructions.md
